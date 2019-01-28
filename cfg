@@ -1,5 +1,6 @@
-NUMBER red
-OPERATOR blue
-IDENTIFIER green
-KEYWORD black
-SPECIAL yellow
+NUM blue
+STR violet
+OP black
+ID green
+KEY red
+COM grey
