@@ -1,6 +1,6 @@
-NUM blue
-STR violet
-OP black
-ID green
-KEY red
-COM grey
+NUMBERS red
+STRINGS green
+OPERATORS violet
+IDENTIFIERS black
+KEYWORDS violet
+COMMENTS grey

@@ -1,104 +1,221 @@
 import re
 import argparse
-
 import ply.lex as lex
 
-parser = argparse.ArgumentParser(description="argument parser")
-parser.add_argument("--cfg", help='Specify CFG', required=True)
-parser.add_argument("--out", help='Specify output file', required=True)
+parser = argparse.ArgumentParser(description = "argument parser")
+parser.add_argument("--cfg", help = 'Specify CFG', required = True)
+parser.add_argument("--in", help = 'Specify input', required = True)
+parser.add_argument("--out", help = 'Specify output file', required = True)
 args = vars(parser.parse_args())
 
-data = '''
- 3 + 4 * 10
-   + -20 *2
- '''
-
 def get_cfg(cfg_file):
-	cfg=open(cfg_file)
-	tokencolour = dict()
-	line=cfg.readline()
-	while line:
-		token_col=line.split()
-		# print(token_col)
-		tokencolour[token_col[0]]=token_col[1]
-		line=cfg.readline()
-	return tokencolour
+    cfg = open(cfg_file)
+    classcolour = dict()
+    line = cfg.readline()
+    while line:
+    	col = line.split()
+    	# print(token_col)
+    	classcolour[col[0]] = col[1]
+    	line = cfg.readline()
+    cfg.close()
+    return classcolour
 
-tokencolour= get_cfg(args["cfg"])
+classcolour = get_cfg(args["cfg"])
 
-#################################   Keywords
-
+#################################   Tokens
 reserved = {
-    'break' : 'KEY',
-    'default' : 'KEY',
-    'func' : 'KEY',
-    'interface' : 'KEY',
-    'select' : 'KEY',
-    'case' : 'KEY',
-    'defer' : 'KEY',
-    'go' : 'KEY',
-    'map' : 'KEY',
-    'struct' : 'KEY',
-    'chan' : 'KEY',
-    'else' : 'KEY',
-    'goto' : 'KEY',
-    'package' : 'KEY',
-    'switch' : 'KEY',
-    'const' : 'KEY',
-    'fallthrough' : 'KEY',
-    'if' : 'KEY',
-    'range' : 'KEY',
-    'type' : 'KEY',
-    'continue' : 'KEY',
-    'for' : 'KEY',
-    'import' : 'KEY',
-    'return' : 'KEY',
-    'var' : 'KEY',
+    'break' : 'BREAK',
+    'default' : 'DEFAULT',
+    'func' : 'FUNC',
+    'interface' : 'INTERFACE',
+    'select' : 'SELECT',
+    'case' : 'CASE',
+    'defer' : 'DEFER',
+    'go' : 'GO',
+    'map' : 'MAP',
+    'struct' : 'STRUCT',
+    'chan' : 'CHAN',
+    'else' : 'ELSE',
+    'goto' : 'GOTO',
+    'package' : 'PACKAGE',
+    'switch' : 'SWITCH',
+    'const' : 'CONST',
+    'fallthrough' : 'FALLTHROUGH',
+    'if' : 'IF',
+    'range' : 'RANGE',
+    'type' : 'TYPE',
+    'continue' : 'CONTINUE',
+    'for' : 'FOR',
+    'import' : 'IMPORT',
+    'return' : 'RETURN',
+    'var' : 'VAR',
 }
 
-tokens = ['NUM','STR','OP','ID','KEY','COM','FUNC']# + list(reserved.values())
+operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
+numbers = ['INT','FLOAT','IMAG']
+strings = ['CHAR','STRING']
+
+tokens = operators + numbers + strings + ['ID','COM'] + list(reserved.values())
+
+tokenclass = {
+    'ADD' : 'OPERATORS',
+    'SUB' : 'OPERATORS',
+    'MUL' : 'OPERATORS',
+    'QUO' : 'OPERATORS',
+    'REM' : 'OPERATORS',
+    'AND' : 'OPERATORS',
+    'OR' : 'OPERATORS',
+    'XOR' : 'OPERATORS',
+    'SHL' : 'OPERATORS',
+    'SHR' : 'OPERATORS',
+    'AND_NOT' : 'OPERATORS',
+    'ADD_ASSIGN' : 'OPERATORS',
+    'SUB_ASSIGN' : 'OPERATORS',
+    'MUL_ASSIGN' : 'OPERATORS',
+    'QUO_ASSIGN' : 'OPERATORS',
+    'REM_ASSIGN' : 'OPERATORS',
+    'AND_ASSIGN' : 'OPERATORS',
+    'OR_ASSIGN' : 'OPERATORS',
+    'XOR_ASSIGN' : 'OPERATORS',
+    'SHL_ASSIGN' : 'OPERATORS',
+    'SHR_ASSIGN' : 'OPERATORS',
+    'AND_NOT_ASSIGN' : 'OPERATORS',
+    'LAND' : 'OPERATORS',
+    'LOR' : 'OPERATORS',
+    'ARROW' : 'OPERATORS',
+    'INC' : 'OPERATORS',
+    'DEC' : 'OPERATORS',
+    'EQL' : 'OPERATORS',
+    'LSS' : 'OPERATORS',
+    'GTR' : 'OPERATORS',
+    'ASSIGN' : 'OPERATORS',
+    'NOT' : 'OPERATORS',
+    'NEQ' : 'OPERATORS',
+    'LEQ' : 'OPERATORS',
+    'GEQ' : 'OPERATORS',
+    'DEFINE' : 'OPERATORS',
+    'ELLIPSIS' : 'OPERATORS',
+    'LPAREN' : 'OPERATORS',
+    'LBRACK' : 'OPERATORS',
+    'LBRACE' : 'OPERATORS',
+    'COMMA' : 'OPERATORS',
+    'PERIOD' : 'OPERATORS',
+    'RPAREN' : 'OPERATORS',
+    'RBRACK' : 'OPERATORS',
+    'RBRACE' : 'OPERATORS',
+    'SEMICOLON' : 'OPERATORS',
+    'COLON' : 'OPERATORS',
+
+    'BREAK' : 'KEYWORDS',
+    'DEFAULT' : 'KEYWORDS',
+    'FUNC' : 'KEYWORDS',
+    'INTERFACE' : 'KEYWORDS',
+    'SELECT' : 'KEYWORDS',
+    'CASE' : 'KEYWORDS',
+    'DEFER' : 'KEYWORDS',
+    'GO' : 'KEYWORDS',
+    'MAP' : 'KEYWORDS',
+    'STRUCT' : 'KEYWORDS',
+    'CHAN' : 'KEYWORDS',
+    'ELSE' : 'KEYWORDS',
+    'GOTO' : 'KEYWORDS',
+    'PACKAGE' : 'KEYWORDS',
+    'SWITCH' : 'KEYWORDS',
+    'CONST' : 'KEYWORDS',
+    'FALLTHROUGH' : 'KEYWORDS',
+    'IF' : 'KEYWORDS',
+    'RANGE' : 'KEYWORDS',
+    'TYPE' : 'KEYWORDS',
+    'CONTINUE' : 'KEYWORDS',
+    'FOR' : 'KEYWORDS',
+    'IMPORT' : 'KEYWORDS',
+    'RETURN' : 'KEYWORDS',
+    'VAR' : 'KEYWORDS',
+
+    'INT' : 'NUMBERS',
+    'FLOAT' : 'NUMBERS',
+    'IMAG' : 'NUMBERS',
+
+    'CHAR' : 'STRINGS',
+    'STRING' : 'STRINGS',
+
+    'ID' : 'IDENTIFIERS',
+    'COM' : 'COMMENTS',
+}
 
 ################################### Operators and delimiters
-OP1 = r'\+|-|\*|/|%'
-OP2 = r'\&|\||\^|<<|>>|\&\^'
-OP3 = r'\+=|-=|\*=|/=|%='
-OP4 = r'\&=|\|=|\^=|<<=|>>=|\&\^='
-OP5 = r'\&\&|\|\||<-|\+\+|--'
-OP6 = r'==|<|>|=|!'
-OP7 = r'!=|<=|>=|:=|\.\.\.'
-OP8 = r'\(|\[|\{|,|\.'
-OP9 = r'\)|\]|\}|;|:'
+t_ADD = r'\+'
+t_SUB = r'-'
+t_MUL = r'\*'
+t_QUO = r'/'
+t_REM = r'%'
 
-t_OP = OP1+'|'+OP2+'|'+OP3+'|'+OP4+'|'+OP5+'|'+OP6+'|'+OP7+'|'+OP8+'|'+OP9
+t_AND = r'\&'
+t_OR = r'\|'
+t_XOR = r'\^'
+t_SHL = r'<<'
+t_SHR = r'>>'
+t_AND_NOT = r'\&\^'
 
+t_ADD_ASSIGN = r'\+='
+t_SUB_ASSIGN = r'-='
+t_MUL_ASSIGN = r'\*='
+t_QUO_ASSIGN = r'/='
+t_REM_ASSIGN = r'%='
 
+t_AND_ASSIGN = r'\&='
+t_OR_ASSIGN = r'\|='
+t_XOR_ASSIGN = r'\^='
+t_SHL_ASSIGN = r'<<='
+t_SHR_ASSIGN = r'>>='
+t_AND_NOT_ASSIGN = r'\&\^='
+
+t_LAND = r'\&\&'
+t_LOR = r'\|\|'
+t_ARROW = r'<-'
+t_INC = r'\+\+'
+t_DEC = r'--'
+
+t_EQL = r'=='
+t_LSS = r'<'
+t_GTR = r'>'
+t_ASSIGN = r'='
+t_NOT = r'!'
+
+t_NEQ = r'!='
+t_LEQ = r'<='
+t_GEQ = r'>='
+t_DEFINE = r':='
+t_ELLIPSIS = r'\.\.\.'
+
+t_LPAREN = r'\('
+t_LBRACK = r'\['
+t_LBRACE = r'\{'
+t_COMMA = r','
+t_PERIOD = r'\.'
+
+t_RPAREN = r'\)'
+t_RBRACK = r'\]'
+t_RBRACE = r'\}'
+t_SEMICOLON = r';'
+t_COLON = r':'
 
 ##################################### Numbers
-
-
 decimal_lit = r'[1-9][\d]*'
 octal_lit = r'0[0-7]+'
 hexal_lit = r'0[xX][\dA-F]+'
-int_lit = '('+decimal_lit+')|('+octal_lit+')|('+hexal_lit+')'
+t_INT = '('+decimal_lit+')|('+octal_lit+')|('+hexal_lit+')'
 
 decimals = r'[0-9]+'
 exponent = r'[eE][+-]?[0-9]+'
 float_lit = '('+decimals+'\.'+decimals+exponent+')|('+decimals+exponent+')|('+decimals+'\.'+decimals+')'
-imag_lit = '(('+decimals+')|('+float_lit+'))'+'i'
 
-t_NUM = '('+float_lit+')|('+imag_lit+')|('+int_lit+')'
-
-
+t_FLOAT = float_lit
+t_IMAG = '(('+decimals+')|('+float_lit+'))'+'i'
 
 ###################################### Strings
-
-
-char = r'\'[^\']\''
-string = r'\"[^\"]*\"'
-
-t_STR = '('+string+')|('+char+')'
-
-
+t_CHAR = r'\'[^\']\''
+t_STRING = r'\"[^\"]*\"'
 
 ###################################### Identifiers
 def t_ID(t):
@@ -106,10 +223,7 @@ def t_ID(t):
     t.type = reserved.get(t.value,'ID')
     return t
 
-
-###################################### Special/Comment
-
-
+###################################### Comments
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
     return t
@@ -119,10 +233,7 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-####################################### A string containing ignored characters
-####################################### (spaces and tabs)
-
-
+####################################### A string containing ignored characters (spaces and tabs)
 t_ignore  = ' \t'
 
 ####################################### Error handling rule
@@ -136,10 +247,9 @@ lexer = lex.lex()
 #######################################    HTML PART    ###########################
 #######################################                 ########################
 
-data = '''
-3 + 0x4234</if() * 10i if dsgsfns""djs//
-+ -2.0e6 *2 "hf/*a"ff"fgafg"*/
-'''
+f = open(args["in"], "r")
+data = f.read()
+f.close()
 
 lexer.input(data)
 
@@ -162,7 +272,7 @@ while True:
             f.write("<br>")
     pos = tok.lexpos + l
     # print(pos)
-    f.write("<font color=\""+tokencolour[str(tok.type)]+"\">"+str(tok.value)+"</font>")
+    f.write("<font color=\"" + classcolour[tokenclass[str(tok.type)]] + "\">")
     if tok.type == 'COM':
         for i in xrange(tok.lexpos, pos):
             if data[i] == ' ':
@@ -171,14 +281,9 @@ while True:
                 f.write("<br>")
             else:
                 f.write(data[i])
-        f.write("</font>")
+    else:
+        f.write(str(tok.value))
+    f.write("</font>")
 
 f.write("</body></html>")
-
-
-
-############################# Debugging issues
-'''
-    // after // should be Comment and not string, check regex of single line comment
-
-'''
+f.close()
