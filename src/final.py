@@ -254,7 +254,7 @@ f.close()
 lexer.input(data)
 
 f = open(args["out"], "w")
-f.write("<html><body>")
+f.write("<html><body bgcolor=\"black\">")
 pos = 0
 
 # Tokenize
@@ -268,6 +268,8 @@ while True:
     for i in xrange(pos, tok.lexpos):
         if data[i] == ' ':
             f.write("&nbsp;")
+        elif data[i] == '\t':
+            f.write("&nbsp;&nbsp;&nbsp;&nbsp;")
         elif data[i] == '\n':
             f.write("<br>")
     pos = tok.lexpos + l
@@ -277,6 +279,8 @@ while True:
         for i in xrange(tok.lexpos, pos):
             if data[i] == ' ':
                 f.write("&nbsp;")
+            elif data[i] == '\t':
+                f.write("&nbsp;&nbsp;&nbsp;&nbsp;")
             elif data[i] == '\n':
                 f.write("<br>")
             else:
