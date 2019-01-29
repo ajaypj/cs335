@@ -58,53 +58,53 @@ strings = ['CHAR','STRING']
 tokens = operators + numbers + strings + ['ID','COM'] + list(reserved.values())
 
 tokenclass = {
-    'ADD' : 'OPERATORS',
-    'SUB' : 'OPERATORS',
-    'MUL' : 'OPERATORS',
-    'QUO' : 'OPERATORS',
-    'REM' : 'OPERATORS',
-    'AND' : 'OPERATORS',
-    'OR' : 'OPERATORS',
-    'XOR' : 'OPERATORS',
-    'SHL' : 'OPERATORS',
-    'SHR' : 'OPERATORS',
-    'AND_NOT' : 'OPERATORS',
-    'ADD_ASSIGN' : 'OPERATORS',
-    'SUB_ASSIGN' : 'OPERATORS',
-    'MUL_ASSIGN' : 'OPERATORS',
-    'QUO_ASSIGN' : 'OPERATORS',
-    'REM_ASSIGN' : 'OPERATORS',
-    'AND_ASSIGN' : 'OPERATORS',
-    'OR_ASSIGN' : 'OPERATORS',
-    'XOR_ASSIGN' : 'OPERATORS',
-    'SHL_ASSIGN' : 'OPERATORS',
-    'SHR_ASSIGN' : 'OPERATORS',
-    'AND_NOT_ASSIGN' : 'OPERATORS',
-    'LAND' : 'OPERATORS',
-    'LOR' : 'OPERATORS',
-    'ARROW' : 'OPERATORS',
-    'INC' : 'OPERATORS',
-    'DEC' : 'OPERATORS',
-    'EQL' : 'OPERATORS',
-    'LSS' : 'OPERATORS',
-    'GTR' : 'OPERATORS',
-    'ASSIGN' : 'OPERATORS',
-    'NOT' : 'OPERATORS',
-    'NEQ' : 'OPERATORS',
-    'LEQ' : 'OPERATORS',
-    'GEQ' : 'OPERATORS',
-    'DEFINE' : 'OPERATORS',
-    'ELLIPSIS' : 'OPERATORS',
-    'LPAREN' : 'OPERATORS',
-    'LBRACK' : 'OPERATORS',
-    'LBRACE' : 'OPERATORS',
-    'COMMA' : 'OPERATORS',
-    'PERIOD' : 'OPERATORS',
-    'RPAREN' : 'OPERATORS',
-    'RBRACK' : 'OPERATORS',
-    'RBRACE' : 'OPERATORS',
-    'SEMICOLON' : 'OPERATORS',
-    'COLON' : 'OPERATORS',
+    'ADD' : 'ARITHMETIC_OPERATORS',
+    'SUB' : 'ARITHMETIC_OPERATORS',
+    'MUL' : 'ARITHMETIC_OPERATORS',
+    'QUO' : 'ARITHMETIC_OPERATORS',
+    'REM' : 'ARITHMETIC_OPERATORS',
+    'AND' : 'ARITHMETIC_OPERATORS',
+    'OR' : 'ARITHMETIC_OPERATORS',
+    'XOR' : 'ARITHMETIC_OPERATORS',
+    'SHL' : 'ARITHMETIC_OPERATORS',
+    'SHR' : 'ARITHMETIC_OPERATORS',
+    'AND_NOT' : 'ARITHMETIC_OPERATORS',
+    'ADD_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'SUB_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'MUL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'QUO_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'REM_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'AND_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'OR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'XOR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'SHL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'SHR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'AND_NOT_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'LAND' : 'LOGICAL_OPERATORS',
+    'LOR' : 'LOGICAL_OPERATORS',
+    'ARROW' : 'OTHER_OPERATORS',
+    'INC' : 'OTHER_OPERATORS',
+    'DEC' : 'OTHER_OPERATORS',
+    'EQL' : 'RELATIONAL_OPERATORS',
+    'LSS' : 'RELATIONAL_OPERATORS',
+    'GTR' : 'RELATIONAL_OPERATORS',
+    'ASSIGN' : 'ASSIGNMENT_OPERATORS',
+    'NOT' : 'LOGICAL_OPERATORS',
+    'NEQ' : 'RELATIONAL_OPERATORS',
+    'LEQ' : 'RELATIONAL_OPERATORS',
+    'GEQ' : 'RELATIONAL_OPERATORS',
+    'DEFINE' : 'OTHER_OPERATORS',
+    'ELLIPSIS' : 'OTHER_OPERATORS',
+    'LPAREN' : 'PUNCTUATION',
+    'LBRACK' : 'PUNCTUATION',
+    'LBRACE' : 'PUNCTUATION',
+    'COMMA' : 'PUNCTUATION',
+    'PERIOD' : 'PUNCTUATION',
+    'RPAREN' : 'PUNCTUATION',
+    'RBRACK' : 'PUNCTUATION',
+    'RBRACE' : 'PUNCTUATION',
+    'SEMICOLON' : 'PUNCTUATION',
+    'COLON' : 'PUNCTUATION',
 
     'BREAK' : 'KEYWORDS',
     'DEFAULT' : 'KEYWORDS',
@@ -201,7 +201,7 @@ t_SEMICOLON = r';'
 t_COLON = r':'
 
 ##################################### Numbers
-decimal_lit = r'[1-9][\d]*'
+decimal_lit = r'0|([1-9][\d]*)'
 octal_lit = r'0[0-7]+'
 hexal_lit = r'0[xX][\dA-F]+'
 t_INT = '('+decimal_lit+')|('+octal_lit+')|('+hexal_lit+')'
@@ -254,7 +254,7 @@ f.close()
 lexer.input(data)
 
 f = open(args["out"], "w")
-f.write("<html><body bgcolor=\"black\">")
+f.write("<html><body bgcolor=\"" + classcolour['BACKGROUND'] + "\">")
 pos = 0
 
 # Tokenize
@@ -272,6 +272,8 @@ while True:
             f.write("&nbsp;&nbsp;&nbsp;&nbsp;")
         elif data[i] == '\n':
             f.write("<br>")
+        else:
+            f.write("<font color=\"white\">" + data[i] + "</font>")
     pos = tok.lexpos + l
     # print(pos)
     f.write("<font color=\"" + classcolour[tokenclass[str(tok.type)]] + "\">")
