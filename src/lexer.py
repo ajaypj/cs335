@@ -53,9 +53,10 @@ reserved = {
 
 operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
 numbers = ['INT','FLOAT','IMAG']
-strings = ['CHAR','STRING']
+strings = ['STRING']
+special = ['COM']
 
-tokens = operators + numbers + strings + ['ID','COM'] + list(reserved.values())
+tokens = operators + numbers + strings + special + ['ID'] + list(reserved.values())
 
 tokenclass = {
     'ADD' : 'ARITHMETIC_OPERATORS',
@@ -69,6 +70,7 @@ tokenclass = {
     'SHL' : 'ARITHMETIC_OPERATORS',
     'SHR' : 'ARITHMETIC_OPERATORS',
     'AND_NOT' : 'ARITHMETIC_OPERATORS',
+
     'ADD_ASSIGN' : 'ASSIGNMENT_OPERATORS',
     'SUB_ASSIGN' : 'ASSIGNMENT_OPERATORS',
     'MUL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
@@ -80,6 +82,7 @@ tokenclass = {
     'SHL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
     'SHR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
     'AND_NOT_ASSIGN' : 'ASSIGNMENT_OPERATORS',
+
     'LAND' : 'LOGICAL_OPERATORS',
     'LOR' : 'LOGICAL_OPERATORS',
     'ARROW' : 'OTHER_OPERATORS',
@@ -95,6 +98,7 @@ tokenclass = {
     'GEQ' : 'RELATIONAL_OPERATORS',
     'DEFINE' : 'OTHER_OPERATORS',
     'ELLIPSIS' : 'OTHER_OPERATORS',
+
     'LPAREN' : 'PUNCTUATION',
     'LBRACK' : 'PUNCTUATION',
     'LBRACE' : 'PUNCTUATION',
@@ -135,8 +139,6 @@ tokenclass = {
     'INT' : 'NUMBERS',
     'FLOAT' : 'NUMBERS',
     'IMAG' : 'NUMBERS',
-
-    'CHAR' : 'STRINGS',
     'STRING' : 'STRINGS',
 
     'ID' : 'IDENTIFIERS',
@@ -214,8 +216,7 @@ t_FLOAT = float_lit
 t_IMAG = '(('+decimals+')|('+float_lit+'))'+'i'
 
 ###################################### Strings
-t_CHAR = r'\'[^\']\''
-t_STRING = r'\"[^\"]*\"'
+t_STRING = r'(\'[^\']*\')|(\"[^\"]*\")'
 
 ###################################### Identifiers
 def t_ID(t):
@@ -226,6 +227,7 @@ def t_ID(t):
 ###################################### Comments
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
+    t.lexer.lineno += t.value.count('\n')
     return t
 
 ####################################### Define a rule so we can track line numbers
@@ -276,7 +278,7 @@ while True:
             f.write("<font color=\"white\">" + data[i] + "</font>")
     pos = tok.lexpos + l
     # print(pos)
-    f.write("<font color=\"" + classcolour[tokenclass[str(tok.type)]] + "\">")
+    f.write("<font color=\"" + classcolour[tokenclass[tok.type]] + "\">")
     if tok.type == 'COM':
         for i in xrange(tok.lexpos, pos):
             if data[i] == ' ':
