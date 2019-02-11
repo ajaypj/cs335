@@ -1,0 +1,34 @@
+Operand         : LPAREN Expression RPAREN | OperandName | Literal
+OperandName     : ID | QualifiedIdent
+QualifiedIdent  : PackageName PERIOD ID
+PackageName     : ID
+Literal         : BasicLiteral | CompositeLit | FunctionLit
+BasicLiteral    : INT | FLOAT | IMAG | STRING | RUNE
+CompositeLit    : LiteralType LiteralValue
+LiteralType     : StructType | ArrayType | LBRACK ELLIPSIS RBRACK ElementType | SliceType | MapType | TypeName
+LiteralValue    : LBRACE LiteralValue1 RBRACE
+LiteralValue1   : ElementList COMMA | ElementList
+ElementList     : KeyedElement ElementList1 |
+KeyedElement    : KeyedElement1 Element
+KeyedElement1   : Key COLON |
+Key             : FieldName | Expression | LiteralValue
+FieldName       : ID
+Element         : Expression | LiteralValue
+FunctionLit     : FUNC Signature FunctionBody
+PrimaryExpr     : Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
+Conversion      : Type LPAREN Expression RPAREN | Type LPAREN Expression COMMA RPAREN
+Selector        : PERIOD ID
+Index           : LBRACK Expression RBRACK
+Slice           : LBRACK Slice1 COLON Slice1 RBRACK | LBRACK Slice1 COLON Expression COLON Expression RBRACK
+Slice1          : Expression |
+TypeAssertion   : PERIOD LPAREN Type RPAREN
+Arguments       : LPAREN RPAREN | LPAREN ExpressionList ELLIPSIS COMMA RPAREN | LPAREN ExpressionList ELLIPSIS RPAREN | LPAREN ExpressionList COMMA RPAREN | LPAREN ExpressionList RPAREN | LPAREN Type COMMA ExpressionList ELLIPSIS COMMA RPAREN | LPAREN Type COMMA ExpressionList ELLIPSIS RPAREN | LPAREN Type COMMA ExpressionList COMMA RPAREN | LPAREN Type COMMA ExpressionList RPAREN | LPAREN Type ELLIPSIS COMMA RPAREN | LPAREN Type ELLIPSIS RPAREN | LPAREN Type COMMA RPAREN | LPAREN Type RPAREN
+MethodExpr      : ReceiverType PERIOD MethodName
+Receivertype    : Type
+Expression      : UnaryExpr | Expression binary_op Expression
+UnaryExpr       : PrimaryExpr | unary_op UnaryExpr
+binary_op       : LOR | LAND | rel_op | add_op | mul_op
+rel_op          : EQL | NEQ | LSS | LEQ | GTR | GEQ
+add_op          : ADD | SUB | OR | XOR
+mul_op          : MUL | QUO | REM | SHL | SHR | AND | AND_NOT
+unary_op        : ADD | SUB | NOT | XOR | MUL | AND | ARROW

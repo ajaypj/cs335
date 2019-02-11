@@ -1,0 +1,49 @@
+1.Types
+
+Type      = TypeName | TypeLit | "(" Type ")" .
+TypeName  = identifier | QualifiedIdent .
+TypeLit   = ArrayType | StructType | PointerType | FunctionType | InterfaceType |
+	    SliceType | MapType | ChannelType .
+
+2.
+
+Block = "{" StatementList "}" .
+StatementList = { Statement ";" } .
+
+  Statement =
+  	Declaration | LabeledStmt | SimpleStmt |
+  	GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt |
+  	FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt |
+  	DeferStmt .
+
+
+
+    Declaration   = ConstDecl | TypeDecl | VarDecl .
+    TopLevelDecl  = Declaration | FunctionDecl | MethodDecl .
+
+      ConstDecl      = "const" ( ConstSpec | "(" { ConstSpec ";" } ")" ) .
+      ConstSpec      = IdentifierList [ [ Type ] "=" ExpressionList ] .
+
+      IdentifierList = identifier { "," identifier } .
+      ExpressionList = Expression { "," Expression } .
+
+    LabeledStmt = Label ":" Statement .
+    Label       = identifier .
+
+    SimpleStmt = EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl .
+    GoStmt = "go" Expression .
+    ReturnStmt = "return" [ ExpressionList ] .
+    BreakStmt = "break" [ Label ] .
+    ContinueStmt = "continue" [ Label ] .
+    GotoStmt = "goto" Label .
+    FallthroughStmt = "fallthrough" .
+    IfStmt = "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ] .
+    SwitchStmt = ExprSwitchStmt | TypeSwitchStmt .
+    SelectStmt = "select" "{" { CommClause } "}" .
+      CommClause = CommCase ":" StatementList .
+      CommCase   = "case" ( SendStmt | RecvStmt ) | "default" .
+      RecvStmt   = [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr .
+      RecvExpr   = Expression .
+    ForStmt = "for" [ Condition | ForClause | RangeClause ] Block .
+    Condition = Expression .
+    DeferStmt = "defer" Expression .

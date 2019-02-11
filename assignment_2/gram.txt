@@ -1,0 +1,115 @@
+SourceFile       : PackageClause SEMICOLON SourceFile1 SourceFile2
+SourceFile1      : SourceFile1 ImportDecl SEMICOLON | "empty"
+SourceFile2      : SourceFile2 TopLevelDecl SEMICOLON | "empty"
+PackageClause    : PACKAGE PackageName
+PackageName      : ID
+ImportDecl       : IMPORT ImportDecl1
+ImportDecl1      : ImportSpec | LPAREN ImportDecl2 RPAREN
+ImportDecl2      : ImportDecl2 ImportSpec SEMICOLON | "empty"
+ImportSpec       : PERIOD ImportPath | PackageName ImportPath | ImportPath
+ImportPath       : string_lit
+TopLevelDecl     : Declaration | FunctionDecl | MethodDecl
+Declaration      : ConstDecl | TypeDecl | VarDecl
+ConstDecl        : CONST ConstDecl1
+ConstDecl1       : ConstSpec | LPAREN ConstDecl2 RPAREN
+ConstDecl2       : ConstDecl2 ConstSpec SEMICOLON
+ConstSpec        : IdentifierList Type ASSIGN ExpressionList | IdentifierList ASSIGN ExpressionList | IdentifierList
+IdentifierList   : ID IdentifierList1
+IdentifierList1  : IdentifierList1 COMMA ID | "empty"
+ExpressionList   : Expression ExpressionList1
+ExpressionList1  : ExpressionList1 COMMA Expression | "empty"
+TypeDecl         : TYPE TypeDecl1
+TypeDecl1        : TypeSpec | LPAREN TypeDecl2 RPAREN
+TypeDecl2        : TypeDecl2 TypeSpec SEMICOLON | "empty"
+TypeSpec         : AliasDecl | TypeDef
+AliasDecl        : ID ASSIGN Type
+TypeDef          : ID Type
+VarDecl          : VAR VarDecl1
+VarDecl1         : VarSpec | LPAREN VarDecl2 RPAREN
+VarDecl2         : VarDecl2 VarSpec SEMICOLON  | "empty"
+VarSpec          : IdentifierList VarSpec1
+VarSpec1         : Type ASSIGN ExpressionList | ASSIGN ExpressionList | Type
+FunctionDecl     : FUNC FunctionName Signature | FUNC FunctionName Signature FunctionBody
+FunctionName     : ID
+FunctionBody     : Block
+Signature        : Parameters | Parameters Result
+Result           : Parameters | Type
+Parameters       : LPAREN Parameters1 RPAREN
+Parameters1      : ParameterList | ParameterList COMMA  | "empty"
+ParameterList    : ParameterDecl ParameterList1
+ParameterList1   : ParameterList1 COMMA ParameterDecl | "empty"
+ParameterDecl    : ParameterDecl1 ParameterDecl2 Type
+ParameterDecl1   : IdentifierList | "empty"
+ParameterDecl2   : ELLIPSIS  | "empty"
+MethodDecl       : FUNC Receiver MethodName Signature | FUNC Receiver MethodName Signature FunctionBody
+Receiver         : Parameters
+MethodName       : ID
+Block : LBRACE StatementList RBRACE
+StatementList : StatementList1
+StatementList1 : StatementList1 Statement SEMICOLON | "empty"
+Statement   : Declaration | LabeledStmt | SimpleStmt | GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt
+Statement   : FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt | DeferStmt
+Declaration : ConstDecl | TypeDecl | VarDecl
+LabeledStmt : Label COLON Statement
+Label       : ID
+SimpleStmt  : EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl
+EmptyStmt   :
+ExpressionStmt : Expression
+SendStmt : Channel ARROW Expression
+Channel  : Expression
+IncDecStmt : Expression IncDecStmt_1
+IncDecStmt_1 : INC | DEC
+Assignment : ExpressionList assign_op ExpressionList
+assign_op : assign_op_1 ASSIGN
+assign_op_1 : add_op | mul_op | "Empty"
+ShortVarDecl : IdentifierList DEFINE ExpressionList
+GoStmt : GO Expression
+ReturnStmt : RETURN ReturnStmt_1
+ReturnStmt_1 : ExpressionList | "Empty"
+BreakStmt : BREAK BreakStmt_1
+BreakStmt_1 : Label | "Empty"
+ContinueStmt : CONTINUE ContinueStmt_1
+ContinueStmt_1 : Label | "Empty"
+GotoStmt : GOTO Label
+FallthroughStmt : FALLTHROUGH
+IfStmt : IF IfStmt_1 Expression Block IfStmt_2
+IfStmt_1 : SimpleStmt SEMICOLON | "Empty"
+IfStmt_2 : ELSE IfStmt_2_1 | "Empty"
+IfStmt_2_1 : IfStmt | Block
+SwitchStmt : ExprSwitchStmt | TypeSwitchStmt
+ExprSwitchStmt : SWITCH ExprSwitchStmt_1 ExprSwitchStmt_2 LBRACE ExprSwitchStmt_3 RBRACE
+ExprSwitchStmt_1 : SimpleStmt SEMICOLON | "Empty"
+ExprSwitchStmt_2 : Expression | "Empty"
+ExprSwitchStmt_3 : ExprSwitchStmt_3 ExprCaseClause | "Empty"
+ExprCaseClause : ExprSwitchCase COLON StatementList
+ExprSwitchCase : CASE ExpressionList | DEFAULT
+TypeSwitchStmt  : SWITCH TypeSwitchStmt_1 TypeSwitchGuard LBRACE TypeSwitchStmt_2 RBRACE
+TypeSwitchStmt_1 : SimpleStmt SEMICOLON | "Empty"
+TypeSwitchStmt_2 : TypeSwitchStmt_2 TypeCaseClause | "Empty"
+TypeSwitchGuard : TypeSwitchGuard_1 PrimaryExpr PERIOD LPAREN TYPE RPAREN
+TypeSwitchGuard_1 : ID DEFINE | "Empty"
+TypeCaseClause  : TypeSwitchCase COLON StatementList
+TypeSwitchCase  : CASE TypeList | DEFAULT
+TypeList        : Type TypeList_1
+TypeList_1 : TypeList_1 COMMA Type | "Empty"
+SelectStmt : SELECT LBRACE SelectStmt_1 RBRACE
+SelectStmt_1 : SelectStmt_1 CommClause | "Empty"
+CommClause : CommCase COLON StatementList
+CommCase   : CASE CommCase_1 | DEFAULT
+CommCase_1 : SendStmt | RecvStmt
+RecvStmt   : RecvStmt_1 RecvExpr
+RecvStmt_1 : ExpressionList ASSIGN | IdentifierList DEFINE | "Empty"
+RecvExpr   : Expression
+ForStmt : FOR ForStmt_1 Block
+ForStmt_1 : Condition | ForClause | RangeClause | "Empty"
+Condition : Expression
+ForClause : ForClause_1 SEMICOLON ForClause_2 SEMICOLON ForClause_3
+ForClause_1 : InitStmt | "Empty"
+ForClause_2 : Condition | "Empty"
+ForClause_3 : PostStmt | "Empty"
+InitStmt : SimpleStmt
+PostStmt : SimpleStmt
+RangeClause : RangeClause_1 RANGE Expression
+RangeClause_1 : ExpressionList ASSIGN | IdentifierList DEFINE | "Empty"
+DeferStmt : DEFER Expression
+TopLevelDecl  : Declaration | FunctionDecl | MethodDecl
