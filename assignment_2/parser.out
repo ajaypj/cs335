@@ -1,0 +1,390 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    SUB_ASSIGN
+    CONST
+    FUNC
+    DEFAULT
+    SHR_ASSIGN
+    CHAN
+    LBRACK
+    LOR
+    VAR
+    REM
+    DEC
+    COM
+    SELECT
+    NEQ
+    CASE
+    DEFER
+    GEQ
+    LAND
+    SEMICOLON
+    RANGE
+    FALLTHROUGH
+    REM_ASSIGN
+    SWITCH
+    AND_NOT
+    AND_ASSIGN
+    COLON
+    AND_NOT_ASSIGN
+    ELLIPSIS
+    STRING
+    ASSIGN
+    DEFINE
+    LSS
+    SHR
+    XOR
+    GOTO
+    FOR
+    PACKAGE
+    QUO_ASSIGN
+    IMAG
+    RBRACK
+    PERIOD
+    RBRACE
+    ELSE
+    NOT
+    EQL
+    ARROW
+    IMPORT
+    GO
+    SHL_ASSIGN
+    SHL
+    ID
+    IF
+    AND
+    MAP
+    RETURN
+    LBRACE
+    STRUCT
+    XOR_ASSIGN
+    FLOAT
+    OR_ASSIGN
+    GTR
+    ADD_ASSIGN
+    BREAK
+    LEQ
+    CONTINUE
+    MUL_ASSIGN
+    INTERFACE
+    COMMA
+    TYPE
+    OR
+    INC
+
+Grammar
+
+Rule 0     S' -> expression
+Rule 1     expression -> expression ADD term
+Rule 2     expression -> expression SUB term
+Rule 3     expression -> term
+Rule 4     term -> term MUL factor
+Rule 5     term -> term QUO factor
+Rule 6     term -> factor
+Rule 7     factor -> INT
+Rule 8     factor -> LPAREN expression RPAREN
+
+Terminals, with rules where they appear
+
+ADD                  : 1
+ADD_ASSIGN           : 
+AND                  : 
+AND_ASSIGN           : 
+AND_NOT              : 
+AND_NOT_ASSIGN       : 
+ARROW                : 
+ASSIGN               : 
+BREAK                : 
+CASE                 : 
+CHAN                 : 
+COLON                : 
+COM                  : 
+COMMA                : 
+CONST                : 
+CONTINUE             : 
+DEC                  : 
+DEFAULT              : 
+DEFER                : 
+DEFINE               : 
+ELLIPSIS             : 
+ELSE                 : 
+EQL                  : 
+FALLTHROUGH          : 
+FLOAT                : 
+FOR                  : 
+FUNC                 : 
+GEQ                  : 
+GO                   : 
+GOTO                 : 
+GTR                  : 
+ID                   : 
+IF                   : 
+IMAG                 : 
+IMPORT               : 
+INC                  : 
+INT                  : 7
+INTERFACE            : 
+LAND                 : 
+LBRACE               : 
+LBRACK               : 
+LEQ                  : 
+LOR                  : 
+LPAREN               : 8
+LSS                  : 
+MAP                  : 
+MUL                  : 4
+MUL_ASSIGN           : 
+NEQ                  : 
+NOT                  : 
+OR                   : 
+OR_ASSIGN            : 
+PACKAGE              : 
+PERIOD               : 
+QUO                  : 5
+QUO_ASSIGN           : 
+RANGE                : 
+RBRACE               : 
+RBRACK               : 
+REM                  : 
+REM_ASSIGN           : 
+RETURN               : 
+RPAREN               : 8
+SELECT               : 
+SEMICOLON            : 
+SHL                  : 
+SHL_ASSIGN           : 
+SHR                  : 
+SHR_ASSIGN           : 
+STRING               : 
+STRUCT               : 
+SUB                  : 2
+SUB_ASSIGN           : 
+SWITCH               : 
+TYPE                 : 
+VAR                  : 
+XOR                  : 
+XOR_ASSIGN           : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+expression           : 1 2 8 0
+factor               : 4 5 6
+term                 : 1 2 3 4 5
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . expression
+    (1) expression -> . expression ADD term
+    (2) expression -> . expression SUB term
+    (3) expression -> . term
+    (4) term -> . term MUL factor
+    (5) term -> . term QUO factor
+    (6) term -> . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    term                           shift and go to state 1
+    expression                     shift and go to state 5
+    factor                         shift and go to state 4
+
+state 1
+
+    (3) expression -> term .
+    (4) term -> term . MUL factor
+    (5) term -> term . QUO factor
+
+    RPAREN          reduce using rule 3 (expression -> term .)
+    ADD             reduce using rule 3 (expression -> term .)
+    SUB             reduce using rule 3 (expression -> term .)
+    $end            reduce using rule 3 (expression -> term .)
+    MUL             shift and go to state 6
+    QUO             shift and go to state 7
+
+
+state 2
+
+    (7) factor -> INT .
+
+    MUL             reduce using rule 7 (factor -> INT .)
+    QUO             reduce using rule 7 (factor -> INT .)
+    RPAREN          reduce using rule 7 (factor -> INT .)
+    ADD             reduce using rule 7 (factor -> INT .)
+    SUB             reduce using rule 7 (factor -> INT .)
+    $end            reduce using rule 7 (factor -> INT .)
+
+
+state 3
+
+    (8) factor -> LPAREN . expression RPAREN
+    (1) expression -> . expression ADD term
+    (2) expression -> . expression SUB term
+    (3) expression -> . term
+    (4) term -> . term MUL factor
+    (5) term -> . term QUO factor
+    (6) term -> . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    term                           shift and go to state 1
+    expression                     shift and go to state 8
+    factor                         shift and go to state 4
+
+state 4
+
+    (6) term -> factor .
+
+    MUL             reduce using rule 6 (term -> factor .)
+    QUO             reduce using rule 6 (term -> factor .)
+    RPAREN          reduce using rule 6 (term -> factor .)
+    ADD             reduce using rule 6 (term -> factor .)
+    SUB             reduce using rule 6 (term -> factor .)
+    $end            reduce using rule 6 (term -> factor .)
+
+
+state 5
+
+    (0) S' -> expression .
+    (1) expression -> expression . ADD term
+    (2) expression -> expression . SUB term
+
+    ADD             shift and go to state 9
+    SUB             shift and go to state 10
+
+
+state 6
+
+    (4) term -> term MUL . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    factor                         shift and go to state 11
+
+state 7
+
+    (5) term -> term QUO . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    factor                         shift and go to state 12
+
+state 8
+
+    (8) factor -> LPAREN expression . RPAREN
+    (1) expression -> expression . ADD term
+    (2) expression -> expression . SUB term
+
+    RPAREN          shift and go to state 13
+    ADD             shift and go to state 9
+    SUB             shift and go to state 10
+
+
+state 9
+
+    (1) expression -> expression ADD . term
+    (4) term -> . term MUL factor
+    (5) term -> . term QUO factor
+    (6) term -> . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    term                           shift and go to state 14
+    factor                         shift and go to state 4
+
+state 10
+
+    (2) expression -> expression SUB . term
+    (4) term -> . term MUL factor
+    (5) term -> . term QUO factor
+    (6) term -> . factor
+    (7) factor -> . INT
+    (8) factor -> . LPAREN expression RPAREN
+
+    INT             shift and go to state 2
+    LPAREN          shift and go to state 3
+
+    term                           shift and go to state 15
+    factor                         shift and go to state 4
+
+state 11
+
+    (4) term -> term MUL factor .
+
+    MUL             reduce using rule 4 (term -> term MUL factor .)
+    QUO             reduce using rule 4 (term -> term MUL factor .)
+    RPAREN          reduce using rule 4 (term -> term MUL factor .)
+    ADD             reduce using rule 4 (term -> term MUL factor .)
+    SUB             reduce using rule 4 (term -> term MUL factor .)
+    $end            reduce using rule 4 (term -> term MUL factor .)
+
+
+state 12
+
+    (5) term -> term QUO factor .
+
+    MUL             reduce using rule 5 (term -> term QUO factor .)
+    QUO             reduce using rule 5 (term -> term QUO factor .)
+    RPAREN          reduce using rule 5 (term -> term QUO factor .)
+    ADD             reduce using rule 5 (term -> term QUO factor .)
+    SUB             reduce using rule 5 (term -> term QUO factor .)
+    $end            reduce using rule 5 (term -> term QUO factor .)
+
+
+state 13
+
+    (8) factor -> LPAREN expression RPAREN .
+
+    MUL             reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+    QUO             reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+    RPAREN          reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+    ADD             reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+    SUB             reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+    $end            reduce using rule 8 (factor -> LPAREN expression RPAREN .)
+
+
+state 14
+
+    (1) expression -> expression ADD term .
+    (4) term -> term . MUL factor
+    (5) term -> term . QUO factor
+
+    RPAREN          reduce using rule 1 (expression -> expression ADD term .)
+    ADD             reduce using rule 1 (expression -> expression ADD term .)
+    SUB             reduce using rule 1 (expression -> expression ADD term .)
+    $end            reduce using rule 1 (expression -> expression ADD term .)
+    MUL             shift and go to state 6
+    QUO             shift and go to state 7
+
+
+state 15
+
+    (2) expression -> expression SUB term .
+    (4) term -> term . MUL factor
+    (5) term -> term . QUO factor
+
+    RPAREN          reduce using rule 2 (expression -> expression SUB term .)
+    ADD             reduce using rule 2 (expression -> expression SUB term .)
+    SUB             reduce using rule 2 (expression -> expression SUB term .)
+    $end            reduce using rule 2 (expression -> expression SUB term .)
+    MUL             shift and go to state 6
+    QUO             shift and go to state 7
+
