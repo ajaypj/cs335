@@ -131,7 +131,7 @@ def t_ID(t):
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
     t.lexer.lineno += t.value.count('\n')
-    return t
+    pass
 
 ####################################### Define a rule so we can track line numbers
 def t_newline(t):
@@ -151,13 +151,6 @@ lexer = lex.lex()
 
 #######################################   PARSING PART    ###########################
 #######################################                   ########################
-# precedence = (
-#     ('left','COMMA')
-#     # ('nonassoc', 'LESSTHAN', 'GREATERTHAN'),  # Nonassociative operators
-#     # ('left', 'PLUS', 'MINUS'),
-#     # ('left', 'TIMES', 'DIVIDE'),
-#     # ('right', 'UMINUS'),            # Unary minus operator
-#  )
 ################### Bismay
 
 
@@ -176,9 +169,11 @@ def p_SourceFile2(p):
 
 def p_PackageClause(p):
     ''' PackageClause    : PACKAGE PackageName '''
+    print "PackageClause"
 
-# def p_PackageName(p):
-#     ''' PackageName      : ID '''
+def p_PackageName(p):
+    ''' PackageName      : ID '''
+    print "PackageName"
 
 def p_ImportDecl(p):
     ''' ImportDecl       : IMPORT ImportDecl1 '''
@@ -249,12 +244,16 @@ def p_TypeSpec(p):
 
 def p_AliasDecl(p):
     ''' AliasDecl        : ID ASSIGN Type '''
+    print "AliasDecl"
 
 def p_TypeDef(p):
     ''' TypeDef          : ID Type '''
+    print "TypeDef"
 
 def p_VarDecl(p):
     ''' VarDecl          : VAR VarDecl1 '''
+    print "VarDecl"
+
 
 def p_VarDecl1(p):
     ''' VarDecl1         : VarSpec
@@ -278,6 +277,7 @@ def p_FunctionDecl(p):
 
 def p_FunctionName(p):
     ''' FunctionName     : ID '''
+    print "FunctionName"
 
 def p_FunctionBody(p):
     ''' FunctionBody     : Block '''
@@ -333,6 +333,7 @@ def p_LabeledStmt(p):
 
 def p_Label(p):
     ''' Label       : ID '''
+    print "Label"
 
 def p_SimpleStmt(p):
     ''' SimpleStmt  : EmptyStmt
@@ -365,12 +366,20 @@ def p_Assignment(p):
     ''' Assignment : ExpressionList assign_op ExpressionList '''
 
 def p_assign_op(p):
-    ''' assign_op : assign_op_1 ASSIGN '''
+    ''' assign_op : ADD_ASSIGN
+                | SUB_ASSIGN
+                | MUL_ASSIGN
+                | QUO_ASSIGN
+                | REM_ASSIGN
+                | AND_ASSIGN
+                | OR_ASSIGN
+                | XOR_ASSIGN
+                | SHL_ASSIGN
+                | SHR_ASSIGN
+                | AND_NOT_ASSIGN '''
 
-def p_assign_op_1(p):
-    ''' assign_op_1 : add_op
-						  | mul_op
-						  |   '''
+
+
 
 def p_ShortVarDecl(p):
     ''' ShortVarDecl : IdentifierList DEFINE ExpressionList '''
@@ -463,6 +472,7 @@ def p_TypeSwitchGuard(p):
 def p_TypeSwitchGuard_1(p):
     ''' TypeSwitchGuard_1 : ID DEFINE
 						  |   '''
+    print "TypeSwitchGuard_1"
 
 def p_TypeCaseClause(p):
     ''' TypeCaseClause  : TypeSwitchCase COLON StatementList '''
@@ -601,9 +611,8 @@ def p_Tag(p):
 def p_IdentifierList(p):
     ''' IdentifierList : ID
                         | ID COMMA IdentifierList'''
-# def p_identifierlist_1(p):
-#     ''' identifierlist_1 :
-# 						 | identifierlist_1 COMMA ID '''
+    print "IdentifierList"
+
 def p_PointerType(p):
     ''' PointerType : MUL BaseType '''
 def p_BaseType(p):
@@ -650,6 +659,7 @@ def p_MethodSpec(p):
 
 def p_MethodName(p):
     ''' MethodName         : ID '''
+    print "MethodName"
 
 def p_InterfaceTypeName(p):
     ''' InterfaceTypeName  : TypeName '''
@@ -681,8 +691,10 @@ def p_Operand(p):
 def p_OperandName(p):
     ''' OperandName     : ID
 						| QualifiedIdent '''
+    print "OperandName"
 def p_QualifiedIdent(p):
     ''' QualifiedIdent  : ID PERIOD ID '''
+    print "QualifiedIdent"
 def p_Literal(p):
     ''' Literal         : BasicLiteral
 						| CompositeLit
@@ -719,12 +731,14 @@ def p_Key(p):
     ''' Key             : ID
 						| Expression
 						| LiteralValue '''
+    print "Key"
 def p_Element(p):
     ''' Element         : Expression
 						| LiteralValue '''
 
 def p_FunctionLit(p):
     ''' FunctionLit     : FUNC Signature FunctionBody '''
+    print "p_FunctionLit"
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr     : Operand
@@ -740,6 +754,7 @@ def p_Conversion(p):
 						| Type LPAREN Expression COMMA RPAREN '''
 def p_Selector(p):
     ''' Selector        : PERIOD ID '''
+    print "Selector"
 def p_Index(p):
     ''' Index           : LBRACK Expression RBRACK '''
 def p_Slice(p):
@@ -816,13 +831,11 @@ def p_unary_op(p):
 
 
 
-# precedence = (
-#     ('nonassoc','ID','CHAN'),
-#     ('left','RPAREN'),
-#     ('left', 'ARROW','COMMA','LPAREN'),
-# )
 
 precedence = (
+    ('nonassoc','ID','STRING','INT','FLOAT','BREAK',  'DEFAULT',  'FUNC',  'INTERFACE',  'SELECT',  'CASE',  'DEFER',  'GO',  'MAP',  'STRUCT',
+    'CHAN',  'ELSE',  'GOTO',  'PACKAGE',  'SWITCH',  'CONST',  'FALLTHROUGH',  'IF',
+    'RANGE',  'TYPE',  'CONTINUE',  'FOR',  'IMPORT',  'RETURN',  'VAR'),
     ('left', 'COMMA'),
     ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
     ('left', 'LOR'),
@@ -835,9 +848,8 @@ precedence = (
     ('left', 'SHL', 'SHR'),
     ('left', 'ADD', 'SUB'),
     ('left', 'MUL', 'QUO', 'REM'),
-    ('right', 'ADD', 'SUB', 'NOT', 'INC', 'DEC', 'AND'),
-    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK', 'ARROW', 'PERIOD', 'INC', 'DEC'),
-    ('nonassoc','ID','CHAN')
+    ('right', 'NOT', 'INC', 'DEC'),
+    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK', 'ARROW', 'PERIOD')
 )
 
 # precedence =(
@@ -870,6 +882,5 @@ data = f.read()
 f.close()
 
 
-result = parser.parse(data)
+result = parser.parse(data,debug=1)
 print (result)
-
