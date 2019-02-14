@@ -125,6 +125,7 @@ def p_Statement(p):
                             |  GoStmt
 							|  IfStmt
 							|  SelectStmt
+                            |  SwitchStmt
 							|  ForStmt '''
     func(p,"Statement")
 
@@ -187,7 +188,7 @@ def p_Signature(p):
     func(p,"Signature")
 
 def p_Result(p):
-    ''' Result         		: LPAREN TypeList RPAREN
+    ''' Result         		: Parameters
 							|  Type '''
     func(p,"Result")
 
@@ -203,7 +204,10 @@ def p_ParameterList(p):
     func(p,"ParameterList")
 
 def p_ParameterDecl(p):
-    ''' ParameterDecl  		: IdentifierList Type '''
+    ''' ParameterDecl  		: IdentifierList Type
+                            | IdentifierList ELLIPSIS Type
+                            | ELLIPSIS Type'''
+                            # | Type
     func(p,"ParameterDecl")
 
 def p_TypeList(p):
@@ -281,6 +285,35 @@ def p_EmptyExpr(p):
 def p_Empty(p):
     ''' Empty          		: '''
     func(p,"Empty")
+
+def p_SwitchStmt(p):
+    '''SwitchStmt : ExprSwitchStmt
+    '''
+    func(p,"SwitchStmt")
+
+def p_ExprSwitchStmt(p):
+    '''ExprSwitchStmt : SWITCH SimpleStmt SEMICOLON  Expression LBRACE ExprCaseClauseList RBRACE
+                 | SWITCH Expression LBRACE ExprCaseClauseList RBRACE
+    '''
+    func(p,"ExprSwitchStmt")
+
+def p_ExprCaseClauseList(p):
+    '''ExprCaseClauseList :
+                 | ExprCaseClauseList ExprCaseClause
+    '''
+    func(p,"ExprCaseClauseList")
+
+def p_ExprCaseClause(p):
+    '''ExprCaseClause : ExprSwitchCase COLON StatementList
+    '''
+    func(p,"ExprCaseClause")
+
+def p_ExprSwitchCase(p):
+    '''ExprSwitchCase : CASE ExpressionList
+                 | DEFAULT
+                 | CASE Expression
+    '''
+    func(p,"ExprSwitchCase")
 
 # def p_ForStmt(p):
 #     ''' ForStmt        :   FOR OPENB SimpleStmt SEMICOLON BrkBlk ExpressionStmt SEMICOLON SimpleStmt Block BrkBlkEnd CLOSEB

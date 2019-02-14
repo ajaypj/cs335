@@ -32,3 +32,7 @@ CHAN shows lot of error(reduce reduce)
 20
 21
 22
+
+Adding type to ParameterDecl adds rr conflict
+
+Added switch case
