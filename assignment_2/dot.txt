@@ -1,445 +1,419 @@
 digraph b {
 	1 [label="PackageClause"]
-	2 [label="package"]
+	2 [label="main"]
 	2 -> 1
-	3 [label="main"]
-	3 -> 1
+	3 [label="ImportDecl"]
+	4 [label="fmt"]
+	4 -> 3
+	5 [label="ImportDeclList"]
+	3 -> 5
+	6 [label=";"]
+	6 -> 5
 	{
 		rank=same;
-		2->3[style=invis]
+		3->6[style=invis]
 	}
-	4 [label="ImportDecl"]
-	5 [label="import"]
-	5 -> 4
-	6 [label="fmt"]
-	6 -> 4
+	7 [label="OPENB"]
+	8 [label="Parameters"]
+	9 [label="("]
+	9 -> 8
+	10 [label=")"]
+	10 -> 8
 	{
 		rank=same;
-		5->6[style=invis]
+		9->10[style=invis]
 	}
-	7 [label="ImportDeclList"]
-	4 -> 7
-	8 [label=";"]
-	8 -> 7
+	11 [label="OPENB"]
+	12 [label="IdentifierList"]
+	13 [label="i"]
+	13 -> 12
+	14 [label=","]
+	14 -> 12
+	15 [label="j"]
+	15 -> 12
 	{
 		rank=same;
-		4->8[style=invis]
+		13->14->15[style=invis]
 	}
-	9 [label="OPENB"]
-	10 [label="Parameters"]
-	11 [label="("]
-	11 -> 10
-	12 [label=")"]
-	12 -> 10
+	16 [label="IdentifierList"]
+	12 -> 16
+	17 [label=","]
+	17 -> 16
+	18 [label="k"]
+	18 -> 16
 	{
 		rank=same;
-		11->12[style=invis]
+		12->17->18[style=invis]
 	}
-	13 [label="OPENB"]
-	14 [label="IdentifierList"]
-	15 [label="i"]
-	15 -> 14
-	16 [label=","]
-	16 -> 14
-	17 [label="j"]
-	17 -> 14
+	19 [label="IdentifierList"]
+	16 -> 19
+	20 [label=","]
+	20 -> 19
+	21 [label="res"]
+	21 -> 19
 	{
 		rank=same;
-		15->16->17[style=invis]
+		16->20->21[style=invis]
 	}
-	18 [label="IdentifierList"]
-	14 -> 18
-	19 [label=","]
-	19 -> 18
-	20 [label="k"]
-	20 -> 18
+	22 [label="VarSpec"]
+	19 -> 22
+	23 [label="int"]
+	23 -> 22
 	{
 		rank=same;
-		14->19->20[style=invis]
+		19->23[style=invis]
 	}
-	21 [label="IdentifierList"]
-	18 -> 21
-	22 [label=","]
-	22 -> 21
-	23 [label="res"]
-	23 -> 21
+	24 [label="VarDecl"]
+	22 -> 24
+	25 [label="StatementList"]
+	24 -> 25
+	26 [label=";"]
+	26 -> 25
 	{
 		rank=same;
-		18->22->23[style=invis]
+		24->26[style=invis]
 	}
-	24 [label="VarSpec"]
-	21 -> 24
-	25 [label="int"]
-	25 -> 24
+	27 [label="IdentifierList"]
+	28 [label="res"]
+	28 -> 27
+	29 [label=","]
+	29 -> 27
+	30 [label="i"]
+	30 -> 27
 	{
 		rank=same;
-		21->25[style=invis]
+		28->29->30[style=invis]
 	}
-	26 [label="VarDecl"]
-	27 [label="var"]
-	27 -> 26
-	24 -> 26
+	31 [label="ExpressionList"]
+	32 [label="0"]
+	32 -> 31
+	33 [label=","]
+	33 -> 31
+	34 [label="1"]
+	34 -> 31
 	{
 		rank=same;
-		27->24[style=invis]
+		32->33->34[style=invis]
 	}
-	28 [label="StatementList"]
-	26 -> 28
-	29 [label=";"]
-	29 -> 28
+	35 [label="ShortVarDecl"]
+	27 -> 35
+	36 [label="="]
+	36 -> 35
+	31 -> 35
 	{
 		rank=same;
-		26->29[style=invis]
+		27->36->31[style=invis]
 	}
-	30 [label="IdentifierList"]
-	31 [label="res"]
-	31 -> 30
-	32 [label=","]
-	32 -> 30
-	33 [label="i"]
-	33 -> 30
+	37 [label="Expression3"]
+	38 [label="i"]
+	38 -> 37
+	39 [label="<"]
+	39 -> 37
+	40 [label="10"]
+	40 -> 37
 	{
 		rank=same;
-		31->32->33[style=invis]
+		38->39->40[style=invis]
 	}
-	34 [label="ExpressionList"]
-	35 [label="0"]
-	35 -> 34
-	36 [label=","]
-	36 -> 34
-	37 [label="1"]
-	37 -> 34
+	41 [label="IncDecStmt"]
+	42 [label="i"]
+	42 -> 41
+	43 [label="++"]
+	43 -> 41
 	{
 		rank=same;
-		35->36->37[style=invis]
+		42->43[style=invis]
 	}
-	38 [label="ShortVarDecl"]
-	30 -> 38
-	39 [label="="]
-	39 -> 38
-	34 -> 38
-	{
-		rank=same;
-		30->39->34[style=invis]
-	}
-	40 [label="Expression3"]
-	41 [label="i"]
-	41 -> 40
-	42 [label="<"]
-	42 -> 40
-	43 [label="10"]
-	43 -> 40
-	{
-		rank=same;
-		41->42->43[style=invis]
-	}
-	44 [label="IncDecStmt"]
-	45 [label="i"]
+	44 [label="ForClause"]
+	35 -> 44
+	45 [label=";"]
 	45 -> 44
-	46 [label="++"]
+	37 -> 44
+	46 [label=";"]
 	46 -> 44
+	41 -> 44
 	{
 		rank=same;
-		45->46[style=invis]
+		35->45->37->46->41[style=invis]
 	}
-	47 [label="ForClause"]
-	38 -> 47
-	48 [label=";"]
-	48 -> 47
-	40 -> 47
-	49 [label=";"]
-	49 -> 47
-	44 -> 47
+	47 [label="OPENB"]
+	48 [label="ShortVarDecl"]
+	49 [label="j"]
+	49 -> 48
+	50 [label="="]
+	50 -> 48
+	51 [label="0"]
+	51 -> 48
 	{
 		rank=same;
-		38->48->40->49->44[style=invis]
+		49->50->51[style=invis]
 	}
-	50 [label="OPENB"]
-	51 [label="ShortVarDecl"]
-	52 [label="j"]
-	52 -> 51
-	53 [label="="]
-	53 -> 51
-	54 [label="0"]
-	54 -> 51
+	52 [label="Expression3"]
+	53 [label="j"]
+	53 -> 52
+	54 [label="<"]
+	54 -> 52
+	55 [label="10"]
+	55 -> 52
 	{
 		rank=same;
-		52->53->54[style=invis]
+		53->54->55[style=invis]
 	}
-	55 [label="Expression3"]
-	56 [label="j"]
-	56 -> 55
-	57 [label="<"]
-	57 -> 55
-	58 [label="10"]
-	58 -> 55
+	56 [label="IncDecStmt"]
+	57 [label="j"]
+	57 -> 56
+	58 [label="++"]
+	58 -> 56
 	{
 		rank=same;
-		56->57->58[style=invis]
+		57->58[style=invis]
 	}
-	59 [label="IncDecStmt"]
-	60 [label="j"]
+	59 [label="ForClause"]
+	48 -> 59
+	60 [label=";"]
 	60 -> 59
-	61 [label="++"]
+	52 -> 59
+	61 [label=";"]
 	61 -> 59
+	56 -> 59
 	{
 		rank=same;
-		60->61[style=invis]
+		48->60->52->61->56[style=invis]
 	}
-	62 [label="ForClause"]
-	51 -> 62
-	63 [label=";"]
-	63 -> 62
-	55 -> 62
-	64 [label=";"]
-	64 -> 62
-	59 -> 62
+	62 [label="OPENB"]
+	63 [label="ShortVarDecl"]
+	64 [label="k"]
+	64 -> 63
+	65 [label="="]
+	65 -> 63
+	66 [label="0"]
+	66 -> 63
 	{
 		rank=same;
-		51->63->55->64->59[style=invis]
+		64->65->66[style=invis]
 	}
-	65 [label="OPENB"]
-	66 [label="ShortVarDecl"]
-	67 [label="k"]
-	67 -> 66
-	68 [label="="]
-	68 -> 66
-	69 [label="0"]
-	69 -> 66
+	67 [label="Expression3"]
+	68 [label="k"]
+	68 -> 67
+	69 [label="<"]
+	69 -> 67
+	70 [label="10"]
+	70 -> 67
 	{
 		rank=same;
-		67->68->69[style=invis]
+		68->69->70[style=invis]
 	}
-	70 [label="Expression3"]
-	71 [label="k"]
-	71 -> 70
-	72 [label="<"]
-	72 -> 70
-	73 [label="10"]
-	73 -> 70
+	71 [label="IncDecStmt"]
+	72 [label="k"]
+	72 -> 71
+	73 [label="++"]
+	73 -> 71
 	{
 		rank=same;
-		71->72->73[style=invis]
+		72->73[style=invis]
 	}
-	74 [label="IncDecStmt"]
-	75 [label="k"]
+	74 [label="ForClause"]
+	63 -> 74
+	75 [label=";"]
 	75 -> 74
-	76 [label="++"]
+	67 -> 74
+	76 [label=";"]
 	76 -> 74
+	71 -> 74
 	{
 		rank=same;
-		75->76[style=invis]
+		63->75->67->76->71[style=invis]
 	}
-	77 [label="ForClause"]
-	66 -> 77
-	78 [label=";"]
-	78 -> 77
-	70 -> 77
-	79 [label=";"]
-	79 -> 77
-	74 -> 77
+	77 [label="OPENB"]
+	78 [label="Expression"]
+	79 [label="res"]
+	79 -> 78
+	80 [label="+="]
+	80 -> 78
+	81 [label="1"]
+	81 -> 78
 	{
 		rank=same;
-		66->78->70->79->74[style=invis]
+		79->80->81[style=invis]
 	}
-	80 [label="OPENB"]
-	81 [label="Expression"]
-	82 [label="res"]
-	82 -> 81
-	83 [label="+="]
-	83 -> 81
-	84 [label="1"]
-	84 -> 81
+	82 [label="StatementList"]
+	78 -> 82
+	83 [label=";"]
+	83 -> 82
 	{
 		rank=same;
-		82->83->84[style=invis]
+		78->83[style=invis]
 	}
-	85 [label="StatementList"]
-	81 -> 85
-	86 [label=";"]
+	84 [label="CLOSEB"]
+	85 [label="Block"]
+	86 [label="{"]
 	86 -> 85
+	77 -> 85
+	82 -> 85
+	84 -> 85
+	87 [label="}"]
+	87 -> 85
 	{
 		rank=same;
-		81->86[style=invis]
+		86->77->82->84->87[style=invis]
 	}
-	87 [label="CLOSEB"]
-	88 [label="Block"]
-	89 [label="{"]
-	89 -> 88
-	80 -> 88
+	88 [label="ForStmt"]
+	74 -> 88
 	85 -> 88
-	87 -> 88
-	90 [label="}"]
-	90 -> 88
 	{
 		rank=same;
-		89->80->85->87->90[style=invis]
+		74->85[style=invis]
 	}
-	91 [label="ForStmt"]
-	92 [label="for"]
-	92 -> 91
-	77 -> 91
-	88 -> 91
+	89 [label="StatementList"]
+	88 -> 89
+	90 [label=";"]
+	90 -> 89
 	{
 		rank=same;
-		92->77->88[style=invis]
+		88->90[style=invis]
 	}
-	93 [label="StatementList"]
-	91 -> 93
-	94 [label=";"]
-	94 -> 93
+	91 [label="CLOSEB"]
+	92 [label="Block"]
+	93 [label="{"]
+	93 -> 92
+	62 -> 92
+	89 -> 92
+	91 -> 92
+	94 [label="}"]
+	94 -> 92
 	{
 		rank=same;
-		91->94[style=invis]
+		93->62->89->91->94[style=invis]
 	}
-	95 [label="CLOSEB"]
-	96 [label="Block"]
-	97 [label="{"]
-	97 -> 96
-	65 -> 96
-	93 -> 96
+	95 [label="ForStmt"]
+	59 -> 95
+	92 -> 95
+	{
+		rank=same;
+		59->92[style=invis]
+	}
+	96 [label="StatementList"]
 	95 -> 96
-	98 [label="}"]
-	98 -> 96
+	97 [label=";"]
+	97 -> 96
 	{
 		rank=same;
-		97->65->93->95->98[style=invis]
+		95->97[style=invis]
 	}
-	99 [label="ForStmt"]
-	100 [label="for"]
+	98 [label="CLOSEB"]
+	99 [label="Block"]
+	100 [label="{"]
 	100 -> 99
-	62 -> 99
+	47 -> 99
 	96 -> 99
+	98 -> 99
+	101 [label="}"]
+	101 -> 99
 	{
 		rank=same;
-		100->62->96[style=invis]
+		100->47->96->98->101[style=invis]
 	}
-	101 [label="StatementList"]
-	99 -> 101
-	102 [label=";"]
-	102 -> 101
+	102 [label="ForStmt"]
+	44 -> 102
+	99 -> 102
 	{
 		rank=same;
-		99->102[style=invis]
+		44->99[style=invis]
 	}
-	103 [label="CLOSEB"]
-	104 [label="Block"]
-	105 [label="{"]
-	105 -> 104
-	50 -> 104
-	101 -> 104
-	103 -> 104
-	106 [label="}"]
-	106 -> 104
+	103 [label="StatementList"]
+	25 -> 103
+	102 -> 103
+	104 [label=";"]
+	104 -> 103
 	{
 		rank=same;
-		105->50->101->103->106[style=invis]
+		25->102->104[style=invis]
 	}
-	107 [label="ForStmt"]
-	108 [label="for"]
-	108 -> 107
-	47 -> 107
-	104 -> 107
+	105 [label="Selector"]
+	106 [label="."]
+	106 -> 105
+	107 [label="Println"]
+	107 -> 105
 	{
 		rank=same;
-		108->47->104[style=invis]
+		106->107[style=invis]
 	}
-	109 [label="StatementList"]
-	28 -> 109
-	107 -> 109
-	110 [label=";"]
-	110 -> 109
+	108 [label="PrimaryExpr"]
+	109 [label="fmt"]
+	109 -> 108
+	105 -> 108
 	{
 		rank=same;
-		28->107->110[style=invis]
+		109->105[style=invis]
 	}
-	111 [label="Selector"]
-	112 [label="."]
-	112 -> 111
-	113 [label="Println"]
-	113 -> 111
+	110 [label="Arguments"]
+	111 [label="("]
+	111 -> 110
+	112 [label="i"]
+	112 -> 110
+	113 [label=")"]
+	113 -> 110
 	{
 		rank=same;
-		112->113[style=invis]
+		111->112->113[style=invis]
 	}
 	114 [label="PrimaryExpr"]
-	115 [label="fmt"]
-	115 -> 114
-	111 -> 114
+	108 -> 114
+	110 -> 114
 	{
 		rank=same;
-		115->111[style=invis]
+		108->110[style=invis]
 	}
-	116 [label="Arguments"]
-	117 [label="("]
-	117 -> 116
-	118 [label="i"]
-	118 -> 116
-	119 [label=")"]
-	119 -> 116
+	115 [label="StatementList"]
+	103 -> 115
+	114 -> 115
+	116 [label=";"]
+	116 -> 115
 	{
 		rank=same;
-		117->118->119[style=invis]
+		103->114->116[style=invis]
 	}
-	120 [label="PrimaryExpr"]
-	114 -> 120
-	116 -> 120
+	117 [label="CLOSEB"]
+	118 [label="Block"]
+	119 [label="{"]
+	119 -> 118
+	11 -> 118
+	115 -> 118
+	117 -> 118
+	120 [label="}"]
+	120 -> 118
 	{
 		rank=same;
-		114->116[style=invis]
+		119->11->115->117->120[style=invis]
 	}
-	121 [label="StatementList"]
-	109 -> 121
-	120 -> 121
-	122 [label=";"]
-	122 -> 121
+	121 [label="CLOSEB"]
+	122 [label="FunctionDecl"]
+	123 [label="main"]
+	123 -> 122
+	7 -> 122
+	8 -> 122
+	118 -> 122
+	121 -> 122
 	{
 		rank=same;
-		109->120->122[style=invis]
+		123->7->8->118->121[style=invis]
 	}
-	123 [label="CLOSEB"]
-	124 [label="Block"]
-	125 [label="{"]
+	124 [label="TopLevelDeclList"]
+	122 -> 124
+	125 [label=";"]
 	125 -> 124
-	13 -> 124
-	121 -> 124
-	123 -> 124
-	126 [label="}"]
-	126 -> 124
 	{
 		rank=same;
-		125->13->121->123->126[style=invis]
+		122->125[style=invis]
 	}
-	127 [label="CLOSEB"]
-	128 [label="FunctionDecl"]
-	129 [label="func"]
-	129 -> 128
-	130 [label="main"]
-	130 -> 128
-	9 -> 128
-	10 -> 128
-	124 -> 128
-	127 -> 128
+	126 [label="SourceFile"]
+	1 -> 126
+	127 [label=";"]
+	127 -> 126
+	5 -> 126
+	124 -> 126
 	{
 		rank=same;
-		129->130->9->10->124->127[style=invis]
-	}
-	131 [label="TopLevelDeclList"]
-	128 -> 131
-	132 [label=";"]
-	132 -> 131
-	{
-		rank=same;
-		128->132[style=invis]
-	}
-	133 [label="SourceFile"]
-	1 -> 133
-	134 [label=";"]
-	134 -> 133
-	7 -> 133
-	131 -> 133
-	{
-		rank=same;
-		1->134->7->131[style=invis]
+		1->127->5->124[style=invis]
 	}
 }

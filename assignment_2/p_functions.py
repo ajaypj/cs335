@@ -1,28 +1,39 @@
+keywords = ['break','default','func','interface','select','case','defer','go','map','struct',
+            'chan','else','goto','package','switch','const','fallthrough','if','range','type',
+            'continue','for','import','return','var']
+
 n=0
 def func(p,value):
     global n
     # value=str.split()
     # value=value[0]
     # print value
+    if len(p)==2:
+        if p[1] in keywords:
+            n+=1
+            p[1]=[n,p[1]]
+            print "\t",p[1][0],"[label=\""+p[1][1]+"\"]"
+        p[0]=p[1]
+        return
     s="\t\t"
+    key_no = 0
     for i in range(0,len(p)):
         # print p[i]
-        if len(p)==2:
-            p[0]=p[1]
-            continue
+        if p[i] in keywords:
+            key_no+=1
         if i==0:
             # Create a node corresponding to i=0
             n+=1
             p[i]=[n,value]
             print "\t",p[i][0],"[label=\""+p[i][1]+"\"]"
         else:
-            if isinstance(p[i],list):
+            if isinstance(p[i],list): # Non-terminal, make edge
                 print "\t",p[i][0],'->',p[0][0]
                 if i != len(p)-1:
                     s+=str(p[i][0])+"->"
                 else:
                     s+=str(p[i][0])
-            else:
+            elif p[i] not in keywords: # Terminal, make node + edge
                 n+=1
                 p[i]=[n,p[i]]
                 # print p[i][1][0]
@@ -36,12 +47,8 @@ def func(p,value):
                 else:
                     s+=str(p[i][0])
 
-    if len(p)>2:
-        print "\t{"
-        # print "[style=invis]"
-        print "\t\t",'rank=same;'
-        print s+"[style=invis]"
-        print "\t}"
+    if len(p)-key_no > 2:
+        print "\t{\n\t\trank=same;\n" + s + "[style=invis]\n\t}"
 
 
 
@@ -478,7 +485,7 @@ def p_Expression4(p):
 							|  Expression4 add_op Expression5 '''
     func(p,"Expression4")
 
-def p_Expression5(p):
+def p_mulExpr(p):
     ''' Expression5    		:  UnaryExpr
 							|  Expression5 mul_op UnaryExpr '''
     func(p,"Expression5")
