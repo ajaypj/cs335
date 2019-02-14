@@ -7,6 +7,9 @@ def func(p,value):
     s="\t\t"
     for i in range(0,len(p)):
         # print p[i]
+        if len(p)==2:
+            p[0]=p[1]
+            continue
         if i==0:
             # Create a node corresponding to i=0
             n+=1

@@ -1,7 +1,7 @@
 all:
-	python lexer.py --in tests/func.go --out out.go
+	python lexer.py --in tests/loop.go --out out.go
 	python parser.py --in out.go > dot.txt
-	dot -Tpng dot.txt > new.png
+	dot -Tps dot.txt > ast.ps
 clean:
-	rm new.png
+	rm *.ps
 	rm out.go

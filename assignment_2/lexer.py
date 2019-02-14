@@ -170,7 +170,7 @@ while True:
         for i in xrange(pos, len(data)):
             if data[i] == '\n':
                 newline_count+=1
-                print newline_count,prev_tok.lineno
+                # print newline_count,prev_tok.lineno
                 if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
                     f.write(";\n")
                 else:
@@ -186,7 +186,7 @@ while True:
     for i in xrange(pos, tok.lexpos):
         if data[i] == '\n':
             newline_count+=1
-            print newline_count,prev_tok.lineno
+            # print newline_count,prev_tok.lineno
             if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
                 f.write(";\n")
             else:
