@@ -194,6 +194,10 @@ while True:
         else:
             f.write(data[i])
     pos = tok.lexpos + l
+
     f.write(tok.value)
+    # if tok.type!='COM':
+    # else:
+    #     f.write(";\n")
 
 f.close()

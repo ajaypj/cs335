@@ -166,8 +166,9 @@ def p_error(p):
 
 precedence = (
     ('nonassoc','ID','STRING','INT','FLOAT','IMAG'),
-    ('left', 'COMMA'),
+    ('left', 'COMMA', ),
     ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
+    ('left','LBRACE','RBRACE' ),
     ('left', 'LOR'),
     ('left', 'LAND'),
     ('left', 'OR'),
@@ -179,7 +180,7 @@ precedence = (
     ('left', 'ADD', 'SUB'),
     ('left', 'MUL', 'QUO', 'REM'),
     ('right', 'NOT', 'INC', 'DEC'),
-    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK', 'ARROW', 'PERIOD'),
+    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK','ARROW', 'PERIOD'),
     ('nonassoc','BREAK',  'DEFAULT',  'FUNC',
      'INTERFACE', 'SELECT',  'CASE',  'DEFER',  'GO',  'MAP',  'STRUCT',
      'CHAN',  'ELSE',  'GOTO',  'PACKAGE',  'SWITCH',  'CONST',  'FALLTHROUGH',
@@ -206,6 +207,6 @@ data = f.read()
 f.close()
 
 print "digraph b {"
-result = parser.parse(data,debug=0)
+result = parser.parse(data,debug=1)
 print "}"
 # print (result)

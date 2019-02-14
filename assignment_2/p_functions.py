@@ -122,6 +122,7 @@ def p_Statement(p):
 							|  ContinueStmt
 							|  GotoStmt
 							|  Block
+                            |  GoStmt
 							|  IfStmt
 							|  SelectStmt
 							|  ForStmt '''
@@ -147,13 +148,17 @@ def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
     func(p,"ExpressionStmt")
 
+def p_GoStmt(p):
+    '''GoStmt               : GO Expression'''
+    func(p,"GoStmt")
+
 def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
 							|  Expression DEC '''
     func(p,"IncDecStmt")
 
 def p_ShortVarDecl(p):
-    ''' ShortVarDecl   		: IdentifierList ASSIGN ExpressionList '''
+    ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
     func(p,"ShortVarDecl")
 
 def p_VarDecl(p):
@@ -212,7 +217,8 @@ def p_IdentifierList(p):
     func(p,"IdentifierList")
 
 def p_MethodDecl(p):
-    ''' MethodDecl     		: FUNC Receiver ID Signature '''
+    ''' MethodDecl     		: FUNC Receiver ID Signature
+                            | FUNC Receiver ID Signature Block'''
     func(p,"MethodDecl")
 
 def p_Receiver(p):
@@ -402,12 +408,14 @@ def p_ArrayType(p):
 
 def p_Operand(p):
     ''' Operand        		: Literal
+                            | ID LiteralValue
 							|  ID
 							|  LPAREN Expression RPAREN '''
     func(p,"Operand")
 
 def p_Literal(p):
     ''' Literal        		: BasicLit
+                            | FunctionLit
 							|  CompositeLit '''
     func(p,"Literal")
 
@@ -417,6 +425,10 @@ def p_BasicLit(p):
 							|  STRING
 							| IMAG '''
     func(p,"BasicLit")
+
+def p_FunctionLit(p):
+    "FunctionLit            : FUNC Signature Block"
+    func(p,"FunctionLit")
 
 def p_CompositeLit(p):
     ''' CompositeLit   		: LiteralType LiteralValue '''
@@ -428,16 +440,32 @@ def p_LiteralType(p):
 							|  PointerType
 							|  LBRACK ELLIPSIS RBRACK Operand
 							|  SliceType
+                            |  InterfaceType
 							|  MapType '''
+                            # |  ChannelType
     func(p,"LiteralType")
+
+# def p_ChannelType(p):
+#     '''ChannelType         : CHAN Type
+#                             | CHAN ARROW Type
+#                             | ARROW CHAN Type'''
+#     func(p,"ChannelType")
+#
+def p_InterfaceType(p):
+    '''InterfaceType : INTERFACE LBRACE RBRACE
+                  | INTERFACE LBRACE ID Signature SEMICOLON RBRACE
+                  | INTERFACE LBRACE ID SEMICOLON RBRACE
+                  | INTERFACE LBRACE ID PERIOD ID SEMICOLON RBRACE'''
+    func(p,"InterfaceType")
 
 def p_LiteralValue(p):
     ''' LiteralValue   		: LBRACE RBRACE
-							|  SEMICOLON RBRACE
 							|  LBRACE ElementList RBRACE
-							|  SEMICOLON ElementList RBRACE
 							|  LBRACE ElementList COMMA RBRACE
-							|  SEMICOLON ElementList COMMA RBRACE '''
+                            |  SEMICOLON RBRACE
+                            |  SEMICOLON ElementList COMMA RBRACE
+                            |  SEMICOLON ElementList RBRACE
+                            '''
     func(p,"LiteralValue")
 
 def p_ElementList(p):
@@ -548,6 +576,7 @@ def p_assign_op(p):
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand
+                            | ID PERIOD ID
 							|  PrimaryExpr Selector
 							|  PrimaryExpr Index
 							|  PrimaryExpr Slice

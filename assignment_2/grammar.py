@@ -15,9 +15,9 @@ Statement      		: Declaration |  LabeledStmt |  SimpleStmt |  ReturnStmt |  Bre
 SimpleStmt     		: EmptyStmt |  ExpressionStmt | IncDecStmt | ShortVarDecl | Assignment
 Assignment     		: ExpressionList assign_op ExpressionList
 EmptyStmt      		:
-ExpressionStmt 		: Expression
+ExpressionStmt 		: Expression SEMICOLON | Expression
 IncDecStmt     		: Expression INC |  Expression DEC
-ShortVarDecl   		: IdentifierList ASSIGN ExpressionList
+ShortVarDecl   		: IdentifierList DEFINE ExpressionList
 VarDecl        		: VAR VarSpec
 VarSpec        		: IdentifierList Type |  IdentifierList Type assign_op ExpressionList |  IdentifierList assign_op ExpressionList
 Declaration    		: TypeDecl |  VarDecl
@@ -67,11 +67,13 @@ FieldDecl      		: IdentifierList Type STRING |  IdentifierList Type
 PointerType    		: MUL Type
 ArrayType      		: LBRACK Expression RBRACK Type
 Operand        		: Literal |  ID |  LPAREN Expression RPAREN
-Literal        		: BasicLit |  CompositeLit
+Literal        		: BasicLit |  CompositeLit | FunctionLit
+FunctionLit         : FUNC Signature Block
 BasicLit       		: INT |  FLOAT |  STRING | IMAG
 CompositeLit   		: LiteralType LiteralValue
-LiteralType    		: StructType |  ArrayType |  PointerType |  LBRACK ELLIPSIS RBRACK Operand |  SliceType |  MapType
-LiteralValue   		: LBRACE RBRACE |  SEMICOLON RBRACE |  LBRACE ElementList RBRACE |  SEMICOLON ElementList RBRACE |  LBRACE ElementList COMMA RBRACE |  SEMICOLON ElementList COMMA RBRACE
+LiteralType    		: StructType |  ArrayType |  PointerType |  LBRACK ELLIPSIS RBRACK Operand |  SliceType |  MapType | ID | InterfaceType
+LiteralValue   		: LBRACE RBRACE |  SEMICOLON RBRACE |  LBRACE ElementList RBRACE |  SEMICOLON ElementList RBRACE |  LBRACE ElementList COMMA RBRACE |  SEMICOLON ElementList COMMA RBRACE | ChannelType
+ChannelType         : CHAN Type | CHAN ARROW Type | ARROW CHAN Type 
 ElementList    		: KeyedElement |  ElementList COMMA KeyedElement
 KeyedElement   		: Element |  Key COLON Element
 Key            		: Expression |  LiteralValue

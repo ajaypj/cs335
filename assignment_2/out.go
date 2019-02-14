@@ -1,15 +1,28 @@
 package main;
 
-import "fmt";
+import (
+	"fmt";
+	"math";
+);
 
-func main(){
-	var i,j,k,res int;
-	for res,i = 0,1; i < 10; i++ {
-		for j = 0; j < 10; j++{
-			for k = 0; k < 10; k++{
-				res += 1;
-			};
-		};
-	};
-	fmt.Println(i);
+type Vertex struct {
+	X, Y float64;
+};
+
+func (v Vertex) Abs() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y);
+};
+
+func AbsFunc(v Vertex) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y);
+};
+
+func main() {
+	v := Vertex{3, 4};
+	fmt.Println(v.Abs());
+	fmt.Println(AbsFunc(v));
+
+	p := &Vertex{4, 3};
+	fmt.Println(p.Abs());
+	fmt.Println(AbsFunc(*p));
 };

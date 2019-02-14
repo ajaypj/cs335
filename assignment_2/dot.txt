@@ -2,418 +2,852 @@ digraph b {
 	1 [label="PackageClause"]
 	2 [label="main"]
 	2 -> 1
-	3 [label="ImportDecl"]
+	3 [label="ImportSpecList"]
 	4 [label="fmt"]
 	4 -> 3
-	5 [label="ImportDeclList"]
-	3 -> 5
-	6 [label=";"]
-	6 -> 5
+	5 [label=";"]
+	5 -> 3
 	{
 		rank=same;
-		3->6[style=invis]
+		4->5[style=invis]
 	}
-	7 [label="OPENB"]
-	8 [label="Parameters"]
-	9 [label="("]
-	9 -> 8
-	10 [label=")"]
-	10 -> 8
+	6 [label="ImportSpecList"]
+	3 -> 6
+	7 [label="math"]
+	7 -> 6
+	8 [label=";"]
+	8 -> 6
 	{
 		rank=same;
-		9->10[style=invis]
+		3->7->8[style=invis]
 	}
-	11 [label="OPENB"]
-	12 [label="IdentifierList"]
-	13 [label="i"]
+	9 [label="ImportDecl"]
+	10 [label="("]
+	10 -> 9
+	6 -> 9
+	11 [label=")"]
+	11 -> 9
+	{
+		rank=same;
+		10->6->11[style=invis]
+	}
+	12 [label="ImportDeclList"]
+	9 -> 12
+	13 [label=";"]
 	13 -> 12
-	14 [label=","]
-	14 -> 12
-	15 [label="j"]
-	15 -> 12
 	{
 		rank=same;
-		13->14->15[style=invis]
+		9->13[style=invis]
 	}
-	16 [label="IdentifierList"]
-	12 -> 16
-	17 [label=","]
-	17 -> 16
-	18 [label="k"]
-	18 -> 16
+	14 [label="IdentifierList"]
+	15 [label="X"]
+	15 -> 14
+	16 [label=","]
+	16 -> 14
+	17 [label="Y"]
+	17 -> 14
 	{
 		rank=same;
-		12->17->18[style=invis]
+		15->16->17[style=invis]
 	}
-	19 [label="IdentifierList"]
-	16 -> 19
-	20 [label=","]
-	20 -> 19
-	21 [label="res"]
-	21 -> 19
+	18 [label="FieldDecl"]
+	14 -> 18
+	19 [label="float64"]
+	19 -> 18
 	{
 		rank=same;
-		16->20->21[style=invis]
+		14->19[style=invis]
 	}
-	22 [label="VarSpec"]
-	19 -> 22
-	23 [label="int"]
+	20 [label="FieldDeclList"]
+	18 -> 20
+	21 [label=";"]
+	21 -> 20
+	{
+		rank=same;
+		18->21[style=invis]
+	}
+	22 [label="StructType"]
+	23 [label="{"]
 	23 -> 22
+	20 -> 22
+	24 [label="}"]
+	24 -> 22
 	{
 		rank=same;
-		19->23[style=invis]
+		23->20->24[style=invis]
 	}
-	24 [label="VarDecl"]
-	22 -> 24
-	25 [label="StatementList"]
-	24 -> 25
-	26 [label=";"]
+	25 [label="TypeSpec"]
+	26 [label="Vertex"]
 	26 -> 25
+	22 -> 25
 	{
 		rank=same;
-		24->26[style=invis]
+		26->22[style=invis]
 	}
-	27 [label="IdentifierList"]
-	28 [label="res"]
-	28 -> 27
-	29 [label=","]
-	29 -> 27
-	30 [label="i"]
-	30 -> 27
+	27 [label="TypeDecl"]
+	25 -> 27
+	28 [label="TopLevelDeclList"]
+	27 -> 28
+	29 [label=";"]
+	29 -> 28
 	{
 		rank=same;
-		28->29->30[style=invis]
+		27->29[style=invis]
 	}
-	31 [label="ExpressionList"]
-	32 [label="0"]
-	32 -> 31
-	33 [label=","]
-	33 -> 31
-	34 [label="1"]
-	34 -> 31
+	30 [label="ParameterDecl"]
+	31 [label="v"]
+	31 -> 30
+	32 [label="Vertex"]
+	32 -> 30
 	{
 		rank=same;
-		32->33->34[style=invis]
+		31->32[style=invis]
 	}
-	35 [label="ShortVarDecl"]
-	27 -> 35
-	36 [label="="]
-	36 -> 35
-	31 -> 35
+	33 [label="Parameters"]
+	34 [label="("]
+	34 -> 33
+	30 -> 33
+	35 [label=")"]
+	35 -> 33
 	{
 		rank=same;
-		27->36->31[style=invis]
+		34->30->35[style=invis]
 	}
-	37 [label="Expression3"]
-	38 [label="i"]
-	38 -> 37
-	39 [label="<"]
-	39 -> 37
-	40 [label="10"]
-	40 -> 37
+	36 [label="Parameters"]
+	37 [label="("]
+	37 -> 36
+	38 [label=")"]
+	38 -> 36
 	{
 		rank=same;
-		38->39->40[style=invis]
+		37->38[style=invis]
 	}
-	41 [label="IncDecStmt"]
-	42 [label="i"]
-	42 -> 41
-	43 [label="++"]
-	43 -> 41
+	39 [label="Signature"]
+	36 -> 39
+	40 [label="float64"]
+	40 -> 39
 	{
 		rank=same;
-		42->43[style=invis]
+		36->40[style=invis]
 	}
-	44 [label="ForClause"]
-	35 -> 44
-	45 [label=";"]
-	45 -> 44
-	37 -> 44
-	46 [label=";"]
-	46 -> 44
-	41 -> 44
+	41 [label="OPENB"]
+	42 [label="PrimaryExpr"]
+	43 [label="math"]
+	43 -> 42
+	44 [label="."]
+	44 -> 42
+	45 [label="Sqrt"]
+	45 -> 42
 	{
 		rank=same;
-		35->45->37->46->41[style=invis]
+		43->44->45[style=invis]
 	}
-	47 [label="OPENB"]
-	48 [label="ShortVarDecl"]
-	49 [label="j"]
-	49 -> 48
-	50 [label="="]
-	50 -> 48
-	51 [label="0"]
-	51 -> 48
+	46 [label="PrimaryExpr"]
+	47 [label="v"]
+	47 -> 46
+	48 [label="."]
+	48 -> 46
+	49 [label="X"]
+	49 -> 46
 	{
 		rank=same;
-		49->50->51[style=invis]
+		47->48->49[style=invis]
 	}
-	52 [label="Expression3"]
-	53 [label="j"]
-	53 -> 52
-	54 [label="<"]
-	54 -> 52
-	55 [label="10"]
-	55 -> 52
+	50 [label="PrimaryExpr"]
+	51 [label="v"]
+	51 -> 50
+	52 [label="."]
+	52 -> 50
+	53 [label="X"]
+	53 -> 50
 	{
 		rank=same;
-		53->54->55[style=invis]
+		51->52->53[style=invis]
 	}
-	56 [label="IncDecStmt"]
-	57 [label="j"]
+	54 [label="Expression5"]
+	46 -> 54
+	55 [label="*"]
+	55 -> 54
+	50 -> 54
+	{
+		rank=same;
+		46->55->50[style=invis]
+	}
+	56 [label="PrimaryExpr"]
+	57 [label="v"]
 	57 -> 56
-	58 [label="++"]
+	58 [label="."]
 	58 -> 56
+	59 [label="Y"]
+	59 -> 56
 	{
 		rank=same;
-		57->58[style=invis]
+		57->58->59[style=invis]
 	}
-	59 [label="ForClause"]
-	48 -> 59
-	60 [label=";"]
-	60 -> 59
-	52 -> 59
-	61 [label=";"]
-	61 -> 59
-	56 -> 59
+	60 [label="PrimaryExpr"]
+	61 [label="v"]
+	61 -> 60
+	62 [label="."]
+	62 -> 60
+	63 [label="Y"]
+	63 -> 60
 	{
 		rank=same;
-		48->60->52->61->56[style=invis]
+		61->62->63[style=invis]
 	}
-	62 [label="OPENB"]
-	63 [label="ShortVarDecl"]
-	64 [label="k"]
-	64 -> 63
-	65 [label="="]
-	65 -> 63
-	66 [label="0"]
-	66 -> 63
+	64 [label="Expression5"]
+	56 -> 64
+	65 [label="*"]
+	65 -> 64
+	60 -> 64
 	{
 		rank=same;
-		64->65->66[style=invis]
+		56->65->60[style=invis]
 	}
-	67 [label="Expression3"]
-	68 [label="k"]
-	68 -> 67
-	69 [label="<"]
-	69 -> 67
-	70 [label="10"]
-	70 -> 67
+	66 [label="Expression4"]
+	54 -> 66
+	67 [label="+"]
+	67 -> 66
+	64 -> 66
 	{
 		rank=same;
-		68->69->70[style=invis]
+		54->67->64[style=invis]
 	}
-	71 [label="IncDecStmt"]
-	72 [label="k"]
-	72 -> 71
-	73 [label="++"]
-	73 -> 71
+	68 [label="Arguments"]
+	69 [label="("]
+	69 -> 68
+	66 -> 68
+	70 [label=")"]
+	70 -> 68
 	{
 		rank=same;
-		72->73[style=invis]
+		69->66->70[style=invis]
 	}
-	74 [label="ForClause"]
-	63 -> 74
-	75 [label=";"]
-	75 -> 74
-	67 -> 74
-	76 [label=";"]
-	76 -> 74
-	71 -> 74
+	71 [label="PrimaryExpr"]
+	42 -> 71
+	68 -> 71
 	{
 		rank=same;
-		63->75->67->76->71[style=invis]
+		42->68[style=invis]
 	}
-	77 [label="OPENB"]
-	78 [label="Expression"]
-	79 [label="res"]
-	79 -> 78
-	80 [label="+="]
-	80 -> 78
-	81 [label="1"]
-	81 -> 78
+	72 [label="ReturnStmt"]
+	71 -> 72
+	73 [label="StatementList"]
+	72 -> 73
+	74 [label=";"]
+	74 -> 73
 	{
 		rank=same;
-		79->80->81[style=invis]
+		72->74[style=invis]
 	}
-	82 [label="StatementList"]
-	78 -> 82
-	83 [label=";"]
-	83 -> 82
+	75 [label="CLOSEB"]
+	76 [label="Block"]
+	77 [label="{"]
+	77 -> 76
+	41 -> 76
+	73 -> 76
+	75 -> 76
+	78 [label="}"]
+	78 -> 76
 	{
 		rank=same;
-		78->83[style=invis]
+		77->41->73->75->78[style=invis]
 	}
-	84 [label="CLOSEB"]
-	85 [label="Block"]
-	86 [label="{"]
-	86 -> 85
-	77 -> 85
-	82 -> 85
-	84 -> 85
-	87 [label="}"]
-	87 -> 85
+	79 [label="MethodDecl"]
+	33 -> 79
+	80 [label="Abs"]
+	80 -> 79
+	39 -> 79
+	76 -> 79
 	{
 		rank=same;
-		86->77->82->84->87[style=invis]
+		33->80->39->76[style=invis]
 	}
-	88 [label="ForStmt"]
-	74 -> 88
-	85 -> 88
+	81 [label="TopLevelDeclList"]
+	28 -> 81
+	79 -> 81
+	82 [label=";"]
+	82 -> 81
 	{
 		rank=same;
-		74->85[style=invis]
+		28->79->82[style=invis]
 	}
-	89 [label="StatementList"]
-	88 -> 89
-	90 [label=";"]
-	90 -> 89
+	83 [label="OPENB"]
+	84 [label="ParameterDecl"]
+	85 [label="v"]
+	85 -> 84
+	86 [label="Vertex"]
+	86 -> 84
 	{
 		rank=same;
-		88->90[style=invis]
+		85->86[style=invis]
 	}
-	91 [label="CLOSEB"]
-	92 [label="Block"]
-	93 [label="{"]
-	93 -> 92
-	62 -> 92
-	89 -> 92
-	91 -> 92
-	94 [label="}"]
-	94 -> 92
+	87 [label="Parameters"]
+	88 [label="("]
+	88 -> 87
+	84 -> 87
+	89 [label=")"]
+	89 -> 87
 	{
 		rank=same;
-		93->62->89->91->94[style=invis]
+		88->84->89[style=invis]
 	}
-	95 [label="ForStmt"]
-	59 -> 95
-	92 -> 95
+	90 [label="Signature"]
+	87 -> 90
+	91 [label="float64"]
+	91 -> 90
 	{
 		rank=same;
-		59->92[style=invis]
+		87->91[style=invis]
 	}
-	96 [label="StatementList"]
-	95 -> 96
-	97 [label=";"]
-	97 -> 96
+	92 [label="OPENB"]
+	93 [label="PrimaryExpr"]
+	94 [label="math"]
+	94 -> 93
+	95 [label="."]
+	95 -> 93
+	96 [label="Sqrt"]
+	96 -> 93
 	{
 		rank=same;
-		95->97[style=invis]
+		94->95->96[style=invis]
 	}
-	98 [label="CLOSEB"]
-	99 [label="Block"]
-	100 [label="{"]
-	100 -> 99
-	47 -> 99
-	96 -> 99
-	98 -> 99
-	101 [label="}"]
-	101 -> 99
+	97 [label="PrimaryExpr"]
+	98 [label="v"]
+	98 -> 97
+	99 [label="."]
+	99 -> 97
+	100 [label="X"]
+	100 -> 97
 	{
 		rank=same;
-		100->47->96->98->101[style=invis]
+		98->99->100[style=invis]
 	}
-	102 [label="ForStmt"]
-	44 -> 102
-	99 -> 102
+	101 [label="PrimaryExpr"]
+	102 [label="v"]
+	102 -> 101
+	103 [label="."]
+	103 -> 101
+	104 [label="X"]
+	104 -> 101
 	{
 		rank=same;
-		44->99[style=invis]
+		102->103->104[style=invis]
 	}
-	103 [label="StatementList"]
-	25 -> 103
-	102 -> 103
-	104 [label=";"]
-	104 -> 103
-	{
-		rank=same;
-		25->102->104[style=invis]
-	}
-	105 [label="Selector"]
-	106 [label="."]
+	105 [label="Expression5"]
+	97 -> 105
+	106 [label="*"]
 	106 -> 105
-	107 [label="Println"]
-	107 -> 105
+	101 -> 105
 	{
 		rank=same;
-		106->107[style=invis]
+		97->106->101[style=invis]
 	}
-	108 [label="PrimaryExpr"]
-	109 [label="fmt"]
-	109 -> 108
-	105 -> 108
+	107 [label="PrimaryExpr"]
+	108 [label="v"]
+	108 -> 107
+	109 [label="."]
+	109 -> 107
+	110 [label="Y"]
+	110 -> 107
 	{
 		rank=same;
-		109->105[style=invis]
+		108->109->110[style=invis]
 	}
-	110 [label="Arguments"]
-	111 [label="("]
-	111 -> 110
-	112 [label="i"]
-	112 -> 110
-	113 [label=")"]
-	113 -> 110
+	111 [label="PrimaryExpr"]
+	112 [label="v"]
+	112 -> 111
+	113 [label="."]
+	113 -> 111
+	114 [label="Y"]
+	114 -> 111
 	{
 		rank=same;
-		111->112->113[style=invis]
+		112->113->114[style=invis]
 	}
-	114 [label="PrimaryExpr"]
-	108 -> 114
-	110 -> 114
-	{
-		rank=same;
-		108->110[style=invis]
-	}
-	115 [label="StatementList"]
-	103 -> 115
-	114 -> 115
-	116 [label=";"]
+	115 [label="Expression5"]
+	107 -> 115
+	116 [label="*"]
 	116 -> 115
+	111 -> 115
 	{
 		rank=same;
-		103->114->116[style=invis]
+		107->116->111[style=invis]
 	}
-	117 [label="CLOSEB"]
-	118 [label="Block"]
-	119 [label="{"]
-	119 -> 118
-	11 -> 118
-	115 -> 118
-	117 -> 118
-	120 [label="}"]
-	120 -> 118
+	117 [label="Expression4"]
+	105 -> 117
+	118 [label="+"]
+	118 -> 117
+	115 -> 117
 	{
 		rank=same;
-		119->11->115->117->120[style=invis]
+		105->118->115[style=invis]
 	}
-	121 [label="CLOSEB"]
-	122 [label="FunctionDecl"]
-	123 [label="main"]
-	123 -> 122
-	7 -> 122
-	8 -> 122
-	118 -> 122
-	121 -> 122
+	119 [label="Arguments"]
+	120 [label="("]
+	120 -> 119
+	117 -> 119
+	121 [label=")"]
+	121 -> 119
 	{
 		rank=same;
-		123->7->8->118->121[style=invis]
+		120->117->121[style=invis]
 	}
-	124 [label="TopLevelDeclList"]
-	122 -> 124
+	122 [label="PrimaryExpr"]
+	93 -> 122
+	119 -> 122
+	{
+		rank=same;
+		93->119[style=invis]
+	}
+	123 [label="ReturnStmt"]
+	122 -> 123
+	124 [label="StatementList"]
+	123 -> 124
 	125 [label=";"]
 	125 -> 124
 	{
 		rank=same;
-		122->125[style=invis]
+		123->125[style=invis]
 	}
-	126 [label="SourceFile"]
-	1 -> 126
-	127 [label=";"]
-	127 -> 126
-	5 -> 126
-	124 -> 126
+	126 [label="CLOSEB"]
+	127 [label="Block"]
+	128 [label="{"]
+	128 -> 127
+	92 -> 127
+	124 -> 127
+	126 -> 127
+	129 [label="}"]
+	129 -> 127
 	{
 		rank=same;
-		1->127->5->124[style=invis]
+		128->92->124->126->129[style=invis]
+	}
+	130 [label="CLOSEB"]
+	131 [label="FunctionDecl"]
+	132 [label="AbsFunc"]
+	132 -> 131
+	83 -> 131
+	90 -> 131
+	127 -> 131
+	130 -> 131
+	{
+		rank=same;
+		132->83->90->127->130[style=invis]
+	}
+	133 [label="TopLevelDeclList"]
+	81 -> 133
+	131 -> 133
+	134 [label=";"]
+	134 -> 133
+	{
+		rank=same;
+		81->131->134[style=invis]
+	}
+	135 [label="OPENB"]
+	136 [label="Parameters"]
+	137 [label="("]
+	137 -> 136
+	138 [label=")"]
+	138 -> 136
+	{
+		rank=same;
+		137->138[style=invis]
+	}
+	139 [label="OPENB"]
+	140 [label="ElementList"]
+	141 [label="3"]
+	141 -> 140
+	142 [label=","]
+	142 -> 140
+	143 [label="4"]
+	143 -> 140
+	{
+		rank=same;
+		141->142->143[style=invis]
+	}
+	144 [label="LiteralValue"]
+	145 [label="{"]
+	145 -> 144
+	140 -> 144
+	146 [label="}"]
+	146 -> 144
+	{
+		rank=same;
+		145->140->146[style=invis]
+	}
+	147 [label="Operand"]
+	148 [label="Vertex"]
+	148 -> 147
+	144 -> 147
+	{
+		rank=same;
+		148->144[style=invis]
+	}
+	149 [label="ShortVarDecl"]
+	150 [label="v"]
+	150 -> 149
+	151 [label=":="]
+	151 -> 149
+	147 -> 149
+	{
+		rank=same;
+		150->151->147[style=invis]
+	}
+	152 [label="StatementList"]
+	149 -> 152
+	153 [label=";"]
+	153 -> 152
+	{
+		rank=same;
+		149->153[style=invis]
+	}
+	154 [label="PrimaryExpr"]
+	155 [label="fmt"]
+	155 -> 154
+	156 [label="."]
+	156 -> 154
+	157 [label="Println"]
+	157 -> 154
+	{
+		rank=same;
+		155->156->157[style=invis]
+	}
+	158 [label="PrimaryExpr"]
+	159 [label="v"]
+	159 -> 158
+	160 [label="."]
+	160 -> 158
+	161 [label="Abs"]
+	161 -> 158
+	{
+		rank=same;
+		159->160->161[style=invis]
+	}
+	162 [label="Arguments"]
+	163 [label="("]
+	163 -> 162
+	164 [label=")"]
+	164 -> 162
+	{
+		rank=same;
+		163->164[style=invis]
+	}
+	165 [label="PrimaryExpr"]
+	158 -> 165
+	162 -> 165
+	{
+		rank=same;
+		158->162[style=invis]
+	}
+	166 [label="Arguments"]
+	167 [label="("]
+	167 -> 166
+	165 -> 166
+	168 [label=")"]
+	168 -> 166
+	{
+		rank=same;
+		167->165->168[style=invis]
+	}
+	169 [label="PrimaryExpr"]
+	154 -> 169
+	166 -> 169
+	{
+		rank=same;
+		154->166[style=invis]
+	}
+	170 [label="StatementList"]
+	152 -> 170
+	169 -> 170
+	171 [label=";"]
+	171 -> 170
+	{
+		rank=same;
+		152->169->171[style=invis]
+	}
+	172 [label="PrimaryExpr"]
+	173 [label="fmt"]
+	173 -> 172
+	174 [label="."]
+	174 -> 172
+	175 [label="Println"]
+	175 -> 172
+	{
+		rank=same;
+		173->174->175[style=invis]
+	}
+	176 [label="Arguments"]
+	177 [label="("]
+	177 -> 176
+	178 [label="v"]
+	178 -> 176
+	179 [label=")"]
+	179 -> 176
+	{
+		rank=same;
+		177->178->179[style=invis]
+	}
+	180 [label="PrimaryExpr"]
+	181 [label="AbsFunc"]
+	181 -> 180
+	176 -> 180
+	{
+		rank=same;
+		181->176[style=invis]
+	}
+	182 [label="Arguments"]
+	183 [label="("]
+	183 -> 182
+	180 -> 182
+	184 [label=")"]
+	184 -> 182
+	{
+		rank=same;
+		183->180->184[style=invis]
+	}
+	185 [label="PrimaryExpr"]
+	172 -> 185
+	182 -> 185
+	{
+		rank=same;
+		172->182[style=invis]
+	}
+	186 [label="StatementList"]
+	170 -> 186
+	185 -> 186
+	187 [label=";"]
+	187 -> 186
+	{
+		rank=same;
+		170->185->187[style=invis]
+	}
+	188 [label="ElementList"]
+	189 [label="4"]
+	189 -> 188
+	190 [label=","]
+	190 -> 188
+	191 [label="3"]
+	191 -> 188
+	{
+		rank=same;
+		189->190->191[style=invis]
+	}
+	192 [label="LiteralValue"]
+	193 [label="{"]
+	193 -> 192
+	188 -> 192
+	194 [label="}"]
+	194 -> 192
+	{
+		rank=same;
+		193->188->194[style=invis]
+	}
+	195 [label="Operand"]
+	196 [label="Vertex"]
+	196 -> 195
+	192 -> 195
+	{
+		rank=same;
+		196->192[style=invis]
+	}
+	197 [label="UnaryExpr"]
+	198 [label="&"]
+	198 -> 197
+	195 -> 197
+	{
+		rank=same;
+		198->195[style=invis]
+	}
+	199 [label="ShortVarDecl"]
+	200 [label="p"]
+	200 -> 199
+	201 [label=":="]
+	201 -> 199
+	197 -> 199
+	{
+		rank=same;
+		200->201->197[style=invis]
+	}
+	202 [label="StatementList"]
+	186 -> 202
+	199 -> 202
+	203 [label=";"]
+	203 -> 202
+	{
+		rank=same;
+		186->199->203[style=invis]
+	}
+	204 [label="PrimaryExpr"]
+	205 [label="fmt"]
+	205 -> 204
+	206 [label="."]
+	206 -> 204
+	207 [label="Println"]
+	207 -> 204
+	{
+		rank=same;
+		205->206->207[style=invis]
+	}
+	208 [label="PrimaryExpr"]
+	209 [label="p"]
+	209 -> 208
+	210 [label="."]
+	210 -> 208
+	211 [label="Abs"]
+	211 -> 208
+	{
+		rank=same;
+		209->210->211[style=invis]
+	}
+	212 [label="Arguments"]
+	213 [label="("]
+	213 -> 212
+	214 [label=")"]
+	214 -> 212
+	{
+		rank=same;
+		213->214[style=invis]
+	}
+	215 [label="PrimaryExpr"]
+	208 -> 215
+	212 -> 215
+	{
+		rank=same;
+		208->212[style=invis]
+	}
+	216 [label="Arguments"]
+	217 [label="("]
+	217 -> 216
+	215 -> 216
+	218 [label=")"]
+	218 -> 216
+	{
+		rank=same;
+		217->215->218[style=invis]
+	}
+	219 [label="PrimaryExpr"]
+	204 -> 219
+	216 -> 219
+	{
+		rank=same;
+		204->216[style=invis]
+	}
+	220 [label="StatementList"]
+	202 -> 220
+	219 -> 220
+	221 [label=";"]
+	221 -> 220
+	{
+		rank=same;
+		202->219->221[style=invis]
+	}
+	222 [label="PrimaryExpr"]
+	223 [label="fmt"]
+	223 -> 222
+	224 [label="."]
+	224 -> 222
+	225 [label="Println"]
+	225 -> 222
+	{
+		rank=same;
+		223->224->225[style=invis]
+	}
+	226 [label="UnaryExpr"]
+	227 [label="*"]
+	227 -> 226
+	228 [label="p"]
+	228 -> 226
+	{
+		rank=same;
+		227->228[style=invis]
+	}
+	229 [label="Arguments"]
+	230 [label="("]
+	230 -> 229
+	226 -> 229
+	231 [label=")"]
+	231 -> 229
+	{
+		rank=same;
+		230->226->231[style=invis]
+	}
+	232 [label="PrimaryExpr"]
+	233 [label="AbsFunc"]
+	233 -> 232
+	229 -> 232
+	{
+		rank=same;
+		233->229[style=invis]
+	}
+	234 [label="Arguments"]
+	235 [label="("]
+	235 -> 234
+	232 -> 234
+	236 [label=")"]
+	236 -> 234
+	{
+		rank=same;
+		235->232->236[style=invis]
+	}
+	237 [label="PrimaryExpr"]
+	222 -> 237
+	234 -> 237
+	{
+		rank=same;
+		222->234[style=invis]
+	}
+	238 [label="StatementList"]
+	220 -> 238
+	237 -> 238
+	239 [label=";"]
+	239 -> 238
+	{
+		rank=same;
+		220->237->239[style=invis]
+	}
+	240 [label="CLOSEB"]
+	241 [label="Block"]
+	242 [label="{"]
+	242 -> 241
+	139 -> 241
+	238 -> 241
+	240 -> 241
+	243 [label="}"]
+	243 -> 241
+	{
+		rank=same;
+		242->139->238->240->243[style=invis]
+	}
+	244 [label="CLOSEB"]
+	245 [label="FunctionDecl"]
+	246 [label="main"]
+	246 -> 245
+	135 -> 245
+	136 -> 245
+	241 -> 245
+	244 -> 245
+	{
+		rank=same;
+		246->135->136->241->244[style=invis]
+	}
+	247 [label="TopLevelDeclList"]
+	133 -> 247
+	245 -> 247
+	248 [label=";"]
+	248 -> 247
+	{
+		rank=same;
+		133->245->248[style=invis]
+	}
+	249 [label="SourceFile"]
+	1 -> 249
+	250 [label=";"]
+	250 -> 249
+	12 -> 249
+	247 -> 249
+	{
+		rank=same;
+		1->250->12->247[style=invis]
 	}
 }
