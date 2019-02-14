@@ -609,13 +609,13 @@ def p_assign_op(p):
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand
-                            | ID PERIOD ID
 							|  PrimaryExpr Selector
 							|  PrimaryExpr Index
 							|  PrimaryExpr Slice
 							|  PrimaryExpr TypeAssertion
 							|  PrimaryExpr Arguments
 							|  ID StructLiteral '''
+                            # | ID PERIOD ID
     func(p,"PrimaryExpr")
 
 def p_StructLiteral(p):

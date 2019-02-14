@@ -166,7 +166,7 @@ def p_error(p):
 
 precedence = (
     ('nonassoc','ID','STRING','INT','FLOAT','IMAG'),
-    ('left', 'COMMA', ),
+    ('left', 'COMMA' ),
     ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
     ('left','LBRACE','RBRACE' ),
     ('left', 'LOR'),
