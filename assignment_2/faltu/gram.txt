@@ -92,14 +92,10 @@ TypeCaseClause  : TypeSwitchCase COLON StatementList
 TypeSwitchCase  : CASE TypeList | DEFAULT
 TypeList        : Type TypeList_1
 TypeList_1 : TypeList_1 COMMA Type | "Empty"
-SelectStmt : SELECT LBRACE SelectStmt_1 RBRACE
-SelectStmt_1 : SelectStmt_1 CommClause | "Empty"
+SelectStmt : SELECT LBRACE  RBRACE | SELECT LBRACE CommClause RBRACE
 CommClause : CommCase COLON StatementList
-CommCase   : CASE CommCase_1 | DEFAULT
-CommCase_1 : SendStmt | RecvStmt
-RecvStmt   : RecvStmt_1 RecvExpr
-RecvStmt_1 : ExpressionList ASSIGN | IdentifierList DEFINE | "Empty"
-RecvExpr   : Expression
+CommCase   : CASE SendStmt | DEFAULT | CASE RecvStmt
+RecvStmt   : ExpressionList ASSIGN Expression | Expression | IdentifierList DEFINE Expression
 ForStmt : FOR ForStmt_1 Block
 ForStmt_1 : Condition | ForClause | RangeClause | "Empty"
 Condition : Expression

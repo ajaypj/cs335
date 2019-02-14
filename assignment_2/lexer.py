@@ -3,24 +3,10 @@ import argparse
 import ply.lex as lex
 
 parser = argparse.ArgumentParser(description = "argument parser")
-parser.add_argument("--cfg", help = 'Specify CFG', required = True)
+# parser.add_argument("--cfg", help = 'Specify CFG', required = True)
 parser.add_argument("--in", help = 'Specify input', required = True)
 parser.add_argument("--out", help = 'Specify output file', required = True)
 args = vars(parser.parse_args())
-
-def get_cfg(cfg_file):
-    cfg = open(cfg_file)
-    classcolour = dict()
-    line = cfg.readline()
-    while line:
-    	col = line.split()
-    	# print(token_col)
-    	classcolour[col[0]] = col[1]
-    	line = cfg.readline()
-    cfg.close()
-    return classcolour
-
-classcolour = get_cfg(args["cfg"])
 
 #################################   Tokens
 reserved = {
@@ -53,97 +39,11 @@ reserved = {
 
 operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
 numbers = ['INT','FLOAT','IMAG']
-strings = ['STRING']
-special = ['COM']
+strings = ['CHAR','STRING']
 
-tokens = operators + numbers + strings + special + ['ID'] + list(reserved.values())
+tokens = operators + numbers + strings + ['ID','COM'] + list(reserved.values())
 
-tokenclass = {
-    'ADD' : 'ARITHMETIC_OPERATORS',
-    'SUB' : 'ARITHMETIC_OPERATORS',
-    'MUL' : 'ARITHMETIC_OPERATORS',
-    'QUO' : 'ARITHMETIC_OPERATORS',
-    'REM' : 'ARITHMETIC_OPERATORS',
-    'AND' : 'ARITHMETIC_OPERATORS',
-    'OR' : 'ARITHMETIC_OPERATORS',
-    'XOR' : 'ARITHMETIC_OPERATORS',
-    'SHL' : 'ARITHMETIC_OPERATORS',
-    'SHR' : 'ARITHMETIC_OPERATORS',
-    'AND_NOT' : 'ARITHMETIC_OPERATORS',
 
-    'ADD_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SUB_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'MUL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'QUO_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'REM_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'AND_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'OR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'XOR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SHL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SHR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'AND_NOT_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-
-    'LAND' : 'LOGICAL_OPERATORS',
-    'LOR' : 'LOGICAL_OPERATORS',
-    'ARROW' : 'OTHER_OPERATORS',
-    'INC' : 'OTHER_OPERATORS',
-    'DEC' : 'OTHER_OPERATORS',
-    'EQL' : 'RELATIONAL_OPERATORS',
-    'LSS' : 'RELATIONAL_OPERATORS',
-    'GTR' : 'RELATIONAL_OPERATORS',
-    'ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'NOT' : 'LOGICAL_OPERATORS',
-    'NEQ' : 'RELATIONAL_OPERATORS',
-    'LEQ' : 'RELATIONAL_OPERATORS',
-    'GEQ' : 'RELATIONAL_OPERATORS',
-    'DEFINE' : 'OTHER_OPERATORS',
-    'ELLIPSIS' : 'OTHER_OPERATORS',
-
-    'LPAREN' : 'PUNCTUATION',
-    'LBRACK' : 'PUNCTUATION',
-    'LBRACE' : 'PUNCTUATION',
-    'COMMA' : 'PUNCTUATION',
-    'PERIOD' : 'PUNCTUATION',
-    'RPAREN' : 'PUNCTUATION',
-    'RBRACK' : 'PUNCTUATION',
-    'RBRACE' : 'PUNCTUATION',
-    'SEMICOLON' : 'PUNCTUATION',
-    'COLON' : 'PUNCTUATION',
-
-    'BREAK' : 'KEYWORDS',
-    'DEFAULT' : 'KEYWORDS',
-    'FUNC' : 'KEYWORDS',
-    'INTERFACE' : 'KEYWORDS',
-    'SELECT' : 'KEYWORDS',
-    'CASE' : 'KEYWORDS',
-    'DEFER' : 'KEYWORDS',
-    'GO' : 'KEYWORDS',
-    'MAP' : 'KEYWORDS',
-    'STRUCT' : 'KEYWORDS',
-    'CHAN' : 'KEYWORDS',
-    'ELSE' : 'KEYWORDS',
-    'GOTO' : 'KEYWORDS',
-    'PACKAGE' : 'KEYWORDS',
-    'SWITCH' : 'KEYWORDS',
-    'CONST' : 'KEYWORDS',
-    'FALLTHROUGH' : 'KEYWORDS',
-    'IF' : 'KEYWORDS',
-    'RANGE' : 'KEYWORDS',
-    'TYPE' : 'KEYWORDS',
-    'CONTINUE' : 'KEYWORDS',
-    'FOR' : 'KEYWORDS',
-    'IMPORT' : 'KEYWORDS',
-    'RETURN' : 'KEYWORDS',
-    'VAR' : 'KEYWORDS',
-
-    'INT' : 'NUMBERS',
-    'FLOAT' : 'NUMBERS',
-    'IMAG' : 'NUMBERS',
-    'STRING' : 'STRINGS',
-
-    'ID' : 'IDENTIFIERS',
-    'COM' : 'COMMENTS',
-}
 
 ################################### Operators and delimiters
 t_ADD = r'\+'
@@ -216,7 +116,8 @@ t_FLOAT = float_lit
 t_IMAG = '(('+decimals+')|('+float_lit+'))'+'i'
 
 ###################################### Strings
-t_STRING = r'(\'[^\']*\')|(\"[^\"]*\")'
+t_CHAR = r'\'[^\']\''
+t_STRING = r'\"[^\"]*\"'
 
 ###################################### Identifiers
 def t_ID(t):
@@ -227,7 +128,6 @@ def t_ID(t):
 ###################################### Comments
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
-    t.lexer.lineno += t.value.count('\n')
     return t
 
 ####################################### Define a rule so we can track line numbers
@@ -256,42 +156,44 @@ f.close()
 lexer.input(data)
 
 f = open(args["out"], "w")
-f.write("<html><body bgcolor=\"" + classcolour['BACKGROUND'] + "\">")
 pos = 0
+tok = None
 
+sem_arr=['ID','BREAK','CONTINUE','FALLTHROUGH','VARTYPE','INT','FLOAT','STRING',
+'IMAG','RUNE','RETURN','INC','DEC','RPAREN','RBRACE']
 # Tokenize
+newline_count=0
 while True:
+    prev_tok=tok
     tok = lexer.token()
     if not tok:
-        break      # No more input
-    print(tok)
-
-    l = len(str(tok.value))
-    for i in xrange(pos, tok.lexpos):
-        if data[i] == ' ':
-            f.write("&nbsp;")
-        elif data[i] == '\t':
-            f.write("&nbsp;&nbsp;&nbsp;&nbsp;")
-        elif data[i] == '\n':
-            f.write("<br>")
-        else:
-            f.write("<font color=\"white\">" + data[i] + "</font>")
-    pos = tok.lexpos + l
-    # print(pos)
-    f.write("<font color=\"" + classcolour[tokenclass[tok.type]] + "\">")
-    if tok.type == 'COM':
-        for i in xrange(tok.lexpos, pos):
-            if data[i] == ' ':
-                f.write("&nbsp;")
-            elif data[i] == '\t':
-                f.write("&nbsp;&nbsp;&nbsp;&nbsp;")
-            elif data[i] == '\n':
-                f.write("<br>")
+        for i in xrange(pos, len(data)):
+            if data[i] == '\n':
+                newline_count+=1
+                print newline_count,prev_tok.lineno
+                if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
+                    f.write(";\n")
+                else:
+                    f.write("\n")
             else:
                 f.write(data[i])
-    else:
-        f.write(str(tok.value))
-    f.write("</font>")
+        break      # No more input
 
-f.write("</body></html>")
+
+
+    l = len(str(tok.value))
+    # i=
+    for i in xrange(pos, tok.lexpos):
+        if data[i] == '\n':
+            newline_count+=1
+            print newline_count,prev_tok.lineno
+            if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
+                f.write(";\n")
+            else:
+                f.write("\n")
+        else:
+            f.write(data[i])
+    pos = tok.lexpos + l
+    f.write(tok.value)
+
 f.close()

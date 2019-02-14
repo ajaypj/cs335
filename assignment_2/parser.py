@@ -2,10 +2,11 @@ import re
 import argparse
 import ply.lex as lex
 import ply.yacc as yacc
+from p_functions import *
 
 parser = argparse.ArgumentParser(description = "argument parser")
 parser.add_argument("--in", help = 'Specify input', required = True)
-parser.add_argument("--out", help = 'Specify output file', required = True)
+# parser.add_argument("--out", help = 'Specify output file', required = True)
 args = vars(parser.parse_args())
 
 
@@ -38,99 +39,13 @@ reserved = {
     'var' : 'VAR',
 }
 
-operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
+operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','COND','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
 numbers = ['INT','FLOAT','IMAG']
 strings = ['STRING']
 special = ['COM']
 
-tokens = operators + numbers + strings + special + ['ID'] + list(reserved.values())
+tokens = operators + numbers + strings + special + ['ID'] + ['VARTYPE'] + list(reserved.values())
 
-tokenclass = {
-    'ADD' : 'ARITHMETIC_OPERATORS',
-    'SUB' : 'ARITHMETIC_OPERATORS',
-    'MUL' : 'ARITHMETIC_OPERATORS',
-    'QUO' : 'ARITHMETIC_OPERATORS',
-    'REM' : 'ARITHMETIC_OPERATORS',
-    'AND' : 'ARITHMETIC_OPERATORS',
-    'OR' : 'ARITHMETIC_OPERATORS',
-    'XOR' : 'ARITHMETIC_OPERATORS',
-    'SHL' : 'ARITHMETIC_OPERATORS',
-    'SHR' : 'ARITHMETIC_OPERATORS',
-    'AND_NOT' : 'ARITHMETIC_OPERATORS',
-
-    'ADD_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SUB_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'MUL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'QUO_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'REM_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'AND_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'OR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'XOR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SHL_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'SHR_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'AND_NOT_ASSIGN' : 'ASSIGNMENT_OPERATORS',
-
-    'LAND' : 'LOGICAL_OPERATORS',
-    'LOR' : 'LOGICAL_OPERATORS',
-    'ARROW' : 'OTHER_OPERATORS',
-    'INC' : 'OTHER_OPERATORS',
-    'DEC' : 'OTHER_OPERATORS',
-    'EQL' : 'RELATIONAL_OPERATORS',
-    'LSS' : 'RELATIONAL_OPERATORS',
-    'GTR' : 'RELATIONAL_OPERATORS',
-    'ASSIGN' : 'ASSIGNMENT_OPERATORS',
-    'NOT' : 'LOGICAL_OPERATORS',
-    'NEQ' : 'RELATIONAL_OPERATORS',
-    'LEQ' : 'RELATIONAL_OPERATORS',
-    'GEQ' : 'RELATIONAL_OPERATORS',
-    'DEFINE' : 'OTHER_OPERATORS',
-    'ELLIPSIS' : 'OTHER_OPERATORS',
-
-    'LPAREN' : 'PUNCTUATION',
-    'LBRACK' : 'PUNCTUATION',
-    'LBRACE' : 'PUNCTUATION',
-    'COMMA' : 'PUNCTUATION',
-    'PERIOD' : 'PUNCTUATION',
-    'RPAREN' : 'PUNCTUATION',
-    'RBRACK' : 'PUNCTUATION',
-    'RBRACE' : 'PUNCTUATION',
-    'SEMICOLON' : 'PUNCTUATION',
-    'COLON' : 'PUNCTUATION',
-
-    'BREAK' : 'KEYWORDS',
-    'DEFAULT' : 'KEYWORDS',
-    'FUNC' : 'KEYWORDS',
-    'INTERFACE' : 'KEYWORDS',
-    'SELECT' : 'KEYWORDS',
-    'CASE' : 'KEYWORDS',
-    'DEFER' : 'KEYWORDS',
-    'GO' : 'KEYWORDS',
-    'MAP' : 'KEYWORDS',
-    'STRUCT' : 'KEYWORDS',
-    'CHAN' : 'KEYWORDS',
-    'ELSE' : 'KEYWORDS',
-    'GOTO' : 'KEYWORDS',
-    'PACKAGE' : 'KEYWORDS',
-    'SWITCH' : 'KEYWORDS',
-    'CONST' : 'KEYWORDS',
-    'FALLTHROUGH' : 'KEYWORDS',
-    'IF' : 'KEYWORDS',
-    'RANGE' : 'KEYWORDS',
-    'TYPE' : 'KEYWORDS',
-    'CONTINUE' : 'KEYWORDS',
-    'FOR' : 'KEYWORDS',
-    'IMPORT' : 'KEYWORDS',
-    'RETURN' : 'KEYWORDS',
-    'VAR' : 'KEYWORDS',
-
-    'INT' : 'NUMBERS',
-    'FLOAT' : 'NUMBERS',
-    'IMAG' : 'NUMBERS',
-    'STRING' : 'STRINGS',
-
-    'ID' : 'IDENTIFIERS',
-    'COM' : 'COMMENTS',
-}
 
 ################################### Operators and delimiters
 t_ADD = r'\+'
@@ -158,6 +73,8 @@ t_XOR_ASSIGN = r'\^='
 t_SHL_ASSIGN = r'<<='
 t_SHR_ASSIGN = r'>>='
 t_AND_NOT_ASSIGN = r'\&\^='
+
+t_COND=r'\?='
 
 t_LAND = r'\&\&'
 t_LOR = r'\|\|'
@@ -189,6 +106,9 @@ t_RBRACE = r'\}'
 t_SEMICOLON = r';'
 t_COLON = r':'
 
+t_VARTYPE = r'int16|int8|int32|int64|int|bool|string|uint|uint16|uint32|uint64|uintptr|float32|float64|complex64|complex128'
+
+
 ##################################### Numbers
 decimal_lit = r'0|([1-9][\d]*)'
 octal_lit = r'0[0-7]+'
@@ -215,7 +135,7 @@ def t_ID(t):
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
     t.lexer.lineno += t.value.count('\n')
-    return t
+    pass
 
 ####################################### Define a rule so we can track line numbers
 def t_newline(t):
@@ -233,80 +153,59 @@ def t_error(t):
 ####################################### Build the lexer
 lexer = lex.lex()
 
-#######################################    HTML PART    ###########################
-#######################################                 ########################
-
-
-
-
-
-
-# f = open(args["in"], "r")
-# data = f.read()
-# f.close()
-
-def p_expression_plus(p):
-     'expression : expression ADD term'
-     p[0] = p[1] + p[3]
-     print "p_expression_plus",p[0],p[1],'+',p[3]
-
-def p_expression_minus(p):
-    'expression : expression SUB term'
-    p[0] = p[1] - p[3]
-    print "p_expression_minus",p[0],p[1],'-',p[3]
-
-def p_expression_term(p):
-    'expression : term'
-    p[0] = p[1]
-    print "p_expression_term"
-
-def p_term_times(p):
-    'term : term MUL factor'
-    p[0] = p[1] * p[3]
-    print "p_term_times",p[0],p[1],'*',p[3]
-
-def p_term_div(p):
-    'term : term QUO factor'
-    p[0] = p[1] / p[3]
-    print "p_term_div",p[0],p[1],'/',p[3]
-
-def p_term_factor(p):
-    'term : factor'
-    p[0] = p[1]
-    print "p_term_factor"
-
-def p_factor_num(p):
-    'factor : INT'
-    p[0] = int(p[1])
-    print "p_factor_num"
-
-def p_factor_expr(p):
-    'factor : LPAREN expression RPAREN'
-    p[0] = p[2]
-    print "p_factor_expr"
-    print p[0],'=(',p[2],')'
-
-# Error rule for syntax errors
+#######################################   PARSING PART    ###########################
+#######################################                   ########################
+################### Bismay
 def p_error(p):
-    print("Syntax error in input!")
+    print "ERROR HERE"
+    print p.lineno(1)," token = "
+    return
 
-# Build the parser
+################################################################################
+
+
+precedence = (
+    ('nonassoc','ID','STRING','INT','FLOAT','IMAG'),
+    ('left', 'COMMA'),
+    ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
+    ('left', 'LOR'),
+    ('left', 'LAND'),
+    ('left', 'OR'),
+    ('left', 'XOR'),
+    ('left', 'AND'),
+    ('left', 'EQL', 'NEQ'),
+    ('left', 'LSS', 'GTR', 'LEQ', 'GEQ'),
+    ('left', 'SHL', 'SHR'),
+    ('left', 'ADD', 'SUB'),
+    ('left', 'MUL', 'QUO', 'REM'),
+    ('right', 'NOT', 'INC', 'DEC'),
+    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK', 'ARROW', 'PERIOD'),
+    ('nonassoc','BREAK',  'DEFAULT',  'FUNC',
+     'INTERFACE', 'SELECT',  'CASE',  'DEFER',  'GO',  'MAP',  'STRUCT',
+     'CHAN',  'ELSE',  'GOTO',  'PACKAGE',  'SWITCH',  'CONST',  'FALLTHROUGH',
+     'IF', 'RANGE',  'TYPE',  'CONTINUE',  'FOR',  'IMPORT',  'RETURN',  'VAR')
+)
+
+# precedence =(
+#     ('nonassoc','ID'),
+#     ('left','LBRACE'),
+# )
+
+
+
+############################################################# Build the parser
+
+
+
+
+
 parser = yacc.yacc()
 
 f = open(args["in"], "r")
 data = f.read()
 f.close()
 
-
-result = parser.parse(data)
-print (result)
-
-
-# while True:
-#     try:
-#         s = raw_input('calc > ')
-#     except EOFError:
-#         break
-#     if not s: continue
-#     result = parser.parse(s)
-#     print(result)
+print "digraph b {"
+result = parser.parse(data,debug=0)
+print "}"
+# print (result)
