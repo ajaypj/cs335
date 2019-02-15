@@ -165,10 +165,11 @@ def p_error(p):
 
 
 precedence = (
-    ('nonassoc','ID','STRING','INT','FLOAT','IMAG'),
+    ('nonassoc','ID','STRING','INT','FLOAT','IMAG', 'STRUCT'),
     ('left', 'COMMA' ),
-    ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
     ('left','LBRACE','RBRACE' ),
+    ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
+    ('right','DEFINE'),
     ('left', 'LOR'),
     ('left', 'LAND'),
     ('left', 'OR'),
@@ -182,7 +183,7 @@ precedence = (
     ('right', 'NOT', 'INC', 'DEC'),
     ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK','ARROW', 'PERIOD'),
     ('nonassoc','BREAK',  'DEFAULT',  'FUNC',
-     'INTERFACE', 'SELECT',  'CASE',  'DEFER',  'GO',  'MAP',  'STRUCT',
+     'INTERFACE', 'SELECT',  'CASE',  'DEFER',  'GO',  'MAP',
      'CHAN',  'ELSE',  'GOTO',  'PACKAGE',  'SWITCH',  'CONST',  'FALLTHROUGH',
      'IF', 'RANGE',  'TYPE',  'CONTINUE',  'FOR',  'IMPORT',  'RETURN',  'VAR')
 )

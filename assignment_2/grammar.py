@@ -11,7 +11,7 @@ CLOSEB         		:
 BrkBlk         		:
 BrkBlkEnd      		:
 StatementList  		: StatementList Statement SEMICOLON |  Statement SEMICOLON
-Statement      		: Declaration |  LabeledStmt |  SimpleStmt |  ReturnStmt |  BreakStmt |  ContinueStmt |  GotoStmt |  Block |  IfStmt |  SelectStmt |  ForStmt
+Statement      		: DeferStmt|Declaration |  LabeledStmt |  SimpleStmt |  ReturnStmt |  BreakStmt |  ContinueStmt |  GotoStmt |  Block |  IfStmt |  SelectStmt |  ForStmt
 SimpleStmt     		: EmptyStmt |  ExpressionStmt | IncDecStmt | ShortVarDecl | Assignment
 Assignment     		: ExpressionList assign_op ExpressionList
 EmptyStmt      		:
@@ -73,7 +73,7 @@ BasicLit       		: INT |  FLOAT |  STRING | IMAG
 CompositeLit   		: LiteralType LiteralValue
 LiteralType    		: StructType |  ArrayType |  PointerType |  LBRACK ELLIPSIS RBRACK Operand |  SliceType |  MapType | ID | InterfaceType
 LiteralValue   		: LBRACE RBRACE |  SEMICOLON RBRACE |  LBRACE ElementList RBRACE |  SEMICOLON ElementList RBRACE |  LBRACE ElementList COMMA RBRACE |  SEMICOLON ElementList COMMA RBRACE | ChannelType
-ChannelType         : CHAN Type | CHAN ARROW Type | ARROW CHAN Type 
+ChannelType         : CHAN Type | CHAN ARROW Type | ARROW CHAN Type
 ElementList    		: KeyedElement |  ElementList COMMA KeyedElement
 KeyedElement   		: Element |  Key COLON Element
 Key            		: Expression |  LiteralValue

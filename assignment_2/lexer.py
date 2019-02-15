@@ -160,10 +160,11 @@ pos = 0
 tok = None
 
 sem_arr=['ID','BREAK','CONTINUE','FALLTHROUGH','VARTYPE','INT','FLOAT','STRING',
-'IMAG','RUNE','RETURN','INC','DEC','RPAREN','RBRACE']
+'IMAG','RUNE','RETURN','INC','DEC','RPAREN','RBRACE','RBRACK']
 # Tokenize
 newline_count=0
 while True:
+    flag=0
     prev_tok=tok
     tok = lexer.token()
     if not tok:
@@ -173,6 +174,7 @@ while True:
                 # print newline_count,prev_tok.lineno
                 if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
                     f.write(";\n")
+                    flag=1
                 else:
                     f.write("\n")
             else:
@@ -189,12 +191,15 @@ while True:
             # print newline_count,prev_tok.lineno
             if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
                 f.write(";\n")
+                flag=1
             else:
                 f.write("\n")
         else:
             f.write(data[i])
     pos = tok.lexpos + l
-
+    # if tok.type=='RBRACE' and prev_tok.type != 'SEMICOLON' and prev_tok!=None and flag==0:
+    #     print prev_tok.type
+    #     f.write(';')
     f.write(tok.value)
     # if tok.type!='COM':
     # else:

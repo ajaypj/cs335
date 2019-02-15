@@ -13,16 +13,15 @@ Lexer comment ERROR //Doesnot resolve single line comment ie doesnot add semicol
 Testcase-9
 functionlit added
 ID PERIOD ID added in primary Expr
-Still Error
+Still Error-ExpressionStmt
 
-
-12-TypeAssertion
-13-SWITCH
-15-Expression Semicolon
-24,16-Id.id type
-17-NO IDEA
+6,12-comment
+13-SWITCH Type, not in
+15,16-State 120 should reduce PrimaryExpr -> ID
+24-map[string]int
+17-Solved by changing Arguments makes other test case fail
 18-GO keyword-corrected
-23-case
+23-case type
 
 
 
@@ -36,3 +35,8 @@ CHAN shows lot of error(reduce reduce)
 Adding type to ParameterDecl adds rr conflict
 
 Added switch case
+
+
+git 1864430
+2 conflicts- KeyValList,StructLiteral
+Should add rune

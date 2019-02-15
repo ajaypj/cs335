@@ -54,7 +54,9 @@ def func(p,value):
 
 
 def p_SourceFile(p):
-    ''' SourceFile     		: PackageClause SEMICOLON ImportDeclList TopLevelDeclList '''
+    ''' SourceFile     		: PackageClause SEMICOLON ImportDeclList TopLevelDeclList
+                            | PackageClause SEMICOLON  TopLevelDeclList
+    '''
     func(p,"SourceFile")
 
 def p_PackageClause(p):
@@ -62,19 +64,18 @@ def p_PackageClause(p):
     func(p,"PackageClause")
 
 def p_ImportDeclList(p):
-    ''' ImportDeclList 		:
-							|  ImportDeclList ImportDecl SEMICOLON
+    ''' ImportDeclList 		: ImportDeclList ImportDecl SEMICOLON
 							|  ImportDecl SEMICOLON '''
     func(p,"ImportDeclList")
 
 def p_ImportDecl(p):
     ''' ImportDecl     		: IMPORT LPAREN ImportSpecList RPAREN
+                            | IMPORT LPAREN  RPAREN
 							|  IMPORT ImportSpec '''
     func(p,"ImportDecl")
 
 def p_ImportSpecList(p):
-    ''' ImportSpecList 		:
-							|  ImportSpecList ImportSpec SEMICOLON
+    ''' ImportSpecList 		:  ImportSpecList ImportSpec SEMICOLON
 							|  ImportSpec SEMICOLON '''
     func(p,"ImportSpecList")
 
@@ -115,6 +116,7 @@ def p_StatementList(p):
 
 def p_Statement(p):
     ''' Statement      		: Declaration
+                            |  DeferStmt
 							|  LabeledStmt
 							|  SimpleStmt
 							|  ReturnStmt
@@ -128,6 +130,10 @@ def p_Statement(p):
                             |  SwitchStmt
 							|  ForStmt '''
     func(p,"Statement")
+
+def p_DeferStmt(p):
+    "DeferStmt              : DEFER Expression"
+    func(p,"DeferStmt")
 
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: EmptyStmt
@@ -146,7 +152,9 @@ def p_EmptyStmt(p):
     func(p,"EmptyStmt")
 
 def p_ExpressionStmt(p):
-    ''' ExpressionStmt 		: Expression '''
+    ''' ExpressionStmt 		: Expression
+    '''
+    # | Expression SEMICOLON
     func(p,"ExpressionStmt")
 
 def p_GoStmt(p):
@@ -210,15 +218,26 @@ def p_ParameterDecl(p):
                             # | Type
     func(p,"ParameterDecl")
 
-def p_TypeList(p):
-    ''' TypeList       		: TypeList COMMA Type
-							|  Type '''
-    func(p,"TypeList")
+# def p_TypeList(p):
+#     ''' TypeList       		: TypeList COMMA Type
+# 							|  Type '''
+#     func(p,"TypeList")
 
 def p_IdentifierList(p):
     ''' IdentifierList 		: ID
 							|  IdentifierList COMMA ID '''
     func(p,"IdentifierList")
+# def p_IdentifierList(p):
+#     '''IdentifierList : ID IdentifierBotList
+#     '''
+#     func(p,"IdentifierList")
+#
+# def p_IdentifierBotList(p):
+#     '''IdentifierBotList : COMMA ID
+#                         | IdentifierBotList COMMA ID
+#     '''
+#     func(p,IdentifierList)
+
 
 def p_MethodDecl(p):
     ''' MethodDecl     		: FUNC Receiver ID Signature
@@ -237,7 +256,13 @@ def p_TopLevelDeclList(p):
 def p_Type(p):
     ''' Type           		: LiteralType
 							|  ID
-							| VARTYPE '''
+                            | ID PERIOD ID
+							| VARTYPE
+                            '''
+                            # | CHAN ARROW Type
+                            # | CHAN Type
+                            # | ARROW CHAN Type
+                            # | LPAREN Type RPAREN
     func(p,"Type")
 
 def p_SliceType(p):
@@ -439,12 +464,12 @@ def p_ArrayType(p):
     ''' ArrayType      		: LBRACK Expression RBRACK Type '''
     func(p,"ArrayType")
 
-def p_Operand(p):
-    ''' Operand        		: Literal
-                            | ID LiteralValue
-							|  ID
-							|  LPAREN Expression RPAREN '''
-    func(p,"Operand")
+# def p_Operand(p):
+#     ''' Operand        		: Literal
+#                             | ID LiteralValue
+# 							|  ID
+# 							|  LPAREN Expression RPAREN '''
+#     func(p,"Operand")
 
 def p_Literal(p):
     ''' Literal        		: BasicLit
@@ -471,10 +496,10 @@ def p_LiteralType(p):
     ''' LiteralType    		: StructType
 							|  ArrayType
 							|  PointerType
-							|  LBRACK ELLIPSIS RBRACK Operand
 							|  SliceType
                             |  InterfaceType
 							|  MapType '''
+                            # |  LBRACK ELLIPSIS RBRACK Operand
                             # |  ChannelType
     func(p,"LiteralType")
 
@@ -608,13 +633,17 @@ def p_assign_op(p):
     func(p,"assign_op")
 
 def p_PrimaryExpr(p):
-    ''' PrimaryExpr    		: Operand
+    ''' PrimaryExpr    		: Literal
+                            |  ID
+                            |  LPAREN Expression RPAREN
+                            | ID LiteralValue
 							|  PrimaryExpr Selector
 							|  PrimaryExpr Index
 							|  PrimaryExpr Slice
 							|  PrimaryExpr TypeAssertion
 							|  PrimaryExpr Arguments
-							|  ID StructLiteral '''
+                            |  ID StructLiteral
+                            '''
                             # | ID PERIOD ID
     func(p,"PrimaryExpr")
 
@@ -653,6 +682,8 @@ def p_Arguments(p):
     ''' Arguments      		: LPAREN RPAREN
 							|  LPAREN ExpressionList RPAREN
 							|  LPAREN ExpressionList ELLIPSIS RPAREN '''
+                            # | LPAREN ExpressionList RPAREN
+                            # | LPAREN Type COMMA ExpressionList RPAREN
     func(p,"Arguments")
 
 def p_ExpressionList(p):
