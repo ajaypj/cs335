@@ -1,17 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
-// This `fact` function calls itself until it reaches the
-// base case of `fact(0)`.
-func fact(n int) int {
-    if(n == 0){
-        return 1;
-    }
-    return n * fact(n-1);
+type Vertex struct {
+	X, Y float64
+}
+
+func Abs(v Vertex) float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func Scale(v *Vertex, f float64) {
+	v.X = v.X * f
+	v.Y = v.Y * f
 }
 
 func main() {
-    fmt.Println(fact(7));
+	v := Vertex{3, 4}
+	Scale(&v, 10)
+	fmt.Println(Abs(v))
 }
-
