@@ -1,6 +1,6 @@
 class symbolTable:
 
-    def __init__(self,par=None):
+    def __init__(self, par=None):
         self.table = {}
         self.globalSymbolList = []
         self.parent = par
@@ -30,7 +30,6 @@ class symbolTable:
             (self.table)[name][key] = value
         else:
             raise KeyError("Symbol " + name + " doesn't exists - Cant Update")
-
 
     def setParent(self, parent):
         self.parent = parent

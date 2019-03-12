@@ -1,3 +1,8 @@
+def p_error(p):
+    print "ERROR HERE"
+    exit()
+    return
+
 ################################################################################
 def p_SourceFile(p):
     ''' SourceFile     		: PackageClause ImportDeclList TopLevelDeclList

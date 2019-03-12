@@ -2,13 +2,12 @@ import re
 import argparse
 import ply.lex as lex
 
-parser = argparse.ArgumentParser(description = "argument parser")
-# parser.add_argument("--cfg", help = 'Specify CFG', required = True)
-parser.add_argument("--in", help = 'Specify input', required = True)
-parser.add_argument("--out", help = 'Specify output file', required = True)
-args = vars(parser.parse_args())
+# parser = argparse.ArgumentParser(description = "argument parser")
+# parser.add_argument("--in", help = 'Specify input file', required = True)
+# parser.add_argument("--out", help = 'Specify output file', required = True)
+# args = vars(parser.parse_args())
 
-#################################   Tokens
+################################# Tokens
 reserved = {
     'break' : 'BREAK',
     'default' : 'DEFAULT',
@@ -37,13 +36,15 @@ reserved = {
     'var' : 'VAR',
 }
 
-operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
+operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','COND','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']
 numbers = ['INT','FLOAT','IMAG']
-strings = ['CHAR','STRING']
+strings = ['STRING','RUNE']
+special = ['COM']
 
-tokens = operators + numbers + strings + ['ID','COM'] + list(reserved.values())
+tokens = operators + numbers + strings + special + ['ID','VARTYPE'] + list(reserved.values())
 
-
+###################################### Type
+vartypes = ['int16','int8','int32','int64','int','bool','string','uint','uint16','uint32','uint64','uintptr','float32','float64','complex64','complex128']
 
 ################################### Operators and delimiters
 t_ADD = r'\+'
@@ -71,6 +72,8 @@ t_XOR_ASSIGN = r'\^='
 t_SHL_ASSIGN = r'<<='
 t_SHR_ASSIGN = r'>>='
 t_AND_NOT_ASSIGN = r'\&\^='
+
+t_COND=r'\?='
 
 t_LAND = r'\&\&'
 t_LOR = r'\|\|'
@@ -115,20 +118,27 @@ float_lit = '('+decimals+'\.'+decimals+exponent+')|('+decimals+exponent+')|('+de
 t_FLOAT = float_lit
 t_IMAG = '(('+decimals+')|('+float_lit+'))'+'i'
 
+###################################### Rune
+char = r'\'[^\']\''
+esc_char = r'\\(a|b|f|n|r|t|v|\\|\'|\")'
+t_RUNE = '('+char+')|('+esc_char+')'
+
 ###################################### Strings
-t_CHAR = r'\'[^\']\''
-t_STRING = r'\"[^\"]*\"'
+t_STRING = r'(\`[^\`]*\`)|(\"[^\"]*\")'
 
 ###################################### Identifiers
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_\d]*'
     t.type = reserved.get(t.value,'ID')
+    if t.value in vartypes:
+        t.type = 'VARTYPE'
     return t
 
 ###################################### Comments
 def t_COM(t):
     r'(/\*(.|\n)*\*/)|(//.*\n)'
-    return t
+    t.lexer.lineno += t.value.count('\n')
+    pass
 
 ####################################### Define a rule so we can track line numbers
 def t_newline(t):
@@ -143,57 +153,53 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-####################################### Build the lexer
+####################################### Build the lexer ##############################
 lexer = lex.lex()
 
-#######################################    HTML PART    ###########################
-#######################################                 ########################
-
-f = open(args["in"], "r")
-data = f.read()
-f.close()
-
-lexer.input(data)
-
-f = open(args["out"], "w")
-pos = 0
-tok = None
-
-sem_arr=['ID','BREAK','CONTINUE','FALLTHROUGH','VARTYPE','INT','FLOAT','STRING',
-'IMAG','RUNE','RETURN','INC','DEC','RPAREN','RBRACE']
-# Tokenize
-newline_count=0
-while True:
-    prev_tok=tok
-    tok = lexer.token()
-    if not tok:
-        for i in xrange(pos, len(data)):
-            if data[i] == '\n':
-                newline_count+=1
-                # print newline_count,prev_tok.lineno
-                if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
-                    f.write(";\n")
-                else:
-                    f.write("\n")
-            else:
-                f.write(data[i])
-        break      # No more input
-
-
-
-    l = len(str(tok.value))
-    # i=
-    for i in xrange(pos, tok.lexpos):
-        if data[i] == '\n':
-            newline_count+=1
-            # print newline_count,prev_tok.lineno
-            if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
-                f.write(";\n")
-            else:
-                f.write("\n")
-        else:
-            f.write(data[i])
-    pos = tok.lexpos + l
-    f.write(tok.value)
-
-f.close()
+################################################################################
+# f = open(args["in"], "r")
+# data = f.read()
+# f.close()
+#
+# lexer.input(data)
+#
+# f = open(args["out"], "w")
+# pos = 0
+# tok = None
+#
+# sem_arr=['ID','BREAK','CONTINUE','FALLTHROUGH','VARTYPE','INT','FLOAT','STRING',
+# 'IMAG','RUNE','RETURN','INC','DEC','RPAREN','RBRACE']
+# # Tokenize
+# newline_count=0
+# while True:
+#     prev_tok=tok
+#     tok = lexer.token()
+#     if not tok:
+#         for i in xrange(pos, len(data)):
+#             if data[i] == '\n':
+#                 newline_count+=1
+#                 # print newline_count,prev_tok.lineno
+#                 if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
+#                     f.write(";\n")
+#                 else:
+#                     f.write("\n")
+#             else:
+#                 f.write(data[i])
+#         break      # No more input
+#
+#     l = len(str(tok.value))
+#     # i=
+#     for i in xrange(pos, tok.lexpos):
+#         if data[i] == '\n':
+#             newline_count+=1
+#             # print newline_count,prev_tok.lineno
+#             if prev_tok.type in  sem_arr and newline_count==prev_tok.lineno:
+#                 f.write(";\n")
+#             else:
+#                 f.write("\n")
+#         else:
+#             f.write(data[i])
+#     pos = tok.lexpos + l
+#     f.write(tok.value)
+#
+# f.close()
