@@ -53,10 +53,30 @@ def p_TopLevelDecl(p):
     # func(p,"TopLevelDecl")
 
 ################################################################################
+def p_OPENB(p):
+    ''' OPENB          		: '''
+    # func(p,"OPENB")
+
+def p_CLOSEB(p):
+    ''' CLOSEB         		: '''
+    # func(p,"CLOSEB")
+
+def p_StartScope(p):
+    ''' StartScope         	: '''
+    pushScope()
+
+def p_EndScope(p):
+    ''' EndScope    		: '''
+    popScope()
+
+def p_StructScope(p):
+    '''StructScope          : '''
+    pushScope(p[-1])
+
+################################################################################
 def p_FunctionDecl(p):
-    ''' FunctionDecl   		: FUNC ID OPENB Signature CLOSEB
-							| FUNC ID OPENB Signature Block CLOSEB '''
-    # func(p,"FunctionDecl")
+    ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
+							| FUNC ID StartScope Signature Block EndScope '''
 
 def p_MethodDecl(p):
     ''' MethodDecl     		: FUNC Parameters ID Signature
@@ -64,63 +84,38 @@ def p_MethodDecl(p):
     # func(p,"MethodDecl")
 
 def p_Declaration(p):
-    ''' Declaration    		: TypeDecl
+    ''' Declaration    		: ConstDecl
+                            | TypeDecl
 							| VarDecl '''
-    # func(p,"Declaration")
+
+def p_ConstDecl(p):
+    ''' ConstDecl           : '''
 
 def p_TypeDecl(p):
     ''' TypeDecl       		: TYPE TypeSpec
                             | TYPE LPAREN TypeSpecList RPAREN
                             | TYPE LPAREN RPAREN '''
-    # func(p,"TypeDecl")
 
 def p_TypeSpecList(p):
     ''' TypeSpecList       	: TypeSpec SEMICOLON
                             | TypeSpecList TypeSpec SEMICOLON '''
-    # func(p,"TypeSpecList")
 
 def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
-    # func(p,"TypeSpec")
-
-def p_VarDecl(p):
-    ''' VarDecl        		: VAR VarSpec
-                            | VAR LPAREN VarSpecList RPAREN
-                            | VAR LPAREN RPAREN '''
-    # func(p,"VarDecl")
-
-def p_VarSpecList(p):
-    ''' VarSpecList       	: VarSpec SEMICOLON
-                            | VarSpecList VarSpec SEMICOLON '''
-    # func(p,"VarSpecList")
-
-def p_VarSpec(p):
-    ''' VarSpec        		: IdentifierList Type
-							| IdentifierList Type ASSIGN ExpressionList
-							| IdentifierList ASSIGN ExpressionList
-							| IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE
-							| IdentifierList ASSIGN LBRACE ExpressionList RBRACE '''
-    # func(p,"VarSpec")
-
-def p_ShortVarDecl(p):
-    ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
-    # func(p,"ShortVarDecl")
-
-def p_IdentifierList(p):
-    ''' IdentifierList 		: ID
-							| IdentifierList COMMA ID '''
-    # func(p,"IdentifierList")
+    if checkID(p[1], 'curr'):
+        raise KeyError("Symbol " + name + " already exists")
+    else:
+        scopeST[currScope].insert(p[1],p[-1]['type'])
+        scopeST[currScope].update(p[1],'class','TYPE')
 
 ################################################################################
 def p_Type(p):
     ''' Type           		: LiteralType
 							| FunctionType
-                            | InterfaceType
-                            | ID
-                            | ID PERIOD ID
-							| VARTYPE '''
-    # func(p,"Type")
+                            | VARTYPE
+                            | ID '''
+    p[0] = p[1]
 
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
@@ -128,30 +123,39 @@ def p_LiteralType(p):
 							| PointerType
 							| SliceType
                             | MapType '''
-    # func(p,"LiteralType")
+    p[0] = p[1]
 
 def p_ArrayType(p):
-    ''' ArrayType      		: LBRACK Expression RBRACK Type '''
-    # func(p,"ArrayType")
+    ''' ArrayType      		: LBRACK Expression RBRACK Type ''' # Must be integer
+    p[0] = {}
+    p[0]['type'] = 'ARRAY(' + p[4] + ')'
+    p[0]['size'] = p[1]['place']
 
 def p_StructType(p):
-    ''' StructType     		: STRUCT LBRACE FieldDeclList RBRACE
-							| STRUCT LBRACE RBRACE '''
-    # func(p,"StructType")
+    ''' StructType     		: STRUCT StructScope LBRACE FieldDeclList RBRACE EndScope
+							| STRUCT StructScope LBRACE RBRACE EndScope '''
+    p[0] = {}
+    p[0]['type'] = 'STRUCT'
+    if len(p) == 5:
+        p[0]['scopeno'] = p[4]
 
 def p_FieldDeclList(p):
     ''' FieldDeclList  		: FieldDecl SEMICOLON
 							| FieldDeclList FieldDecl SEMICOLON '''
-    # func(p,"FieldDeclList")
+    p[0] = currScope
 
 def p_FieldDecl(p):
     ''' FieldDecl      		: IdentifierList Type STRING
 							| IdentifierList Type '''
-    # func(p,"FieldDecl")
+    for iden in p[1]:
+        if checkID(iden, 'curr'):
+            raise KeyError("Symbol " + iden + " already exists")
+        scopeST[currScope].insert(iden, p[2]['type'])
 
 def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
-    # func(p,"PointerType")
+    p[0] = {}
+    p[0]['type'] = 'POINTER(' + p[2] + ')'
 
 def p_SliceType(p):
     ''' SliceType      		: LBRACK RBRACK Type '''
@@ -161,15 +165,16 @@ def p_MapType(p):
     ''' MapType        		: MAP LBRACK Type RBRACK Type '''
     # func(p,"MapType")
 
-def p_FunctionType(p):
-    ''' FunctionType        : FUNC Signature '''
-    # func(p,"FunctionType")
+################################################################################
+# def p_FunctionType(p):
+#     ''' FunctionType        : FUNC Signature '''
+#     # func(p,"FunctionType")
 
 def p_Signature(p):
     ''' Signature      		: Parameters
 							| Parameters Parameters
                             | Parameters Type '''
-    # func(p,"Signature")
+    p[0] = 
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -189,21 +194,21 @@ def p_ParameterDecl(p):
                             | IdentifierList ELLIPSIS Type '''
     # func(p,"ParameterDecl")
 
-def p_InterfaceType(p):
-    ''' InterfaceType 		: INTERFACE LBRACE RBRACE
-                            | INTERFACE LBRACE MethodSpecList RBRACE '''
-    # func(p,"InterfaceType")
-
-def p_MethodSpecList(p):
-    ''' MethodSpecList      : MethodSpec SEMICOLON
-                            | MethodSpecList MethodSpec SEMICOLON '''
-    # func(p,"MethodSpecList")
-
-def p_MethodSpec(p):
-    ''' MethodSpec        	: ID Signature
-                            | ID Type '''
-    # func(p,"MethodSpec")
-
+# def p_InterfaceType(p):
+#     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
+#                             | INTERFACE LBRACE MethodSpecList RBRACE '''
+#     # func(p,"InterfaceType")
+#
+# def p_MethodSpecList(p):
+#     ''' MethodSpecList      : MethodSpec SEMICOLON
+#                             | MethodSpecList MethodSpec SEMICOLON '''
+#     # func(p,"MethodSpecList")
+#
+# def p_MethodSpec(p):
+#     ''' MethodSpec        	: ID Signature
+#                             | ID Type '''
+#     # func(p,"MethodSpec")
+#
 # def p_ChannelType(p):
 #     ''' ChannelType 		: CHAN Type
 #                             | CHAN ARROW Type
@@ -211,17 +216,60 @@ def p_MethodSpec(p):
 #     # func(p,"ChannelType")
 
 ################################################################################
+def p_VarDecl(p):
+    ''' VarDecl        		: VAR VarSpec
+                            | VAR LPAREN VarSpecList RPAREN
+                            | VAR LPAREN RPAREN '''
+
+def p_VarSpecList(p):
+    ''' VarSpecList       	: VarSpec SEMICOLON
+                            | VarSpecList VarSpec SEMICOLON '''
+
+def p_VarSpec(p):
+    ''' VarSpec        		: IdentifierList Type
+							| IdentifierList Type ASSIGN ExpressionList
+                            | IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE '''
+    for iden in p[1]:
+        if checkID(iden, 'curr'):
+            raise KeyError("Symbol " + iden + " already exists")
+        scopeST[currScope].insert(iden, p[2]['type'])
+
+        if p[2][type][0:5] == 'ARRAY':
+            scopeST[currScope].update(iden, 'size', p[2]['size'])
+        if p[2][type] == 'STRUCT':
+            scopeST[currScope].update(iden, 'scopeno', p[2]['scopeno'])
+        # if p[2][type] == 'SLICE':
+        #     scopeST[currScope].update(iden, '', p[2][''])
+        # if p[2][type] == 'MAP':
+        #     scopeST[currScope].update(iden, '', p[2][''])
+
+
+# def p_VarSpec(p):
+#     '''	VarSpec			    : IdentifierList ASSIGN ExpressionList
+#     						| IdentifierList ASSIGN LBRACE ExpressionList RBRACE '''
+#     for iden in p[1]:
+#         # scopeST[currScope].update()
+
+def p_IdentifierList(p):
+    ''' IdentifierList 		: ID
+							| IdentifierList COMMA ID '''
+    if len(p) > 2:
+        p[0] = p[1] + [p[3]]
+    else:
+        p[0] = [p[1]]
+
+def p_ShortVarDecl(p):
+    ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
+    if len(p[1]) != len(p[2]):
+        raise KeyError("Number of arguments do not match")
+    for i in xrange(len(p[1])):
+        # scopeST[currScope].update()
+
+################################################################################
 def p_Block(p):
-    ''' Block          		: LBRACE OPENB StatementList CLOSEB RBRACE '''
+    ''' Block          		: LBRACE StatementList RBRACE '''
+
     # func(p,"Block")
-
-def p_OPENB(p):
-    ''' OPENB          		: '''
-    # func(p,"OPENB")
-
-def p_CLOSEB(p):
-    ''' CLOSEB         		: '''
-    # func(p,"CLOSEB")
 
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
@@ -238,7 +286,7 @@ def p_Statement(p):
 							| ContinueStmt
 							| GotoStmt
                             | FallthroughStmt
-							| Block
+							| StartScope Block EndScope
 							| IfStmt
                             | SwitchStmt
 							| SelectStmt

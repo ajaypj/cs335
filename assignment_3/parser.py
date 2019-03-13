@@ -23,32 +23,26 @@ def checkId(identifier, typeOf):
             return True
         return False
 
-    if typeOf == "*":
+    if typeOf == "curr":
         if scopeST[currScope].getInfo(identifier) is not None:
             return True
         return False
 
-    if typeOf == "label":
-    	if scopeST[0].getInfo(identifier) is not None:
-    		return True
-    	return False
-
-    if typeOf == "*!s":
-        if scopeST[currScope].getInfo(identifier) is not None:
-            info = scopeST[currScope].getInfo(identifier)
-            if info['type'] != ('type'+identifier):
-                return True
+    if typeOf == "recent":
+        for scope in scopeStack[::-1]:
+            if scopeST[scope].getInfo(identifier) is not None:
+                info = scopeST[scope].getInfo(identifier)
+                if typeOf == "**" or info['type'] == typeOf:
+                    return True
+    else:
+        if scopeST[typeOf].getInfo(identifier) is not None:
+            return True
         return False
 
-    for scope in scopeStack[::-1]:
-        if scopeST[scope].getInfo(identifier) is not None:
-            info = scopeST[scope].getInfo(identifier)
-            if typeOf == "**" or info['type'] == typeOf:
-                return True
 
     return False
 
-def addscope(name=None):
+def pushScope(name=None):
     global currScope
     global scopeNo
     scopeNo += 1
@@ -57,19 +51,9 @@ def addscope(name=None):
     scopeStack.append(currScope)
     scopeST[currscope] = symbolTable(lastScope)
     if name is not None:
-        if type(name) is list:
-            scopeST[lastScope].insert(name[1], 'func')
-            scopeST[lastScope].updateArgList(name[1], 'child', scopeST[currScope])
-        else:
-            temp = currScope
-            currScope = lastScope
-            if checkId(name, '*'):
-                raise NameError("Name " + name + " already defined")
-            currScope = temp
-            scopeST[lastScope].insert(name, 'type'+name)
-            scopeST[lastScope].updateArgList(name, 'child', scopeST[currScope])
+        # 
 
-def delScope():
+def popScope():
     global currScope
     currScope = scopeStack.pop()
     currScope = scopeStack[-1]
