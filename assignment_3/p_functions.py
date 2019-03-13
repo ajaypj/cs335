@@ -1,7 +1,6 @@
 var_no=0
 lineno=0
 
-
 def new_var():
     global var_no
     retVal='var_'+str(var_no)
@@ -15,10 +14,6 @@ class expr():
         self.value=None
         self.extra={}
         self.code=[]
-
-
-
-
 
 def p_error(p):
     print "ERROR HERE"
@@ -99,6 +94,11 @@ def p_StructScope(p):
 def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
 							| FUNC ID StartScope Signature Block EndScope '''
+    if checkID(p[2], 'curr'):
+        raise KeyError("Symbol " + name + " already exists")
+    else:
+        scopeST[currScope][p[2]] = p[4].deepcopy()
+        scopeST[currScope].update(p[2], 'class', 'FUNC')
 
 def p_MethodDecl(p):
     ''' MethodDecl     		: FUNC Parameters ID Signature
@@ -211,23 +211,34 @@ def p_Signature(p):
     p[0]['scopeno'] = currScope
     p[0]['parameters'] = p[1]
     if len(p) > 2:
-        p[0]['returntype'] = p[2]
-        p[0]['']
+        p[0]['returntype'] = p[2].copy()
     else:
-        p[0]['returntype'] = {}
+        p[0]['returntype'] = {'type' : 'VOID', 'class' : 'TYPE'}
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
 							| LPAREN ParameterList RPAREN
 							| LPAREN ParameterList COMMA RPAREN '''
+    if len(p) > 3:
+        p[0] = p[2]
 
 def p_ParameterList(p):
     ''' ParameterList  		: ParameterDecl
 							| ParameterList COMMA ParameterDecl '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[1] + p[3]
 
 def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
                             | IdentifierList Type '''
+    if len(p) == 2:
+        p[0] = [p[1].copy()]
+    else:
+        p[0] = []
+        for iden in p[1]:
+            p[0].append(p[2].copy())
     # func(p,"ParameterDecl")
 
 # def p_InterfaceType(p):
