@@ -12,7 +12,7 @@ class symbolTable:
     def insert(self, name, type):
         if (not self.lookUp(name)):
             (self.table)[name] = {}
-            (self.table)[name]["type"] = type
+            (self.table)[name]['type'] = type
 
     # Returns the argument list of the variable else returns None
     # Note that type is always a key in argument list
