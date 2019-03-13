@@ -17,18 +17,18 @@ currScope = 0
 scopeST = {}
 scopeST[0] = symbolTable()
 
-def checkId(identifier, typeOf):
-    if typeOf == "global":
+def checkID(identifier, typeOf):
+    if typeOf == 'global':
         if scopeST[0].getInfo(identifier) is not None:
             return True
         return False
 
-    if typeOf == "curr":
+    if typeOf == 'curr':
         if scopeST[currScope].getInfo(identifier) is not None:
             return True
         return False
 
-    if typeOf == "recent":
+    if typeOf == 'recent':
         for scope in scopeStack[::-1]:
             if scopeST[scope].getInfo(identifier) is not None:
                 info = scopeST[scope].getInfo(identifier)
@@ -51,7 +51,7 @@ def pushScope(name=None):
     scopeStack.append(currScope)
     scopeST[currscope] = symbolTable(lastScope)
     if name is not None:
-        # 
+        #
 
 def popScope():
     global currScope

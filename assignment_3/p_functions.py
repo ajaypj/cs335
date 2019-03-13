@@ -106,16 +106,26 @@ def p_TypeSpec(p):
     if checkID(p[1], 'curr'):
         raise KeyError("Symbol " + name + " already exists")
     else:
-        scopeST[currScope].insert(p[1],p[-1]['type'])
-        scopeST[currScope].update(p[1],'class','TYPE')
+        scopeST[currScope][p[1]] = p[-1].copy()
 
 ################################################################################
 def p_Type(p):
-    ''' Type           		: LiteralType
-							| FunctionType
-                            | VARTYPE
-                            | ID '''
+    ''' Type           		: VARTYPE '''
+    p[0] = {}
+    p[0]['type'] = p[1]
+    p[0]['class'] = 'TYPE'
+
+def p_Type(p):
+    ''' Type           		: LiteralType '''
     p[0] = p[1]
+    p[0]['class'] = 'TYPE'
+
+def p_Type(p):
+    ''' Type           		: ID '''
+    if not checkID(p[1], 'curr'):
+        raise KeyError("Type not defined")
+    else:
+        p[0] = (scopeST[currScope].getInfo(p[1])).copy()
 
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
@@ -150,7 +160,8 @@ def p_FieldDecl(p):
     for iden in p[1]:
         if checkID(iden, 'curr'):
             raise KeyError("Symbol " + iden + " already exists")
-        scopeST[currScope].insert(iden, p[2]['type'])
+        (scopeST[currScope].table)[iden] = p[2].copy()
+        scopeST[currScope].update(iden, 'class', 'FIELD')
 
 def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
@@ -172,26 +183,29 @@ def p_MapType(p):
 
 def p_Signature(p):
     ''' Signature      		: Parameters
-							| Parameters Parameters
                             | Parameters Type '''
-    p[0] = 
+                            # | Parameters Parameters
+    p[0] = {}
+    p[0]['scopeno'] = currScope
+    p[0]['parameters'] = p[1]
+    if len(p) > 2:
+        p[0]['returntype'] = p[2]
+        p[0]['']
+    else:
+        p[0]['returntype'] = {}
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
 							| LPAREN ParameterList RPAREN
 							| LPAREN ParameterList COMMA RPAREN '''
-    # func(p,"Parameters")
 
 def p_ParameterList(p):
     ''' ParameterList  		: ParameterDecl
 							| ParameterList COMMA ParameterDecl '''
-    # func(p,"ParameterList")
 
 def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
-                            | IdentifierList Type
-                            | ELLIPSIS Type
-                            | IdentifierList ELLIPSIS Type '''
+                            | IdentifierList Type '''
     # func(p,"ParameterDecl")
 
 # def p_InterfaceType(p):
@@ -232,12 +246,13 @@ def p_VarSpec(p):
     for iden in p[1]:
         if checkID(iden, 'curr'):
             raise KeyError("Symbol " + iden + " already exists")
-        scopeST[currScope].insert(iden, p[2]['type'])
+        (scopeST[currScope].table)[iden] = p[2].copy()
+        scopeST[currScope].update(iden, 'class', 'VAR')
 
-        if p[2][type][0:5] == 'ARRAY':
-            scopeST[currScope].update(iden, 'size', p[2]['size'])
-        if p[2][type] == 'STRUCT':
-            scopeST[currScope].update(iden, 'scopeno', p[2]['scopeno'])
+        # if p[2][type][0:5] == 'ARRAY':
+        #     scopeST[currScope].update(iden, 'size', p[2]['size'])
+        # if p[2][type] == 'STRUCT':
+        #     scopeST[currScope].update(iden, 'scopeno', p[2]['scopeno'])
         # if p[2][type] == 'SLICE':
         #     scopeST[currScope].update(iden, '', p[2][''])
         # if p[2][type] == 'MAP':
