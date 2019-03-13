@@ -1,3 +1,25 @@
+var_no=0
+lineno=0
+
+
+def new_var():
+    global var_no
+    retVal='var_'+str(var_no)
+    var_no+=1
+    return retVal
+
+class expr():
+    def __init__(self):
+        self.place = new_var()
+        self.type =''
+        self.value=None
+        self.extra={}
+        self.code=[]
+
+
+
+
+
 def p_error(p):
     print "ERROR HERE"
     exit()
@@ -174,7 +196,7 @@ def p_Signature(p):
     ''' Signature      		: Parameters
 							| Parameters Parameters
                             | Parameters Type '''
-    p[0] = 
+    p[0] =
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -432,6 +454,7 @@ def p_ForStmt_1(p):
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
+    p[0]=p[1]
     # func(p,"Condition")
 
 def p_ForClause(p):
@@ -440,6 +463,7 @@ def p_ForClause(p):
 
 def p_ForClause_1(p):
     ''' ForClause_1 		: SimpleStmt '''
+    p[0]=p[1]
     # func(p,"ForClause_1")
 
 def p_ForClause_2(p):
@@ -469,52 +493,106 @@ def p_DeferStmt(p):
 def p_ExpressionList(p):
     ''' ExpressionList  	: Expression
 							| ExpressionList COMMA Expression '''
-    # func(p,"ExpressionList")
-
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=p[1]+[p[3]]
 def p_Expression(p):
     ''' Expression     		: Expression1
 							| UnaryExpr assign_op Expression '''
-    # func(p,"Expression")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_Expression1(p):
     ''' Expression1    		: Expression2
 							| Expression1 LOR Expression2 '''
-    # func(p,"Expression1")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_Expression2(p):
     ''' Expression2    		: Expression3
 							| Expression2 LAND Expression3 '''
-    # func(p,"Expression2")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_Expression3(p):
     ''' Expression3    		: Expression4
 							| Expression3 rel_op Expression4 '''
-    # func(p,"Expression3")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_Expression4(p):
     ''' Expression4    		: Expression5
 							| Expression4 add_op Expression5 '''
-    # func(p,"Expression4")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_Expression5(p):
     ''' Expression5    		: UnaryExpr
 							| Expression5 mul_op UnaryExpr '''
-    # func(p,"Expression5")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
+        lineno+=1
 
 def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
 							| unary_op UnaryExpr '''
-    # func(p,"UnaryExpr")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=expr()
+        p[0].code=(p[2].code).append(str(lineno)+','+p[1]+','+p[0].place+','+p[1].place+'\n')
+        lineno+=1
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand
-                            | MethodExpr
-							| PrimaryExpr Selector
-							| PrimaryExpr Index
-							| PrimaryExpr Slice
-							| PrimaryExpr TypeAssertion
-							| PrimaryExpr Arguments '''
-    # func(p,"PrimaryExpr")
+    '''
+                            # | MethodExpr
+    p[0]=p[1]
+def p_PrimaryExpr1(p):
+    ''' PrimaryExpr    		: PrimaryExpr Selector
+    '''
+
+def p_PrimaryExpr2(p):
+    ''' PrimaryExpr    		: PrimaryExpr Index
+    '''
+def p_PrimaryExpr3(p):
+    ''' PrimaryExpr    		: PrimaryExpr Slice
+    '''
+
+def p_PrimaryExpr4(p):
+    ''' PrimaryExpr    		: PrimaryExpr TypeAssertion
+    '''
+def p_PrimaryExpr5(p):
+    ''' PrimaryExpr    		: PrimaryExpr Arguments
+    '''
+
+
+
+
 
 # def p_Conversion(p):
 #     ''' Conversion        	: Type LPAREN Expression COMMA RPAREN
@@ -563,37 +641,74 @@ def p_Arguments(p):
                             | LPAREN Type ELLIPSIS RPAREN
                             | LPAREN Type COMMA RPAREN
                             | LPAREN Type RPAREN '''
-    # func(p,"Arguments")
+
 
 def p_Operand(p):
-    ''' Operand        		: Literal
-							| ID
-                            | ID PERIOD ID
-							| LPAREN Expression RPAREN '''
-    # func(p,"Operand")
+    ''' Operand        		: Literal'''
+    p[0]=p[1]
+
+def p_Operand1(p):
+    ''' Operand        		: ID'''
+    if checkID(ID,'curr')==False:
+        raise KeyError("Symbol " + name + " doesn't exist, cant access,p_functions.py in line no ")
+
+    if (scopeST[currScope].table)[p[1]]["class"]!='VAR':
+        raise KeyError("The identifier used is not variable,p_functions.py in line no ")
+
+    p[0]=expr()
+    p[0].type=(scopeST[currScope].table)[p[1]]["type"]
+    p[0].place=p[1]
+
+def p_Operand2(p):# Doubt
+    ''' Operand        		: ID PERIOD ID'''
+
+def p_Operand3(p):
+    ''' Operand        		: LPAREN Expression RPAREN'''
+    p[0]=p[2]
+
+
 
 def p_Literal(p):
-    ''' Literal        		: BasicLit
-                            | FunctionLit
-							| CompositeLit '''
-    # func(p,"Literal")
+    ''' Literal        		: BasicLit '''
+                            # | FunctionLit
+							# | CompositeLit
+    p[0]=p[1]
 
 def p_BasicLit(p):
-    ''' BasicLit       		: INT
-							| FLOAT
-							| STRING
-							| IMAG '''
-    # func(p,"BasicLit")
+    ''' BasicLit       		: INT '''
+    p[0]=expr()
+    p[0].type='int'
+    p[0].value=int(p[1])
+
+def p_BasicLit1(p):
+    ''' BasicLit       		: FLOAT '''
+    p[0]=expr()
+    p[0].type='float'
+    p[0].value=float(p[1])
+
+def p_BasicLit2(p):
+    ''' BasicLit       		: STRING '''
+    p[0]=expr()
+    p[0].type='string'
+    p[0].value=p[1]
+
+def p_BasicLit3(p):
+    ''' BasicLit       		: IMAG '''
+    p[0]=expr()
+    p[0].type='complex'
+    p[0].value=complex(p[1])
+
+
 
 def p_FunctionLit(p):
     ''' FunctionLit         : FUNC Signature Block '''
-    # func(p,"FunctionLit")
+    # Goto Label Then p[0]=return value
 
 def p_CompositeLit(p):
     ''' CompositeLit   		: ID LiteralValue
                             | LiteralType LiteralValue
                             | LBRACK ELLIPSIS RBRACK Operand LiteralValue '''
-    # func(p,"CompositeLit")
+    #
 
 def p_LiteralValue(p):
     ''' LiteralValue   		: LBRACE RBRACE
@@ -622,7 +737,7 @@ def p_Key(p):
 def p_Element(p):
     ''' Element        		: Expression
 							| LiteralValue '''
-    # func(p,"Element")
+
 
 def p_assign_op(p):
     ''' assign_op      		: ASSIGN
@@ -636,7 +751,9 @@ def p_assign_op(p):
 							| XOR_ASSIGN
 							| SHL_ASSIGN
 							| SHR_ASSIGN
-							| AND_NOT_ASSIGN '''
+							| AND_NOT_ASSIGN
+    '''
+    p[0]=p[1]
     # func(p,"assign_op")
 
 def p_rel_op(p):
@@ -645,15 +762,16 @@ def p_rel_op(p):
 							| LSS
 							| LEQ
 							| GTR
-							| GEQ '''
-    # func(p,"rel_op")
+							| GEQ
+    '''
+    p[0]=p[1]
 
 def p_add_op(p):
     ''' add_op         		: ADD
 							| SUB
 							| OR
 							| XOR '''
-    # func(p,"add_op")
+    p[0]=p[1]
 
 def p_mul_op(p):
     ''' mul_op         		: MUL
@@ -663,7 +781,7 @@ def p_mul_op(p):
 							| SHR
 							| AND
 							| AND_NOT '''
-    # func(p,"mul_op")
+    p[0]=p[1]
 
 def p_unary_op(p):
     ''' unary_op       		: ADD
@@ -673,4 +791,4 @@ def p_unary_op(p):
 							| MUL
 							| AND
 							| ARROW '''
-    # func(p,"unary_op")
+    p[0]=p[1]
