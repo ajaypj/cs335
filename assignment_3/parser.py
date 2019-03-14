@@ -22,6 +22,12 @@ labelDic={}
 labelDic['0']=None
 currLabel="0"
 
+def printList(list):
+    for i in list:
+        print i
+
+
+
 def checkID(identifier, typeOf):
     if typeOf == 'global':
         return scopeST[0].getInfo(identifier)
@@ -63,6 +69,12 @@ def new_var():
     global var_no
     retVal='var_'+str(var_no)
     var_no+=1
+    return retVal
+
+def createLabel():
+    global labelNo
+    retVal='label_'+str(labelNo)
+    labelNo+=1
     return retVal
 
 class expr():
@@ -120,6 +132,7 @@ def p_TopLevelDeclList(p):
 def p_TopLevelDecl(p):
     ''' TopLevelDecl   		: Declaration
 							| FunctionDecl '''
+    p[0]=p[1]
 							# | MethodDecl '''
 
 ################################################################################
@@ -153,7 +166,8 @@ def p_FunctionDecl(p):
     else:
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
-
+    if len(p)==7:
+        print printList(p[5])
 # def p_MethodDecl(p):
 #     ''' MethodDecl     		: FUNC Parameters ID Signature
 #                             | FUNC Parameters ID Signature Block '''
@@ -163,7 +177,7 @@ def p_Declaration(p):
     ''' Declaration    		: ConstDecl
                             | TypeDecl
 							| VarDecl '''
-
+    p[0]=[]
 def p_ConstDecl(p):
     ''' ConstDecl           : '''
 
@@ -420,6 +434,7 @@ def p_EmptyStmt(p):
 
 def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
+    p[0]=p[1].code
     # func(p,"ExpressionStmt")
 
 # def p_SendStmt(p):
@@ -460,7 +475,8 @@ def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
 							| RETURN ExpressionList '''
     if len(p)==3:
-        p[0]=["=,retVal,"+p[2][0].place]
+        p[0]=p[2][0].code
+        p[0]+=["=,retVal,"+p[2][0].place]
 
     # func(p,"ReturnStmt")
 
@@ -468,49 +484,114 @@ def p_ReturnStmt(p):
 def p_BreakStmt(p):
     ''' BreakStmt      		: BREAK
 							| BREAK ID '''
-    global currLabel
+    # global currLabel
     if len(p)==2:
-        if currLabel in labelDic.keys():
-            goto=
-
-        p[0]=["goto,"]
+        # if currLabel in labelDic.keys():
+        gt=labelDic[currLabel]
+        if gt is not None:
+            p[0]=["goto,"+gt]
+        else:
+            raise Exception("Nothing to Break")
     else:
         # check if ID in Label
-        p[0]=[]
+        if p[2] in labelDic.keys():
+            p[0]=["goto,"+p[2]]
+        else:
+            raise Exception("LABEL "+ p[2]+" Doesn't exist")
+
     # func(p,"BreakStmt")
 
 def p_ContinueStmt(p):
     ''' ContinueStmt   		: CONTINUE
 							| CONTINUE ID '''
+    if len(p)==2:
+        if currLabel != "0":
+            p[0]=["goto,"+currLabel]
+        else:
+            raise Exception("Nothing To CONTINUE")
+    else:
+        if p[2] in labelDic.keys():
+            p[0]=["goto,"+p[2]]
+        else:
+            raise Exception("LABEL "+ p[2]+" Doesn't exist")
+
+
     # func(p,"ContinueStmt")
 
+# Doubt
 def p_LabeledStmt(p):
     ''' LabeledStmt    		: ID COLON Statement '''
-    # func(p,"LabeledStmt")
+    labelDic[p[1]]="Created"
+    p[0]=[p[1]+':',p[2].code]
+
 
 def p_GotoStmt(p):
     ''' GotoStmt       		: GOTO ID '''
+    if p[2] in labelDic.keys():
+        p[0]=["goto,"+p[2]]
     # func(p,"GotoStmt")
 
 ################################################################################
 def p_IfStmt(p):
-    ''' IfStmt         		: IF OPENB Expression Block CLOSEB
-							| IF OPENB SimpleStmt SEMICOLON Expression Block CLOSEB
-							| IF OPENB Expression Block ELSE Block CLOSEB
-							| IF OPENB Expression Block ELSE IfStmt CLOSEB
-							| IF OPENB SimpleStmt SEMICOLON Expression Block ELSE IfStmt CLOSEB
-							| IF OPENB SimpleStmt SEMICOLON Expression Block ELSE Block CLOSEB '''
-    # func(p,"IfStmt")
+    ''' IfStmt         		: IF Expression StartScope Block EndScope'''
+
+                            # | IF Expression StartScope Block EndScope ELSE StartScope Block EndScope
+                            # | IF Expression StartScope Block EndScope ELSE StartScope IfStmt EndScope
+                            # | IF SimpleStmt SEMICOLON Expression Block ELSE IfStmt
+                            # | IF SimpleStmt SEMICOLON Expression Block ELSE Block
+                            # | IF SimpleStmt SEMICOLON Expression Block
+    endLabel=createLabel()
+
+    p[0]=p[2].code
+    # Consider gotoPos goes to Label if positive,similarly gotoZeoroNeg
+    p[0]+=["gotoZeoroNeg,"+p[2].place+","+endLabel]
+    p[0]+=p[4]
+    p[0]+=[endLabel+":"]
+
+def p_IfStmt1(p):
+    ''' IfStmt         		: IF Expression StartScope Block EndScope ELSE StartScope Block EndScope'''
+    p[0]=p[2].code
+    # Printed in the format  Else ifLabel If endLabel
+    ifLabel=createLabel()
+    endLabel=createLabel()
+    p[0]+=["gotoPos,"+p[2].place+","+ifLabel]
+    p[0]+=p[8]
+    p[0]+=["goto,"+endLabel]
+    p[0]+=[ifLabel+":"]
+    p[0]+=p[4]
+
+def p_IfStmt2(p):
+    ''' IfStmt         		: IF Expression StartScope Block EndScope ELSE StartScope IfStmt EndScope'''
+    p[0]=p[2].code
+    ifLabel=createLabel()
+    endLabel=createLabel()
+    p[0]+=["gotoPos,"+p[2].place+","+ifLabel]
+    p[0]+=p[8]
+    p[0]+=["goto,"+endLabel]
+    p[0]+=[ifLabel+":"]
+    p[0]+=p[4]
 
 def p_ForStmt(p):
     ''' ForStmt : FOR ForStmt1 Block '''
-    # func(p,"ForStmt")
+    forLabel=createLabel()
+    endLabel=createLabel()
+    p[0]=p[2][0]
+    p[0]+=[forLabel+":"]
+    p[0]+=p[2][1].code
+    p[0]+=["gotoNeg,"+p[2][1].place+","+endLabel]
+    p[0]+=p[3]
+    p[0]+=p[2][2]
+    p[0]+=["goto,"+forLabel]
+    p[0]+=[endLabel+":"]
 
 def p_ForStmt1(p):
-    ''' ForStmt1 		    : Condition
-    | ForClause
-    | RangeClause '''
-    # func(p,"ForStmt1")
+    ''' ForStmt1 		    : ForClause'''
+    p[0]=p[1]
+# def p_ForStmt1(p):
+#     ''' ForStmt1 		    : Condition
+#     | ForClause
+#     | RangeClause '''
+#     # func(p,"ForStmt1")
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
@@ -519,17 +600,18 @@ def p_Condition(p):
 
 def p_ForClause(p):
     ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
+    p[0]=[p[1],p[3],p[5]]
     # func(p,"ForClause")
 
-def p_RangeClause(p):
-    ''' RangeClause 		: RangeClause_1 RANGE Expression '''
-    # func(p,"RangeClause")
-
-def p_RangeClause_1(p):
-    ''' RangeClause_1 		: ExpressionList ASSIGN
-							| IdentifierList DEFINE
-							| '''
-    # func(p,"RangeClause_1")
+# def p_RangeClause(p):
+#     ''' RangeClause 		: RangeClause_1 RANGE Expression '''
+#     # func(p,"RangeClause")
+#
+# def p_RangeClause_1(p):
+#     ''' RangeClause_1 		: ExpressionList ASSIGN
+# 							| IdentifierList DEFINE
+# 							| '''
+#     # func(p,"RangeClause_1")
 
 def p_SwitchStmt(p):
     ''' SwitchStmt          : ExprSwitchStmt '''
@@ -841,33 +923,33 @@ def p_BasicLit3(p):
 #                             | LBRACK ELLIPSIS RBRACK Operand LiteralValue '''
 #     #
 
-def p_LiteralValue(p):
-    ''' LiteralValue   		: LBRACE RBRACE
-							| SEMICOLON RBRACE
-							| LBRACE ElementList RBRACE
-							| SEMICOLON ElementList RBRACE
-							| LBRACE ElementList COMMA RBRACE
-							| SEMICOLON ElementList COMMA RBRACE '''
+# def p_LiteralValue(p):
+#     ''' LiteralValue   		: LBRACE RBRACE
+# 							| SEMICOLON RBRACE
+# 							| LBRACE ElementList RBRACE
+# 							| SEMICOLON ElementList RBRACE
+# 							| LBRACE ElementList COMMA RBRACE
+# 							| SEMICOLON ElementList COMMA RBRACE '''
     # func(p,"LiteralValue")
 
-def p_ElementList(p):
-    ''' ElementList    		: KeyedElement
-							| ElementList COMMA KeyedElement '''
-    # func(p,"ElementList")
-
-def p_KeyedElement(p):
-    ''' KeyedElement   		: Element
-							| Key COLON Element '''
-    # func(p,"KeyedElement")
-
-def p_Key(p):
-    ''' Key            		: Expression
-							| LiteralValue '''
-    # func(p,"Key")
-
-def p_Element(p):
-    ''' Element        		: Expression
-							| LiteralValue '''
+# def p_ElementList(p):
+#     ''' ElementList    		: KeyedElement
+# 							| ElementList COMMA KeyedElement '''
+#     # func(p,"ElementList")
+#
+# def p_KeyedElement(p):
+#     ''' KeyedElement   		: Element
+# 							| Key COLON Element '''
+#     # func(p,"KeyedElement")
+#
+# def p_Key(p):
+#     ''' Key            		: Expression
+# 							| LiteralValue '''
+#     # func(p,"Key")
+#
+# def p_Element(p):
+#     ''' Element        		: Expression
+# 							| LiteralValue '''
 
 
 def p_assign_op(p):
