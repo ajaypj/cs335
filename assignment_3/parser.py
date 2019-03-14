@@ -582,7 +582,7 @@ def p_DeferStmt(p):
     ''' DeferStmt           : DEFER Expression '''
     # func(p,"DeferStmt")
 
-################################################################################
+##########################       Expression   ##########################
 def p_ExpressionList(p):
     ''' ExpressionList  	: Expression
 							| ExpressionList COMMA Expression '''
@@ -668,20 +668,27 @@ def p_PrimaryExpr(p):
 def p_PrimaryExpr1(p):
     ''' PrimaryExpr    		: PrimaryExpr Selector
     '''
+    # PrimaryExpr should be struct
 
 def p_PrimaryExpr2(p):
     ''' PrimaryExpr    		: PrimaryExpr Index
     '''
-def p_PrimaryExpr3(p):
-    ''' PrimaryExpr    		: PrimaryExpr Slice
-    '''
+    # PrimaryExpr Should be array
 
-def p_PrimaryExpr4(p):
-    ''' PrimaryExpr    		: PrimaryExpr TypeAssertion
-    '''
+
+# def p_PrimaryExpr3(p):
+#     ''' PrimaryExpr    		: PrimaryExpr Slice
+#     '''
+
+# def p_PrimaryExpr4(p):
+#     ''' PrimaryExpr    		: PrimaryExpr TypeAssertion
+#     '''
+
 def p_PrimaryExpr5(p):
     ''' PrimaryExpr    		: PrimaryExpr Arguments
     '''
+    # PrimaryExpr should be function
+
 
 
 
@@ -752,8 +759,8 @@ def p_Operand1(p):
     p[0].type=(scopeST[currScope].table)[p[1]]["type"]
     p[0].place=p[1]
 
-def p_Operand2(p):# Doubt
-    ''' Operand        		: ID PERIOD ID'''
+# def p_Operand2(p):# Doubt
+#     ''' Operand        		: ID PERIOD ID'''
 
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN'''
@@ -793,15 +800,15 @@ def p_BasicLit3(p):
 
 
 
-def p_FunctionLit(p):
-    ''' FunctionLit         : FUNC Signature Block '''
-    # Goto Label Then p[0]=return value
+# def p_FunctionLit(p):
+#     ''' FunctionLit         : FUNC Signature Block '''
 
-def p_CompositeLit(p):
-    ''' CompositeLit   		: ID LiteralValue
-                            | LiteralType LiteralValue
-                            | LBRACK ELLIPSIS RBRACK Operand LiteralValue '''
-    #
+
+# def p_CompositeLit(p):
+#     ''' CompositeLit   		: ID LiteralValue
+#                             | LiteralType LiteralValue
+#                             | LBRACK ELLIPSIS RBRACK Operand LiteralValue '''
+#     #
 
 def p_LiteralValue(p):
     ''' LiteralValue   		: LBRACE RBRACE
