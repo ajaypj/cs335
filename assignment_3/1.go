@@ -6,5 +6,5 @@ import (
 );
 
 func main() {
-	var a int;
+	type a int;
 };

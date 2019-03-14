@@ -1,1 +1,1 @@
-{'a': {'type': 'int', 'cls': 'VAR'}}
+{'a': {'type': 'int', 'cls': 'TYPENAME'}}

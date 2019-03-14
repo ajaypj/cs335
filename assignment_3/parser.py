@@ -154,7 +154,7 @@ def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
 							| FUNC ID StartScope Signature Block EndScope '''
     if checkID(p[2], 'curr'):
-        raise KeyError("Symbol " + name + " already exists")
+        raise KeyError("Symbol " + p[2] + " already exists")
     else:
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
@@ -185,9 +185,11 @@ def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
     if checkID(p[1], 'curr'):
-        raise KeyError("Symbol " + name + " already exists")
+        raise KeyError("Symbol " + p[1] + " already exists")
+    elif len(p) == 4:
+        (scopeST[currScope].table)[p[1]] = p[3].copy()
     else:
-        scopeST[currScope][p[1]] = p[-1].copy()
+        (scopeST[currScope].table)[p[1]] = p[2].copy()
 
 ################################################################################
 def p_Type1(p):
@@ -427,9 +429,9 @@ def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
                             | EmptyStmt
 							| ExpressionStmt
-							| SendStmt
                             | IncDecStmt
                             | Assignment '''
+                            # | SendStmt
     p[0]=p[1]
 
 def p_EmptyStmt(p):
@@ -535,31 +537,31 @@ def p_ExprSwitchCase(p):
                             | CASE Expression '''
     # func(p,"ExprSwitchCase")
 
-def p_SelectStmt(p):
-    ''' SelectStmt     		: SELECT LBRACE RBRACE
-							| SELECT LBRACE CommClauseList RBRACE '''
-    # func(p,"SelectStmt")
-
-def p_CommClauseList(p):
-    ''' CommClauseList     	: CommClause
-                            | CommClauseList CommClause '''
-    # func(p,"CommClause")
-
-def p_CommClause(p):
-    ''' CommClause     		: CommCase COLON StatementList '''
-    # func(p,"CommClause")
-
-def p_CommCase(p):
-    ''' CommCase       		: CASE SendStmt
-							| DEFAULT
-							| CASE RecvStmt '''
-    # func(p,"CommCase")
-
-def p_RecvStmt(p):
-    ''' RecvStmt       		: ExpressionList ASSIGN Expression
-							| Expression
-							| IdentifierList DEFINE Expression '''
-    # func(p,"RecvStmt")
+# def p_SelectStmt(p):
+#     ''' SelectStmt     		: SELECT LBRACE RBRACE
+# 							| SELECT LBRACE CommClauseList RBRACE '''
+#     # func(p,"SelectStmt")
+#
+# def p_CommClauseList(p):
+#     ''' CommClauseList     	: CommClause
+#                             | CommClauseList CommClause '''
+#     # func(p,"CommClause")
+#
+# def p_CommClause(p):
+#     ''' CommClause     		: CommCase COLON StatementList '''
+#     # func(p,"CommClause")
+#
+# def p_CommCase(p):
+#     ''' CommCase       		: CASE SendStmt
+# 							| DEFAULT
+# 							| CASE RecvStmt '''
+#     # func(p,"CommCase")
+#
+# def p_RecvStmt(p):
+#     ''' RecvStmt       		: ExpressionList ASSIGN Expression
+# 							| Expression
+# 							| IdentifierList DEFINE Expression '''
+#     # func(p,"RecvStmt")
 
 def p_ForStmt(p):
     ''' ForStmt : FOR ForStmt1 Block '''
