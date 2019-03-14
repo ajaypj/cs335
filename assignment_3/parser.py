@@ -16,6 +16,11 @@ scopeNo = 0
 currScope = 0
 scopeST = {}
 scopeST[0] = symbolTable()
+labelNo=0
+# Stores parent of label
+labelDic={}
+labelDic['0']=None
+currLabel="0"
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -419,7 +424,7 @@ def p_ExpressionStmt(p):
 
 # def p_SendStmt(p):
 #     ''' SendStmt 		    : Expression ARROW Expression '''
-    # func(p,"SendStmt")
+#     func(p,"SendStmt")
 
 def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
@@ -454,11 +459,24 @@ def p_Assignment(p):
 def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
 							| RETURN ExpressionList '''
+    if len(p)==3:
+        p[0]=["=,retVal,"+p[2][0].place]
+
     # func(p,"ReturnStmt")
 
+### Not Done
 def p_BreakStmt(p):
     ''' BreakStmt      		: BREAK
 							| BREAK ID '''
+    global currLabel
+    if len(p)==2:
+        if currLabel in labelDic.keys():
+            goto=
+
+        p[0]=["goto,"]
+    else:
+        # check if ID in Label
+        p[0]=[]
     # func(p,"BreakStmt")
 
 def p_ContinueStmt(p):
@@ -589,8 +607,7 @@ def p_ExpressionList(p):
         p[0]=p[1]+[p[3]]
 
 def p_Expression(p):
-    ''' Expression     		: Expression1
-    '''
+    ''' Expression     		: Expression1 '''
                             # | UnaryExpr assign_op Expression
     if len(p)==2:
         p[0]=p[1]
@@ -653,14 +670,12 @@ def p_UnaryExpr(p):
         p[0].code=(p[2].code).append(p[1]+','+p[0].place+','+p[1].place)
 
 def p_PrimaryExpr(p):
-    ''' PrimaryExpr    		: Operand
-    '''
+    ''' PrimaryExpr    		: Operand '''
                             # | MethodExpr
     p[0]=p[1]
 
 def p_PrimaryExpr1(p):
-    ''' PrimaryExpr    		: PrimaryExpr Selector
-    '''
+    ''' PrimaryExpr    		: PrimaryExpr Selector '''
     # PrimaryExpr should be struct
 
 def p_Selector(p):
@@ -668,13 +683,11 @@ def p_Selector(p):
     # func(p,"Selector")
 
 def p_PrimaryExpr2(p):
-    ''' PrimaryExpr    		: PrimaryExpr Index
-    '''
+    ''' PrimaryExpr    		: PrimaryExpr Index '''
     # PrimaryExpr Should be array
 
 def p_Index(p):
     ''' Index          		: LBRACK Expression RBRACK '''
-
 
 # def p_PrimaryExpr3(p):
 #     ''' PrimaryExpr    		: PrimaryExpr Slice
@@ -701,13 +714,16 @@ def p_PrimaryExpr5(p):
                 raise Exception(i+"th type doesn't match in "+p[1].place)
             elif (p[2][i].extra)['type'] != dic['parameters'][i]:
                 raise Exception(i+"th type doesn't match in "+p[1].place)
-            else:
-                # Function call
-                p[0] = expr()
-                p[0].code=["jump,"+p[1].place]
-                p[0].code+=["="+p[0].place+',retVal']
-                p[0].extra['type']=dic["return"][0]
-    ### Multiple argum
+
+        # Function call
+        p[0] = expr()
+        for i in xrange(len(p[2])):
+            p[0].code+=p[2][i].code
+            p[0].code+=["=,param_"+str(i)+p[2][i].place]
+        p[0].code=["jump,"+p[1].place]
+        p[0].code+=["="+p[0].place+',retVal']
+        p[0].extra['type']=dic["return"][0]
+    ### Multiple returns
 
 def p_Arguments(p):
     ''' Arguments           : LPAREN RPAREN
@@ -744,7 +760,6 @@ def p_Arguments(p):
 #     ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
     # func(p,"TypeAssertion")
 
-
 def p_Operand(p):
     ''' Operand        		: Literal'''
     p[0]=p[1]
@@ -762,10 +777,8 @@ def p_Operand1(p):
     p[0].cls=dic["cls"]
     if p[0].cls=="VAR":
         p[0].extra["type"]=dic["type"]
-        if dic['type'][0:5] == 'ARRAY'
-            p[0].extra["type"]+=' '+dic["size"]
         if dic['type'] == 'STRUCT':
-            p[0].extra["type"]+=' '+dic["scopeno"]
+            p[0].extra["scopeno"] = dic["scopeno"]
     elif p[0].cls=="FUNC":
         p[0].extra["return"]=dic["return"]
         p[0].extra["parameters"]=dic["parameters"]
