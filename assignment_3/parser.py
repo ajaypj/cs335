@@ -19,27 +19,23 @@ scopeST[0] = symbolTable()
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
-        if scopeST[0].getInfo(identifier) is not None:
-            return True
-        return False
+        return scopeST[0].getInfo(identifier)
 
     if typeOf == 'curr':
-        if scopeST[currScope].getInfo(identifier) is not None:
-            return True
-        return False
+        return scopeST[currScope].getInfo(identifier)
 
     if typeOf == 'recent':
         for scope in scopeStack[::-1]:
             if scopeST[scope].getInfo(identifier) is not None:
-                info = scopeST[scope].getInfo(identifier)
-                if typeOf == '' or info['type'] == typeOf:
-                    return True
+                return scopeST[scope].getInfo(identifier)
+        return None
+
     # else:
     #     if scopeST[typeOf].getInfo(identifier) is not None:
     #         return True
     #     return False
 
-    return False
+    return None
 
 def pushScope(name=None):
     global currScope
@@ -118,8 +114,8 @@ def p_TopLevelDeclList(p):
 
 def p_TopLevelDecl(p):
     ''' TopLevelDecl   		: Declaration
-							| FunctionDecl
-							| MethodDecl '''
+							| FunctionDecl '''
+							# | MethodDecl '''
 
 ################################################################################
 def p_OPENB(p):
@@ -153,10 +149,10 @@ def p_FunctionDecl(p):
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
 
-def p_MethodDecl(p):
-    ''' MethodDecl     		: FUNC Parameters ID Signature
-                            | FUNC Parameters ID Signature Block '''
-    # func(p,"MethodDecl")
+# def p_MethodDecl(p):
+#     ''' MethodDecl     		: FUNC Parameters ID Signature
+#                             | FUNC Parameters ID Signature Block '''
+#     # func(p,"MethodDecl")
 
 def p_Declaration(p):
     ''' Declaration    		: ConstDecl
@@ -178,7 +174,7 @@ def p_TypeSpecList(p):
 def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
-    if checkID(p[1], 'curr'):
+    if checkID(p[1], 'curr') is not None:
         raise KeyError("Symbol " + p[1] + " already exists")
     elif len(p) == 4:
         (scopeST[currScope].table)[p[1]] = p[3].copy()
@@ -197,10 +193,12 @@ def p_Type2(p):
 
 def p_Type3(p):
     ''' Type           		: ID '''
-    if not checkID(p[1], 'curr'):
+    if checkID(p[1], 'recent') is None:
+            raise KeyError("Type not defined")
+    elif checkID(p[1], 'recent')['class'] != 'TYPENAME':
         raise KeyError("Type not defined")
     else:
-        p[0] = ((scopeST[currScope].table).getInfo(p[1])).copy()
+        p[0] = (checkID(p[1], 'recent')).copy()
 
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
@@ -233,7 +231,7 @@ def p_FieldDecl(p):
     ''' FieldDecl      		: IdentifierList Type STRING
 							| IdentifierList Type '''
     for iden in p[1]:
-        if checkID(iden, 'curr'):
+        if checkID(iden, 'curr') is not None:
             raise KeyError("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
@@ -350,7 +348,7 @@ def p_VarSpec(p):
 							| IdentifierList Type ASSIGN ExpressionList
                             | IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE '''
     for iden in p[1]:
-        if checkID(iden, 'curr'):
+        if checkID(iden, 'curr') is not None:
             raise KeyError("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
@@ -696,6 +694,10 @@ def p_PrimaryExpr2(p):
 def p_PrimaryExpr5(p):
     ''' PrimaryExpr    		: PrimaryExpr Arguments
     '''
+    if checkID(p[1].place,'global') is None:
+        raise Exception("Expected a name of function")
+    elif checkID(p[1].place,'global')["class"] != "FUNC":
+        raise Exception("Expected a name of function")
     # PrimaryExpr should be function
 
 
@@ -757,19 +759,20 @@ def p_Operand(p):
 
 def p_Operand1(p):
     ''' Operand        		: ID'''
-    if checkID(p[1],'curr')==False:
+    dic = checkID(p[1],'recent')
+    if dic is None:
         raise KeyError("Symbol " + p[1] + " doesn't exist, cant access,p_functions.py in line no ")
 
-    if (scopeST[currScope].table)[p[1]]["cls"]!='VAR':
+    if dic["cls"]!='VAR':
         raise KeyError("The identifier used is not variable,p_functions.py in line no ")
 
     p[0]=expr()
-    p[0].cls=(scopeST[currScope].table)[p[1]]["cls"]
+    p[0].cls=dic["cls"]
     if p[0].cls=="VAR":
-        p[0].extra["type"]=(scopeST[currScope].table)[p[1]]["type"]
+        p[0].extra["type"]=dic["type"]
     elif p[0].cls=="FUNC":
-        p[0].extra["return"]=(scopeST[currScope].table)[p[1]]["return"]
-        p[0].extra["parameters"]=(scopeST[currScope].table)[p[1]]["parameters"]
+        p[0].extra["return"]=dic["return"]
+        p[0].extra["parameters"]=dic["parameters"]
     else:
         raise KeyError("The variable"+p[1]+"cannot be an operand")
     p[0].place=p[1]
