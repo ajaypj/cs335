@@ -386,12 +386,16 @@ def p_ShortVarDecl(p):
 ################################################################################
 def p_Block(p):
     ''' Block          		: LBRACE StatementList RBRACE '''
-
+    p[0]=p[2]
     # func(p,"Block")
 
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
 							| Statement SEMICOLON '''
+    if len(p)==3:
+        p[0]=p[1]
+    else:
+        p[0]=p[1]+p[2]
     # func(p,"StatementList")
 
 def p_Statement(p):
@@ -413,6 +417,10 @@ def p_Statement(p):
     # | RecvStmt
     # | DeferStmt
     # func(p,"Statement")
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=p[2]
 
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
@@ -464,7 +472,7 @@ def p_Assignment(p):
         else:
             p[0]+=[p[2][0]+','+p[1][i].place +","+p[3][i].place]
 
-    print p[0]
+    # print p[0]
 
 def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
