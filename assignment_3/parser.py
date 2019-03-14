@@ -39,7 +39,6 @@ def checkID(identifier, typeOf):
             return True
         return False
 
-
     return False
 
 def pushScope(name=None):
@@ -225,7 +224,7 @@ def p_StructType(p):
 							| STRUCT StructScope LBRACE RBRACE EndScope '''
     p[0] = {}
     p[0]['type'] = 'STRUCT'
-    if len(p) == 5:
+    if len(p) == 7:
         p[0]['scopeno'] = p[4]
 
 def p_FieldDeclList(p):
@@ -267,9 +266,9 @@ def p_Signature(p):
     p[0]['parameters'] = p[1]
     stri = p[2]['type']
     if p[2][type][0:5] == 'ARRAY':
-        stri += str(p[2]['size'])
+        stri += ' '+str(p[2]['size'])
     if p[2][type] == 'STRUCT':
-        stri += str(p[2]['scopeno'])
+        stri += ' '+str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
 def p_Signature(p):
@@ -304,18 +303,18 @@ def p_ParameterDecl(p):
     if len(p) == 2:
         stri = p[1]['type']
         if p[2][type][0:5] == 'ARRAY':
-            stri += str(p[2]['size'])
+            stri += ' '+str(p[2]['size'])
         if p[2][type] == 'STRUCT':
-            stri += str(p[2]['scopeno'])
+            stri += ' '+str(p[2]['scopeno'])
         p[0] = [stri]
     else:
         p[0] = []
         for iden in p[1]:
             stri = p[2]['type']
             if p[2][type][0:5] == 'ARRAY':
-                stri += str(p[2]['size'])
+                stri += ' '+str(p[2]['size'])
             if p[2][type] == 'STRUCT':
-                stri += str(p[2]['scopeno'])
+                stri += ' '+str(p[2]['scopeno'])
             p[0].append(stri)
 
 # def p_InterfaceType(p):
