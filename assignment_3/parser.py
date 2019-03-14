@@ -404,7 +404,6 @@ def p_Statement(p):
     ''' Statement      		: Declaration
 							| LabeledStmt
                             | SimpleStmt
-                            | GoStmt
 							| ReturnStmt
 							| BreakStmt
 							| ContinueStmt
@@ -413,9 +412,11 @@ def p_Statement(p):
 							| StartScope Block EndScope
 							| IfStmt
                             | SwitchStmt
-							| SelectStmt
 							| ForStmt
-                            | DeferStmt '''
+    '''
+    # | SelectStmt
+    # | GoStmt
+    # | DeferStmt
     # func(p,"Statement")
 
 def p_LabeledStmt(p):
@@ -429,28 +430,45 @@ def p_SimpleStmt(p):
 							| SendStmt
                             | IncDecStmt
                             | Assignment '''
-    # func(p,"SimpleStmt")
+    p[0]=p[1]
 
 def p_EmptyStmt(p):
     ''' EmptyStmt      		: '''
     # func(p,"EmptyStmt")
+    p[0]=[]
 
 def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
     # func(p,"ExpressionStmt")
 
-def p_SendStmt(p):
-    ''' SendStmt 		    : Expression ARROW Expression '''
+# def p_SendStmt(p):
+#     ''' SendStmt 		    : Expression ARROW Expression '''
     # func(p,"SendStmt")
 
 def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
                             | Expression DEC '''
-    # func(p,"IncDecStmt")
+    # Check that Expression is a variable or UnaryExpr
+    p[0]=p[1].code
+    str=''
+    if p[2]=='++':
+        str='+'
+    else:
+        str='-'
+    str+=p[1].place+','+p[1].place+',1'
+    p[0]+=[str]
 
 def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
-    # func(p,"Assignment")
+        # Break assign_op into multiple parts
+    if len(p[1])!=len(p[3]):
+        raise Exception("No of Expression in both side of assign_op do not match")
+    p[0]=[]
+    for i in range(len(p[1])):
+        p[0]+=p[3][i].code
+
+    for i in range(len(p[1])):
+        p[0]+=[p[2][0]+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
 
 def p_GoStmt(p):
     '''GoStmt               : GO Expression'''
@@ -586,7 +604,8 @@ def p_ExpressionList(p):
         p[0]=p[1]+[p[3]]
 def p_Expression(p):
     ''' Expression     		: Expression1
-							| UnaryExpr assign_op Expression '''
+    '''
+                            # | UnaryExpr assign_op Expression
     if len(p)==2:
         p[0]=p[1]
     else:
@@ -693,8 +712,8 @@ def p_PrimaryExpr5(p):
 # 							| Type LPAREN Expression RPAREN '''
 #     # func(p,"Conversion")
 
-def p_MethodExpr(p):
-    ''' MethodExpr       	: Type PERIOD ID '''
+# def p_MethodExpr(p):
+#     ''' MethodExpr       	: Type PERIOD ID '''
     # func(p,"MethodExpr")
 
 def p_Selector(p):
