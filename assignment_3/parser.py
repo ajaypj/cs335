@@ -39,6 +39,7 @@ def checkID(identifier, typeOf):
             return True
         return False
 
+
     return False
 
 def pushScope(name=None):
@@ -224,7 +225,7 @@ def p_StructType(p):
 							| STRUCT StructScope LBRACE RBRACE EndScope '''
     p[0] = {}
     p[0]['type'] = 'STRUCT'
-    if len(p) == 7:
+    if len(p) == 5:
         p[0]['scopeno'] = p[4]
 
 def p_FieldDeclList(p):
@@ -266,9 +267,9 @@ def p_Signature(p):
     p[0]['parameters'] = p[1]
     stri = p[2]['type']
     if p[2][type][0:5] == 'ARRAY':
-        stri += ' '+str(p[2]['size'])
+        stri += str(p[2]['size'])
     if p[2][type] == 'STRUCT':
-        stri += ' '+str(p[2]['scopeno'])
+        stri += str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
 def p_Signature(p):
@@ -303,18 +304,18 @@ def p_ParameterDecl(p):
     if len(p) == 2:
         stri = p[1]['type']
         if p[2][type][0:5] == 'ARRAY':
-            stri += ' '+str(p[2]['size'])
+            stri += str(p[2]['size'])
         if p[2][type] == 'STRUCT':
-            stri += ' '+str(p[2]['scopeno'])
+            stri += str(p[2]['scopeno'])
         p[0] = [stri]
     else:
         p[0] = []
         for iden in p[1]:
             stri = p[2]['type']
             if p[2][type][0:5] == 'ARRAY':
-                stri += ' '+str(p[2]['size'])
+                stri += str(p[2]['size'])
             if p[2][type] == 'STRUCT':
-                stri += ' '+str(p[2]['scopeno'])
+                stri += str(p[2]['scopeno'])
             p[0].append(stri)
 
 # def p_InterfaceType(p):
@@ -391,31 +392,38 @@ def p_IdentifierList(p):
 ################################################################################
 def p_Block(p):
     ''' Block          		: LBRACE StatementList RBRACE '''
-
+    p[0]=p[2]
     # func(p,"Block")
 
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
 							| Statement SEMICOLON '''
+    if len(p)==3:
+        p[0]=p[1]
+    else:
+        p[0]=p[1]+p[3]
+
     # func(p,"StatementList")
 
 def p_Statement(p):
     ''' Statement      		: Declaration
 							| LabeledStmt
                             | SimpleStmt
-                            | GoStmt
 							| ReturnStmt
 							| BreakStmt
 							| ContinueStmt
-							| GotoStmt
-                            | FallthroughStmt
+                            | GotoStmt
 							| StartScope Block EndScope
 							| IfStmt
                             | SwitchStmt
-							| SelectStmt
+                            | FallthroughStmt
 							| ForStmt
-                            | DeferStmt '''
+    '''
+                            # | DeferStmt
+                            # | SelectStmt
+                            # | GoStmt
     # func(p,"Statement")
+
 
 def p_LabeledStmt(p):
     ''' LabeledStmt    		: ID COLON Statement '''
@@ -425,8 +433,8 @@ def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
                             | EmptyStmt
                             | IncDecStmt
+                            | ExpressionStmt
                             | Assignment '''
-                            # | ExpressionStmt
                             # | SendStmt
     p[0]=p[1]
 
@@ -434,9 +442,9 @@ def p_EmptyStmt(p):
     ''' EmptyStmt      		: '''
     p[0]=[]
 
-# def p_ExpressionStmt(p):
-#     ''' ExpressionStmt 		: Expression '''
-
+def p_ExpressionStmt(p):
+    ''' ExpressionStmt 		: Expression '''
+    p[0]=p[1].code
 
 # def p_SendStmt(p):
 #     ''' SendStmt 		    : Expression ARROW Expression '''
@@ -468,9 +476,9 @@ def p_Assignment(p):
     for i in range(len(p[1])):
         p[0]+=[p[2][0]+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
 
-def p_GoStmt(p):
-    '''GoStmt               : GO Expression'''
-    # func(p,"GoStmt")
+# def p_GoStmt(p):
+#     '''GoStmt               : GO Expression'''
+
 
 def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
@@ -533,9 +541,9 @@ def p_ExprSwitchCase(p):
                             | CASE Expression '''
     # func(p,"ExprSwitchCase")
 
-def p_SelectStmt(p):
-    ''' SelectStmt     		: SELECT LBRACE RBRACE
-							| SELECT LBRACE CommClauseList RBRACE '''
+# def p_SelectStmt(p):
+#     ''' SelectStmt     		: SELECT LBRACE RBRACE
+# 							| SELECT LBRACE CommClauseList RBRACE '''
     # func(p,"SelectStmt")
 
 def p_CommClauseList(p):
@@ -603,8 +611,8 @@ def p_RangeClause_1(p):
 							| '''
     # func(p,"RangeClause_1")
 
-def p_DeferStmt(p):
-    ''' DeferStmt           : DEFER Expression '''
+# def p_DeferStmt(p):
+#     ''' DeferStmt           : DEFER Expression '''
     # func(p,"DeferStmt")
 
 ##########################       Expression   ##########################
