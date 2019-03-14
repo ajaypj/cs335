@@ -84,48 +84,42 @@ def p_SourceFile(p):
                             | PackageClause ImportDeclList
                             | PackageClause TopLevelDeclList
                             | PackageClause '''
-    # func(p,"SourceFile")
+
 
 def p_PackageClause(p):
     ''' PackageClause  		: PACKAGE ID SEMICOLON '''
-    # func(p,"PackageClause")
+
 
 def p_ImportDeclList(p):
     ''' ImportDeclList 		: ImportDecl SEMICOLON
 							| ImportDeclList ImportDecl SEMICOLON '''
-    # func(p,"ImportDeclList")
+
 
 def p_ImportDecl(p):
     ''' ImportDecl     		: IMPORT LPAREN ImportSpecList RPAREN
                             | IMPORT LPAREN RPAREN
 							| IMPORT ImportSpec '''
-    # func(p,"ImportDecl")
 
 def p_ImportSpecList(p):
     ''' ImportSpecList 		: ImportSpec SEMICOLON
 							| ImportSpecList ImportSpec SEMICOLON '''
-    # func(p,"ImportSpecList")
 
 def p_ImportSpec(p):
     ''' ImportSpec     		: ID ImportPath
 							| PERIOD ImportPath
 							| ImportPath '''
-    # func(p,"ImportSpec")
 
 def p_ImportPath(p):
     ''' ImportPath     		: STRING '''
-    # func(p,"ImportPath")
 
 def p_TopLevelDeclList(p):
     ''' TopLevelDeclList    : TopLevelDecl SEMICOLON
 							| TopLevelDeclList TopLevelDecl SEMICOLON '''
-    # func(p,"TopLevelDeclList")
 
 def p_TopLevelDecl(p):
     ''' TopLevelDecl   		: Declaration
 							| FunctionDecl
 							| MethodDecl '''
-    # func(p,"TopLevelDecl")
 
 ################################################################################
 def p_OPENB(p):
