@@ -398,26 +398,22 @@ def p_StatementList(p):
 
 def p_Statement(p):
     ''' Statement      		: Declaration
-							| LabeledStmt
                             | SimpleStmt
 							| ReturnStmt
 							| BreakStmt
 							| ContinueStmt
+                            | LabeledStmt
 							| GotoStmt
-                            | FallthroughStmt
 							| StartScope Block EndScope
 							| IfStmt
+                            | ForStmt
                             | SwitchStmt
-							| ForStmt
+                            | FallthroughStmt
     '''
     # | SelectStmt
     # | GoStmt
     # | DeferStmt
     # func(p,"Statement")
-
-def p_LabeledStmt(p):
-    ''' LabeledStmt    		: ID COLON Statement '''
-    # func(p,"LabeledStmt")
 
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
@@ -490,13 +486,13 @@ def p_ContinueStmt(p):
 							| CONTINUE ID '''
     # func(p,"ContinueStmt")
 
+def p_LabeledStmt(p):
+    ''' LabeledStmt    		: ID COLON Statement '''
+    # func(p,"LabeledStmt")
+
 def p_GotoStmt(p):
     ''' GotoStmt       		: GOTO ID '''
     # func(p,"GotoStmt")
-
-def p_FallthroughStmt(p):
-    ''' FallthroughStmt     : FALLTHROUGH '''
-    # func(p,"FallthroughStmt")
 
 ################################################################################
 def p_IfStmt(p):
@@ -507,6 +503,35 @@ def p_IfStmt(p):
 							| IF OPENB SimpleStmt SEMICOLON Expression Block ELSE IfStmt CLOSEB
 							| IF OPENB SimpleStmt SEMICOLON Expression Block ELSE Block CLOSEB '''
     # func(p,"IfStmt")
+
+def p_ForStmt(p):
+    ''' ForStmt : FOR ForStmt1 Block '''
+    # func(p,"ForStmt")
+
+def p_ForStmt1(p):
+    ''' ForStmt1 		    : Condition
+    | ForClause
+    | RangeClause '''
+    # func(p,"ForStmt1")
+
+def p_Condition(p):
+    ''' Condition 		    : Expression '''
+    p[0]=p[1]
+    # func(p,"Condition")
+
+def p_ForClause(p):
+    ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
+    # func(p,"ForClause")
+
+def p_RangeClause(p):
+    ''' RangeClause 		: RangeClause_1 RANGE Expression '''
+    # func(p,"RangeClause")
+
+def p_RangeClause_1(p):
+    ''' RangeClause_1 		: ExpressionList ASSIGN
+							| IdentifierList DEFINE
+							| '''
+    # func(p,"RangeClause_1")
 
 def p_SwitchStmt(p):
     ''' SwitchStmt          : ExprSwitchStmt '''
@@ -536,6 +561,10 @@ def p_ExprSwitchCase(p):
                             | CASE Expression '''
     # func(p,"ExprSwitchCase")
 
+def p_FallthroughStmt(p):
+    ''' FallthroughStmt     : FALLTHROUGH '''
+    # func(p,"FallthroughStmt")
+
 # def p_SelectStmt(p):
 #     ''' SelectStmt     		: SELECT LBRACE RBRACE
 # 							| SELECT LBRACE CommClauseList RBRACE '''
@@ -561,39 +590,10 @@ def p_ExprSwitchCase(p):
 # 							| Expression
 # 							| IdentifierList DEFINE Expression '''
 #     # func(p,"RecvStmt")
-
-def p_ForStmt(p):
-    ''' ForStmt : FOR ForStmt1 Block '''
-    # func(p,"ForStmt")
-
-def p_ForStmt1(p):
-    ''' ForStmt1 		    : Condition
-							| ForClause
-							| RangeClause '''
-    # func(p,"ForStmt1")
-
-def p_Condition(p):
-    ''' Condition 		    : Expression '''
-    p[0]=p[1]
-    # func(p,"Condition")
-
-def p_ForClause(p):
-    ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
-    # func(p,"ForClause")
-
-def p_RangeClause(p):
-    ''' RangeClause 		: RangeClause_1 RANGE Expression '''
-    # func(p,"RangeClause")
-
-def p_RangeClause_1(p):
-    ''' RangeClause_1 		: ExpressionList ASSIGN
-							| IdentifierList DEFINE
-							| '''
-    # func(p,"RangeClause_1")
-
-def p_DeferStmt(p):
-    ''' DeferStmt           : DEFER Expression '''
-    # func(p,"DeferStmt")
+#
+# def p_DeferStmt(p):
+#     ''' DeferStmt           : DEFER Expression '''
+#     # func(p,"DeferStmt")
 
 ##########################       Expression   ##########################
 def p_ExpressionList(p):
