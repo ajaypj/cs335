@@ -97,7 +97,7 @@ def p_FunctionDecl(p):
     if checkID(p[2], 'curr'):
         raise KeyError("Symbol " + name + " already exists")
     else:
-        scopeST[currScope][p[2]] = p[4].deepcopy()
+        scopeST[currScope][p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'class', 'FUNC')
 
 def p_MethodDecl(p):
@@ -133,9 +133,7 @@ def p_TypeSpec(p):
 ################################################################################
 def p_Type(p):
     ''' Type           		: VARTYPE '''
-    p[0] = {}
-    p[0]['type'] = p[1]
-    p[0]['class'] = 'TYPE'
+    p[0] = {'type' : p[1], 'class' : 'TYPE'}
 
 def p_Type(p):
     ''' Type           		: LiteralType '''
@@ -190,13 +188,13 @@ def p_PointerType(p):
     p[0] = {}
     p[0]['type'] = 'POINTER(' + p[2] + ')'
 
-def p_SliceType(p):
-    ''' SliceType      		: LBRACK RBRACK Type '''
-    # func(p,"SliceType")
-
-def p_MapType(p):
-    ''' MapType        		: MAP LBRACK Type RBRACK Type '''
-    # func(p,"MapType")
+# def p_SliceType(p):
+#     ''' SliceType      		: LBRACK RBRACK Type '''
+#     # func(p,"SliceType")
+#
+# def p_MapType(p):
+#     ''' MapType        		: MAP LBRACK Type RBRACK Type '''
+#     # func(p,"MapType")
 
 ################################################################################
 # def p_FunctionType(p):
@@ -211,9 +209,13 @@ def p_Signature(p):
     p[0]['scopeno'] = currScope
     p[0]['parameters'] = p[1]
     if len(p) > 2:
-        p[0]['returntype'] = p[2].copy()
+        p[0]['returntype'] = p[2]['type']
+        if p[2][type][0:5] == 'ARRAY':
+            p[0]['returntype'] += str(p[2]['size'])
+        if p[2][type] == 'STRUCT':
+            p[0]['returntype'] += str(p[2]['scopeno'])
     else:
-        p[0]['returntype'] = {'type' : 'VOID', 'class' : 'TYPE'}
+        p[0]['returntype'] = 'VOID'
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -234,12 +236,20 @@ def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
                             | IdentifierList Type '''
     if len(p) == 2:
-        p[0] = [p[1].copy()]
+        p[0] = p[1]['type']
+        if p[2][type][0:5] == 'ARRAY':
+            p[0] += str(p[2]['size'])
+        if p[2][type] == 'STRUCT':
+            p[0] += str(p[2]['scopeno'])
+
     else:
-        p[0] = []
+        p[0] = ''
         for iden in p[1]:
-            p[0].append(p[2].copy())
-    # func(p,"ParameterDecl")
+            p[0] += p[2]['type']
+            if p[2][type][0:5] == 'ARRAY':
+                p[0] += str(p[2]['size'])
+            if p[2][type] == 'STRUCT':
+                p[0] += str(p[2]['scopeno'])
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -290,7 +300,6 @@ def p_VarSpec(p):
         #     scopeST[currScope].update(iden, '', p[2][''])
         # if p[2][type] == 'MAP':
         #     scopeST[currScope].update(iden, '', p[2][''])
-
 
 # def p_VarSpec(p):
 #     '''	VarSpec			    : IdentifierList ASSIGN ExpressionList
