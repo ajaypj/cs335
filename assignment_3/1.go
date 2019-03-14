@@ -6,5 +6,9 @@ import (
 );
 
 func main() {
-	type a int;
+	var a,b int;
+	a = (a*3 + a/5);
+	type node struct{
+		a int;
+		};
 };

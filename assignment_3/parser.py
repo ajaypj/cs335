@@ -267,12 +267,12 @@ def p_Signature1(p):
     p[0] = {}
     p[0]['scopeno'] = currScope
     p[0]['parameters'] = p[1]
-    stri = p[2]['type']
+    str = p[2]['type']
     if p[2][type][0:5] == 'ARRAY':
-        stri += ' '+str(p[2]['size'])
+        str += ' '+str(p[2]['size'])
     if p[2][type] == 'STRUCT':
-        stri += ' '+str(p[2]['scopeno'])
-    p[0]['return'] = [stri]
+        str += ' '+str(p[2]['scopeno'])
+    p[0]['return'] = [str]
 
 def p_Signature2(p):
     ''' Signature      		: Parameters
@@ -304,21 +304,21 @@ def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
                             | IdentifierList Type '''
     if len(p) == 2:
-        stri = p[1]['type']
+        str = p[1]['type']
         if p[1][type][0:5] == 'ARRAY':
-            stri += ' '+str(p[1]['size'])
+            str += ' '+str(p[1]['size'])
         if p[1][type] == 'STRUCT':
-            stri += ' '+str(p[1]['scopeno'])
-        p[0] = [stri]
+            str += ' '+str(p[1]['scopeno'])
+        p[0] = [str]
     else:
         p[0] = []
         for iden in p[1]:
-            stri = p[2]['type']
+            str = p[2]['type']
             if p[2][type][0:5] == 'ARRAY':
-                stri += ' '+str(p[2]['size'])
+                str += ' '+str(p[2]['size'])
             if p[2][type] == 'STRUCT':
-                stri += ' '+str(p[2]['scopeno'])
-            p[0].append(stri)
+                str += ' '+str(p[2]['scopeno'])
+            p[0].append(str)
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -470,10 +470,15 @@ def p_Assignment(p):
         p[0]+=p[3][i].code
 
     for i in range(len(p[1])):
-        p[0]+=[p[2][0]+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+        if len(p[2])==2:
+            p[0]+=[p[2][0]+','+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+        else:
+            p[0]+=[p[2][0]+','+p[1][i].place +","+p[3][i].place]
 
-def p_GoStmt(p):
-    '''GoStmt               : GO Expression'''
+    print p[0]
+
+# def p_GoStmt(p):
+#     '''GoStmt               : GO Expression'''
     # func(p,"GoStmt")
 
 def p_ReturnStmt(p):
@@ -601,7 +606,7 @@ def p_ExpressionList(p):
     ''' ExpressionList  	: Expression
 							| ExpressionList COMMA Expression '''
     if len(p)==2:
-        p[0]=p[1]
+        p[0]=[p[1]]
     else:
         p[0]=p[1]+[p[3]]
 def p_Expression(p):
@@ -612,8 +617,8 @@ def p_Expression(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+
 
 def p_Expression1(p):
     ''' Expression1    		: Expression2
@@ -622,8 +627,7 @@ def p_Expression1(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
 
 def p_Expression2(p):
     ''' Expression2    		: Expression3
@@ -632,8 +636,7 @@ def p_Expression2(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
 
 def p_Expression3(p):
     ''' Expression3    		: Expression4
@@ -642,8 +645,7 @@ def p_Expression3(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
 
 def p_Expression4(p):
     ''' Expression4    		: Expression5
@@ -652,8 +654,7 @@ def p_Expression4(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
 
 def p_Expression5(p):
     ''' Expression5    		: UnaryExpr
@@ -662,8 +663,7 @@ def p_Expression5(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[str(lineno)+','+p[2]+','+p[0].place+','+p[1].place+','+p[3].place+'\n']
-        lineno+=1
+        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
 
 def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
@@ -672,8 +672,8 @@ def p_UnaryExpr(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=(p[2].code).append(str(lineno)+','+p[1]+','+p[0].place+','+p[1].place+'\n')
-        lineno+=1
+        p[0].code=(p[2].code).append(p[1]+','+p[0].place+','+p[1].place)
+
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand
@@ -798,7 +798,7 @@ def p_BasicLit(p):
     p[0]=expr()
     p[0].extra["type"]='int'
     # p[0].value=int(p[1])
-    p[0].code=["="+p[0].place+","+p[1]]
+    p[0].code=["="+','+p[0].place+","+p[1]]
 
 
 def p_BasicLit1(p):
@@ -806,7 +806,7 @@ def p_BasicLit1(p):
     p[0]=expr()
     p[0].extra["type"]='float'
     # p[0].value=float(p[1])
-    p[0].code=["="+p[0].place+","+p[1]]
+    p[0].code=["=,"+p[0].place+","+p[1]]
 
 
 def p_BasicLit2(p):
@@ -814,14 +814,14 @@ def p_BasicLit2(p):
     p[0]=expr()
     p[0].extra["type"]='string'
     # p[0].value=p[1]
-    p[0].code=["="+p[0].place+","+p[1]]
+    p[0].code=["=,"+p[0].place+","+p[1]]
 
 def p_BasicLit3(p):
     ''' BasicLit       		: IMAG '''
     p[0]=expr()
     p[0].extra["type"]='complex'
     # p[0].value=complex(p[1])
-    p[0].code=["="+p[0].place+","+p[1]]
+    p[0].code=["=,"+p[0].place+","+p[1]]
 
 
 
