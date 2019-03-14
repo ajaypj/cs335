@@ -543,15 +543,14 @@ def p_RecvStmt(p):
     # func(p,"RecvStmt")
 
 def p_ForStmt(p):
-    ''' ForStmt : FOR ForStmt_1 Block '''
+    ''' ForStmt : FOR ForStmt1 Block '''
     # func(p,"ForStmt")
 
-def p_ForStmt_1(p):
-    ''' ForStmt_1 		    : Condition
+def p_ForStmt1(p):
+    ''' ForStmt1 		    : Condition
 							| ForClause
-							| RangeClause
-							| '''
-    # func(p,"ForStmt_1")
+							| RangeClause '''
+    # func(p,"ForStmt1")
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
@@ -559,22 +558,8 @@ def p_Condition(p):
     # func(p,"Condition")
 
 def p_ForClause(p):
-    ''' ForClause 		    : ForClause_1 SEMICOLON ForClause_2 SEMICOLON ForClause_3 '''
+    ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
     # func(p,"ForClause")
-
-def p_ForClause_1(p):
-    ''' ForClause_1 		: SimpleStmt '''
-    p[0]=p[1]
-    # func(p,"ForClause_1")
-
-def p_ForClause_2(p):
-    ''' ForClause_2 		: Condition
-							| '''
-    # func(p,"ForClause_2")
-
-def p_ForClause_3(p):
-    ''' ForClause_3 		: SimpleStmt '''
-    # func(p,"ForClause_3")
 
 def p_RangeClause(p):
     ''' RangeClause 		: RangeClause_1 RANGE Expression '''
