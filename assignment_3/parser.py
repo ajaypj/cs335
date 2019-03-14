@@ -190,16 +190,16 @@ def p_TypeSpec(p):
         scopeST[currScope][p[1]] = p[-1].copy()
 
 ################################################################################
-def p_Type(p):
+def p_Type1(p):
     ''' Type           		: VARTYPE '''
-    p[0] = {'type' : p[1], 'class' : 'TYPE'}
+    p[0] = {'type' : p[1], 'class' : 'TYPENAME'}
 
-def p_Type(p):
+def p_Type2(p):
     ''' Type           		: LiteralType '''
     p[0] = p[1]
-    p[0]['class'] = 'TYPE'
+    p[0]['class'] = 'TYPENAME'
 
-def p_Type(p):
+def p_Type3(p):
     ''' Type           		: ID '''
     if not checkID(p[1], 'curr'):
         raise KeyError("Type not defined")
@@ -209,9 +209,9 @@ def p_Type(p):
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
 							| StructType
-							| PointerType
-							| SliceType
-                            | MapType '''
+							| PointerType '''
+							# | SliceType
+                            # | MapType '''
     p[0] = p[1]
 
 def p_ArrayType(p):
@@ -260,7 +260,7 @@ def p_PointerType(p):
 #     ''' FunctionType        : FUNC Signature '''
 #     # func(p,"FunctionType")
 
-def p_Signature(p):
+def p_Signature1(p):
     ''' Signature      		: Parameters Type '''
     p[0] = {}
     p[0]['scopeno'] = currScope
@@ -272,7 +272,7 @@ def p_Signature(p):
         stri += str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
-def p_Signature(p):
+def p_Signature2(p):
     ''' Signature      		: Parameters
                             | Parameters Parameters '''
     p[0] = {}
@@ -303,10 +303,10 @@ def p_ParameterDecl(p):
                             | IdentifierList Type '''
     if len(p) == 2:
         stri = p[1]['type']
-        if p[2][type][0:5] == 'ARRAY':
-            stri += str(p[2]['size'])
-        if p[2][type] == 'STRUCT':
-            stri += str(p[2]['scopeno'])
+        if p[1][type][0:5] == 'ARRAY':
+            stri += ' '+str(p[1]['size'])
+        if p[1][type] == 'STRUCT':
+            stri += ' '+str(p[1]['scopeno'])
         p[0] = [stri]
     else:
         p[0] = []
@@ -432,6 +432,8 @@ def p_LabeledStmt(p):
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
                             | EmptyStmt
+							| ExpressionStmt
+							| SendStmt
                             | IncDecStmt
                             | ExpressionStmt
                             | Assignment '''
@@ -446,35 +448,18 @@ def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
     p[0]=p[1].code
 
-# def p_SendStmt(p):
-#     ''' SendStmt 		    : Expression ARROW Expression '''
+def p_SendStmt(p):
+    ''' SendStmt 		    : Expression ARROW Expression '''
     # func(p,"SendStmt")
 
-def p_IncDecStmt(p):# Done
+def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
                             | Expression DEC '''
-    # Check that Expression is a variable or UnaryExpr
-    p[0]=p[1].code
-    str=''
-    if p[2]=='++':
-        str='+'
-    else:
-        str='-'
-    str+=p[1].place+','+p[1].place+',1'
-    p[0]+=[p[1].place]
+    # func(p,"IncDecStmt")
 
 def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
-    # Break assign_op into multiple parts
-
-    if len(p[1])!=len(p[3]):
-        raise Exception("No of Expression in both side of assign_op do not match")
-    p[0]=[]
-    for i in range(len(p[1])):
-        p[0]+=p[3][i].code
-
-    for i in range(len(p[1])):
-        p[0]+=[p[2][0]+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+    # func(p,"Assignment")
 
 # def p_GoStmt(p):
 #     '''GoStmt               : GO Expression'''
@@ -568,15 +553,14 @@ def p_RecvStmt(p):
     # func(p,"RecvStmt")
 
 def p_ForStmt(p):
-    ''' ForStmt : FOR ForStmt_1 Block '''
+    ''' ForStmt : FOR ForStmt1 Block '''
     # func(p,"ForStmt")
 
-def p_ForStmt_1(p):
-    ''' ForStmt_1 		    : Condition
+def p_ForStmt1(p):
+    ''' ForStmt1 		    : Condition
 							| ForClause
-							| RangeClause
-							| '''
-    # func(p,"ForStmt_1")
+							| RangeClause '''
+    # func(p,"ForStmt1")
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
@@ -584,22 +568,8 @@ def p_Condition(p):
     # func(p,"Condition")
 
 def p_ForClause(p):
-    ''' ForClause 		    : ForClause_1 SEMICOLON ForClause_2 SEMICOLON ForClause_3 '''
+    ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
     # func(p,"ForClause")
-
-def p_ForClause_1(p):
-    ''' ForClause_1 		: SimpleStmt '''
-    p[0]=p[1]
-    # func(p,"ForClause_1")
-
-def p_ForClause_2(p):
-    ''' ForClause_2 		: Condition
-							| '''
-    # func(p,"ForClause_2")
-
-def p_ForClause_3(p):
-    ''' ForClause_3 		: SimpleStmt '''
-    # func(p,"ForClause_3")
 
 def p_RangeClause(p):
     ''' RangeClause 		: RangeClause_1 RANGE Expression '''
@@ -624,8 +594,8 @@ def p_ExpressionList(p):
     else:
         p[0]=p[1]+[p[3]]
 def p_Expression(p):
-    ''' Expression     		: Expression1 '''
-    # | UnaryExpr assign_op Expression
+    ''' Expression     		: Expression1
+							| UnaryExpr assign_op Expression '''
     if len(p)==2:
         p[0]=p[1]
     else:
@@ -732,8 +702,8 @@ def p_PrimaryExpr5(p):
 # 							| Type LPAREN Expression RPAREN '''
 #     # func(p,"Conversion")
 
-# def p_MethodExpr(p):
-#     ''' MethodExpr       	: Type PERIOD ID '''
+def p_MethodExpr(p):
+    ''' MethodExpr       	: Type PERIOD ID '''
     # func(p,"MethodExpr")
 
 def p_Selector(p):
@@ -804,8 +774,6 @@ def p_Operand1(p):
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN'''
     p[0]=p[2]
-
-
 
 def p_Literal(p):
     ''' Literal        		: BasicLit '''
