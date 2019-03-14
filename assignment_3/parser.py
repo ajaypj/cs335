@@ -189,16 +189,16 @@ def p_TypeSpec(p):
         scopeST[currScope][p[1]] = p[-1].copy()
 
 ################################################################################
-def p_Type1(p):
+def p_Type(p):
     ''' Type           		: VARTYPE '''
-    p[0] = {'type' : p[1], 'class' : 'TYPENAME'}
+    p[0] = {'type' : p[1], 'class' : 'TYPE'}
 
-def p_Type2(p):
+def p_Type(p):
     ''' Type           		: LiteralType '''
     p[0] = p[1]
-    p[0]['class'] = 'TYPENAME'
+    p[0]['class'] = 'TYPE'
 
-def p_Type3(p):
+def p_Type(p):
     ''' Type           		: ID '''
     if not checkID(p[1], 'curr'):
         raise KeyError("Type not defined")
@@ -208,9 +208,9 @@ def p_Type3(p):
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
 							| StructType
-							| PointerType '''
-							# | SliceType
-                            # | MapType '''
+							| PointerType
+							| SliceType
+                            | MapType '''
     p[0] = p[1]
 
 def p_ArrayType(p):
@@ -259,7 +259,7 @@ def p_PointerType(p):
 #     ''' FunctionType        : FUNC Signature '''
 #     # func(p,"FunctionType")
 
-def p_Signature1(p):
+def p_Signature(p):
     ''' Signature      		: Parameters Type '''
     p[0] = {}
     p[0]['scopeno'] = currScope
@@ -271,7 +271,7 @@ def p_Signature1(p):
         stri += ' '+str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
-def p_Signature2(p):
+def p_Signature(p):
     ''' Signature      		: Parameters
                             | Parameters Parameters '''
     p[0] = {}
@@ -424,32 +424,49 @@ def p_LabeledStmt(p):
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl
                             | EmptyStmt
-							| ExpressionStmt
-							| SendStmt
                             | IncDecStmt
                             | Assignment '''
-    # func(p,"SimpleStmt")
+                            # | ExpressionStmt
+                            # | SendStmt
+    p[0]=p[1]
 
 def p_EmptyStmt(p):
     ''' EmptyStmt      		: '''
-    # func(p,"EmptyStmt")
+    p[0]=[]
 
-def p_ExpressionStmt(p):
-    ''' ExpressionStmt 		: Expression '''
-    # func(p,"ExpressionStmt")
+# def p_ExpressionStmt(p):
+#     ''' ExpressionStmt 		: Expression '''
 
-def p_SendStmt(p):
-    ''' SendStmt 		    : Expression ARROW Expression '''
+
+# def p_SendStmt(p):
+#     ''' SendStmt 		    : Expression ARROW Expression '''
     # func(p,"SendStmt")
 
-def p_IncDecStmt(p):
+def p_IncDecStmt(p):# Done
     ''' IncDecStmt     		: Expression INC
                             | Expression DEC '''
-    # func(p,"IncDecStmt")
+    # Check that Expression is a variable or UnaryExpr
+    p[0]=p[1].code
+    str=''
+    if p[2]=='++':
+        str='+'
+    else:
+        str='-'
+    str+=p[1].place+','+p[1].place+',1'
+    p[0]+=[p[1].place]
 
 def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
-    # func(p,"Assignment")
+    # Break assign_op into multiple parts
+
+    if len(p[1])!=len(p[3]):
+        raise Exception("No of Expression in both side of assign_op do not match")
+    p[0]=[]
+    for i in range(len(p[1])):
+        p[0]+=p[3][i].code
+
+    for i in range(len(p[1])):
+        p[0]+=[p[2][0]+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
 
 def p_GoStmt(p):
     '''GoStmt               : GO Expression'''
@@ -584,8 +601,8 @@ def p_ExpressionList(p):
     else:
         p[0]=p[1]+[p[3]]
 def p_Expression(p):
-    ''' Expression     		: Expression1
-							| UnaryExpr assign_op Expression '''
+    ''' Expression     		: Expression1 '''
+    # | UnaryExpr assign_op Expression
     if len(p)==2:
         p[0]=p[1]
     else:
@@ -692,8 +709,8 @@ def p_PrimaryExpr5(p):
 # 							| Type LPAREN Expression RPAREN '''
 #     # func(p,"Conversion")
 
-def p_MethodExpr(p):
-    ''' MethodExpr       	: Type PERIOD ID '''
+# def p_MethodExpr(p):
+#     ''' MethodExpr       	: Type PERIOD ID '''
     # func(p,"MethodExpr")
 
 def p_Selector(p):
@@ -764,6 +781,8 @@ def p_Operand1(p):
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN'''
     p[0]=p[2]
+
+
 
 def p_Literal(p):
     ''' Literal        		: BasicLit '''
