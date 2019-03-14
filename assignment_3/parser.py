@@ -68,7 +68,8 @@ def new_var():
 class expr():
     def __init__(self):
         self.place = new_var()
-        self.type =''
+        self.class =''
+        # self.type=''
         self.value=None
         self.extra={}
         self.code=[]
@@ -717,19 +718,21 @@ def p_Selector(p):
 
 def p_Index(p):
     ''' Index          		: LBRACK Expression RBRACK '''
-    # func(p,"Index")
+    
 
-def p_Slice(p):
-    ''' Slice          		: LBRACK COLON RBRACK
-							| LBRACK COLON Expression RBRACK
-							| LBRACK Expression COLON RBRACK
-							| LBRACK Expression COLON Expression RBRACK
-							| LBRACK COLON Expression COLON Expression RBRACK
-							| LBRACK Expression COLON Expression COLON Expression RBRACK '''
+
+#
+# def p_Slice(p):
+#     ''' Slice          		: LBRACK COLON RBRACK
+# 							| LBRACK COLON Expression RBRACK
+# 							| LBRACK Expression COLON RBRACK
+# 							| LBRACK Expression COLON Expression RBRACK
+# 							| LBRACK COLON Expression COLON Expression RBRACK
+# 							| LBRACK Expression COLON Expression COLON Expression RBRACK '''
     # func(p,"Slice")
 
-def p_TypeAssertion(p):
-    ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
+# def p_TypeAssertion(p):
+#     ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
     # func(p,"TypeAssertion")
 
 def p_Arguments(p):
@@ -737,19 +740,16 @@ def p_Arguments(p):
 	# 						| LPAREN ExpressionList RPAREN
 	# 						| LPAREN ExpressionList ELLIPSIS RPAREN '''
     ''' Arguments           : LPAREN RPAREN
-                            | LPAREN ExpressionList ELLIPSIS COMMA RPAREN
-                            | LPAREN ExpressionList ELLIPSIS RPAREN
                             | LPAREN ExpressionList COMMA RPAREN
-                            | LPAREN ExpressionList RPAREN
-                            | LPAREN Type COMMA ExpressionList ELLIPSIS COMMA RPAREN
-                            | LPAREN Type COMMA ExpressionList ELLIPSIS RPAREN
-                            | LPAREN Type COMMA ExpressionList COMMA RPAREN
-                            | LPAREN Type COMMA ExpressionList RPAREN
-                            | LPAREN Type ELLIPSIS COMMA RPAREN
-                            | LPAREN Type ELLIPSIS RPAREN
-                            | LPAREN Type COMMA RPAREN
-                            | LPAREN Type RPAREN '''
-
+                            | LPAREN ExpressionList RPAREN '''
+                            # | LPAREN Type COMMA ExpressionList COMMA RPAREN
+                            # | LPAREN Type COMMA ExpressionList RPAREN
+                            # | LPAREN Type COMMA RPAREN
+                            # | LPAREN Type RPAREN '''
+    if len(p)==3:
+        p[0]=[]
+    else:
+        p[0]=p[2]
 
 def p_Operand(p):
     ''' Operand        		: Literal'''
@@ -764,7 +764,14 @@ def p_Operand1(p):
         raise KeyError("The identifier used is not variable,p_functions.py in line no ")
 
     p[0]=expr()
-    p[0].type=(scopeST[currScope].table)[p[1]]["type"]
+    p[0].class=(scopeST[currScope].table)[p[1]]["class"]
+    if p[0].class=="VAR":
+        p[0].extra["type"]=(scopeST[currScope].table)[p[1]]["type"]
+    elif p[0].class=="FUNC":
+        p[0].extra["return"]=(scopeST[currScope].table)[p[1]]["return"]
+        p[0].extra["parameters"]=(scopeST[currScope].table)[p[1]]["parameters"]
+    else:
+        raise KeyError("The variable"+p[1]+"cannot be an operand")
     p[0].place=p[1]
 
 # def p_Operand2(p):# Doubt
@@ -785,26 +792,32 @@ def p_Literal(p):
 def p_BasicLit(p):
     ''' BasicLit       		: INT '''
     p[0]=expr()
-    p[0].type='int'
-    p[0].value=int(p[1])
+    p[0].extra["type"]='int'
+    # p[0].value=int(p[1])
+    p[0].code=["="+p[0].place+","+p[1]]
+
 
 def p_BasicLit1(p):
     ''' BasicLit       		: FLOAT '''
     p[0]=expr()
-    p[0].type='float'
-    p[0].value=float(p[1])
+    p[0].extra["type"]='float'
+    # p[0].value=float(p[1])
+    p[0].code=["="+p[0].place+","+p[1]]
+
 
 def p_BasicLit2(p):
     ''' BasicLit       		: STRING '''
     p[0]=expr()
-    p[0].type='string'
-    p[0].value=p[1]
+    p[0].extra["type"]='string'
+    # p[0].value=p[1]
+    p[0].code=["="+p[0].place+","+p[1]]
 
 def p_BasicLit3(p):
     ''' BasicLit       		: IMAG '''
     p[0]=expr()
-    p[0].type='complex'
-    p[0].value=complex(p[1])
+    p[0].extra["type"]='complex'
+    # p[0].value=complex(p[1])
+    p[0].code=["="+p[0].place+","+p[1]]
 
 
 
