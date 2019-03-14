@@ -212,7 +212,7 @@ def p_ArrayType(p):
     ''' ArrayType      		: LBRACK Expression RBRACK Type ''' # Must be integer
     p[0] = {}
     p[0]['type'] = 'ARRAY(' + p[4] + ')'
-    p[0]['size'] = p[1]['place']
+    # p[0]['size'] will be calculated
 
 def p_StructType(p):
     ''' StructType     		: STRUCT StructScope LBRACE FieldDeclList RBRACE EndScope
@@ -221,6 +221,7 @@ def p_StructType(p):
     p[0]['type'] = 'STRUCT'
     if len(p) == 7:
         p[0]['scopeno'] = p[4]
+        p[0]['type'] += ' '+str(p[4])
 
 def p_FieldDeclList(p):
     ''' FieldDeclList  		: FieldDecl SEMICOLON
@@ -255,27 +256,22 @@ def p_PointerType(p):
 #     # func(p,"FunctionType")
 
 def p_Signature1(p):
-    ''' Signature      		: Parameters Type '''
-    p[0] = {}
-    p[0]['scopeno'] = currScope
-    p[0]['parameters'] = p[1]
-    str = p[2]['type']
-    if p[2][type][0:5] == 'ARRAY':
-        str += ' '+str(p[2]['size'])
-    if p[2][type] == 'STRUCT':
-        str += ' '+str(p[2]['scopeno'])
-    p[0]['return'] = [str]
-
-def p_Signature2(p):
     ''' Signature      		: Parameters
-                            | Parameters Parameters '''
+                            | Parameters Type '''
     p[0] = {}
     p[0]['scopeno'] = currScope
     p[0]['parameters'] = p[1]
     if len(p) > 2:
-        p[0]['return'] = p[2]
+        p[0]['return'] = [p[2]['type']]
     else:
         p[0]['return'] = ['VOID']
+
+def p_Signature2(p):
+    ''' Signature      		: Parameters Parameters '''
+    p[0] = {}
+    p[0]['scopeno'] = currScope
+    p[0]['parameters'] = p[1]
+    p[0]['return'] = p[2]
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -296,21 +292,11 @@ def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
                             | IdentifierList Type '''
     if len(p) == 2:
-        str = p[1]['type']
-        if p[1][type][0:5] == 'ARRAY':
-            str += ' '+str(p[1]['size'])
-        if p[1][type] == 'STRUCT':
-            str += ' '+str(p[1]['scopeno'])
-        p[0] = [str]
+        p[0] = [p[1]['type']]
     else:
         p[0] = []
         for iden in p[1]:
-            str = p[2]['type']
-            if p[2][type][0:5] == 'ARRAY':
-                str += ' '+str(p[2]['size'])
-            if p[2][type] == 'STRUCT':
-                str += ' '+str(p[2]['scopeno'])
-            p[0].append(str)
+            p[0].append(p[2]['type'])
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -353,15 +339,6 @@ def p_VarSpec(p):
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
-        # if p[2][type][0:5] == 'ARRAY':
-        #     scopeST[currScope].update(iden, 'size', p[2]['size'])
-        # if p[2][type] == 'STRUCT':
-        #     scopeST[currScope].update(iden, 'scopeno', p[2]['scopeno'])
-        # if p[2][type] == 'SLICE':
-        #     scopeST[currScope].update(iden, '', p[2][''])
-        # if p[2][type] == 'MAP':
-        #     scopeST[currScope].update(iden, '', p[2][''])
-
 # def p_VarSpec(p):
 #     '''	VarSpec			    : IdentifierList ASSIGN ExpressionList
 #     						| IdentifierList ASSIGN LBRACE ExpressionList RBRACE '''
@@ -381,7 +358,7 @@ def p_ShortVarDecl(p):
     if len(p[1]) != len(p[3]):
         raise Exception("Number of arguments do not match")
     # for i in xrange(len(p[1])):
-        # scopeST[currScope].update()
+    #     scopeST[currScope].update()
 
 ################################################################################
 def p_Block(p):
