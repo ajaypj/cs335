@@ -144,7 +144,7 @@ def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
 							| FUNC ID StartScope Signature Block EndScope '''
     if checkID(p[2], 'curr'):
-        raise KeyError("Symbol " + p[2] + " already exists")
+        raise Exception("Symbol " + p[2] + " already exists")
     else:
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
@@ -175,7 +175,7 @@ def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
     if checkID(p[1], 'curr') is not None:
-        raise KeyError("Symbol " + p[1] + " already exists")
+        raise Exception("Symbol " + p[1] + " already exists")
     elif len(p) == 4:
         (scopeST[currScope].table)[p[1]] = p[3].copy()
     else:
@@ -194,9 +194,9 @@ def p_Type2(p):
 def p_Type3(p):
     ''' Type           		: ID '''
     if checkID(p[1], 'recent') is None:
-            raise KeyError("Type not defined")
+        raise Exception("Type not defined")
     elif checkID(p[1], 'recent')['class'] != 'TYPENAME':
-        raise KeyError("Type not defined")
+        raise Exception("Type not defined")
     else:
         p[0] = (checkID(p[1], 'recent')).copy()
 
@@ -232,7 +232,7 @@ def p_FieldDecl(p):
 							| IdentifierList Type '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise KeyError("Symbol " + iden + " already exists")
+            raise Exception("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
 
@@ -349,7 +349,7 @@ def p_VarSpec(p):
                             | IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise KeyError("Symbol " + iden + " already exists")
+            raise Exception("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
@@ -379,7 +379,7 @@ def p_IdentifierList(p):
 def p_ShortVarDecl(p):
     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
     if len(p[1]) != len(p[3]):
-        raise KeyError("Number of arguments do not match")
+        raise Exception("Number of arguments do not match")
     # for i in xrange(len(p[1])):
         # scopeST[currScope].update()
 
@@ -408,8 +408,9 @@ def p_Statement(p):
                             | SwitchStmt
                             | FallthroughStmt
     '''
-    # | SelectStmt
     # | GoStmt
+    # | SelectStmt
+    # | RecvStmt
     # | DeferStmt
     # func(p,"Statement")
 
@@ -464,10 +465,6 @@ def p_Assignment(p):
             p[0]+=[p[2][0]+','+p[1][i].place +","+p[3][i].place]
 
     print p[0]
-
-# def p_GoStmt(p):
-#     '''GoStmt               : GO Expression'''
-    # func(p,"GoStmt")
 
 def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
@@ -563,6 +560,10 @@ def p_FallthroughStmt(p):
     ''' FallthroughStmt     : FALLTHROUGH '''
     # func(p,"FallthroughStmt")
 
+# def p_GoStmt(p):
+#     '''GoStmt               : GO Expression'''
+#     # func(p,"GoStmt")
+#
 # def p_SelectStmt(p):
 #     ''' SelectStmt     		: SELECT LBRACE RBRACE
 # 							| SELECT LBRACE CommClauseList RBRACE '''
@@ -601,6 +602,7 @@ def p_ExpressionList(p):
         p[0]=[p[1]]
     else:
         p[0]=p[1]+[p[3]]
+
 def p_Expression(p):
     ''' Expression     		: Expression1
     '''
@@ -610,7 +612,6 @@ def p_Expression(p):
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
-
 
 def p_Expression1(p):
     ''' Expression1    		: Expression2
@@ -666,21 +667,28 @@ def p_UnaryExpr(p):
         p[0]=expr()
         p[0].code=(p[2].code).append(p[1]+','+p[0].place+','+p[1].place)
 
-
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand
     '''
                             # | MethodExpr
     p[0]=p[1]
+
 def p_PrimaryExpr1(p):
     ''' PrimaryExpr    		: PrimaryExpr Selector
     '''
     # PrimaryExpr should be struct
 
+def p_Selector(p):
+    ''' Selector       		: PERIOD ID '''
+    # func(p,"Selector")
+
 def p_PrimaryExpr2(p):
     ''' PrimaryExpr    		: PrimaryExpr Index
     '''
     # PrimaryExpr Should be array
+
+def p_Index(p):
+    ''' Index          		: LBRACK Expression RBRACK '''
 
 
 # def p_PrimaryExpr3(p):
@@ -694,16 +702,40 @@ def p_PrimaryExpr2(p):
 def p_PrimaryExpr5(p):
     ''' PrimaryExpr    		: PrimaryExpr Arguments
     '''
-    if checkID(p[1].place,'global') is None:
+    dic = checkID(p[1].place,'global')
+    if dic is None:
         raise Exception("Expected a name of function")
-    elif checkID(p[1].place,'global')["class"] != "FUNC":
+    elif dic["class"] != "FUNC":
         raise Exception("Expected a name of function")
     # PrimaryExpr should be function
+    if len(p[2]) != len(dic['parameters']):
+        raise Exception(str(len(dic['parameters']))+"parameters expected")
+    else:
+        for i in xrange(len(p[2])):
+            if 'type' not in (p[2][i].extra).keys():
+                raise Exception(i+"th type doesn't match in "+p[1].place)
+            elif (p[2][i].extra)['type'] != dic['parameters'][i]:
+                raise Exception(i+"th type doesn't match in "+p[1].place)
+            else:
+                # Function call
+                p[0] = expr()
+                p[0].code=["jump,"+p[1].place]
+                p[0].code+=["="+p[0].place+',retVal']
+                p[0].extra['type']=dic["return"][0]
+    ### Multiple argum
 
-
-
-
-
+def p_Arguments(p):
+    ''' Arguments           : LPAREN RPAREN
+                            | LPAREN ExpressionList COMMA RPAREN
+                            | LPAREN ExpressionList RPAREN '''
+    # | LPAREN Type COMMA ExpressionList COMMA RPAREN
+    # | LPAREN Type COMMA ExpressionList RPAREN
+    # | LPAREN Type COMMA RPAREN
+    # | LPAREN Type RPAREN '''
+    if len(p)==3:
+        p[0]=[]
+    else:
+        p[0]=p[2]
 
 # def p_Conversion(p):
 #     ''' Conversion        	: Type LPAREN Expression COMMA RPAREN
@@ -713,16 +745,6 @@ def p_PrimaryExpr5(p):
 # def p_MethodExpr(p):
 #     ''' MethodExpr       	: Type PERIOD ID '''
     # func(p,"MethodExpr")
-
-def p_Selector(p):
-    ''' Selector       		: PERIOD ID '''
-    # func(p,"Selector")
-
-def p_Index(p):
-    ''' Index          		: LBRACK Expression RBRACK '''
-
-
-
 #
 # def p_Slice(p):
 #     ''' Slice          		: LBRACK COLON RBRACK
@@ -737,21 +759,6 @@ def p_Index(p):
 #     ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
     # func(p,"TypeAssertion")
 
-def p_Arguments(p):
-    # ''' Arguments      		: LPAREN RPAREN
-	# 						| LPAREN ExpressionList RPAREN
-	# 						| LPAREN ExpressionList ELLIPSIS RPAREN '''
-    ''' Arguments           : LPAREN RPAREN
-                            | LPAREN ExpressionList COMMA RPAREN
-                            | LPAREN ExpressionList RPAREN '''
-                            # | LPAREN Type COMMA ExpressionList COMMA RPAREN
-                            # | LPAREN Type COMMA ExpressionList RPAREN
-                            # | LPAREN Type COMMA RPAREN
-                            # | LPAREN Type RPAREN '''
-    if len(p)==3:
-        p[0]=[]
-    else:
-        p[0]=p[2]
 
 def p_Operand(p):
     ''' Operand        		: Literal'''
@@ -761,20 +768,24 @@ def p_Operand1(p):
     ''' Operand        		: ID'''
     dic = checkID(p[1],'recent')
     if dic is None:
-        raise KeyError("Symbol " + p[1] + " doesn't exist, cant access,p_functions.py in line no ")
+        raise Exception("Symbol " + p[1] + " doesn't exist, cant access,p_functions.py in line no ")
 
     if dic["cls"]!='VAR':
-        raise KeyError("The identifier used is not variable,p_functions.py in line no ")
+        raise Exception("The identifier used is not variable,p_functions.py in line no ")
 
     p[0]=expr()
     p[0].cls=dic["cls"]
     if p[0].cls=="VAR":
         p[0].extra["type"]=dic["type"]
+        if dic['type'][0:5] == 'ARRAY'
+            p[0].extra["type"]+=' '+dic["size"]
+        if dic['type'] == 'STRUCT':
+            p[0].extra["type"]+=' '+dic["scopeno"]
     elif p[0].cls=="FUNC":
         p[0].extra["return"]=dic["return"]
         p[0].extra["parameters"]=dic["parameters"]
     else:
-        raise KeyError("The variable"+p[1]+"cannot be an operand")
+        raise Exception("The variable"+p[1]+"cannot be an operand")
     p[0].place=p[1]
 
 # def p_Operand2(p):# Doubt
