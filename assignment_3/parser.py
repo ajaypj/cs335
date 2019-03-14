@@ -260,20 +260,27 @@ def p_PointerType(p):
 #     # func(p,"FunctionType")
 
 def p_Signature(p):
+    ''' Signature      		: Parameters Type '''
+    p[0] = {}
+    p[0]['scopeno'] = currScope
+    p[0]['parameters'] = p[1]
+    stri = p[2]['type']
+    if p[2][type][0:5] == 'ARRAY':
+        stri += str(p[2]['size'])
+    if p[2][type] == 'STRUCT':
+        stri += str(p[2]['scopeno'])
+    p[0]['return'] = [stri]
+
+def p_Signature(p):
     ''' Signature      		: Parameters
-                            | Parameters Type '''
-                            # | Parameters Parameters
+                            | Parameters Parameters '''
     p[0] = {}
     p[0]['scopeno'] = currScope
     p[0]['parameters'] = p[1]
     if len(p) > 2:
-        p[0]['returntype'] = p[2]['type']
-        if p[2][type][0:5] == 'ARRAY':
-            p[0]['returntype'] += str(p[2]['size'])
-        if p[2][type] == 'STRUCT':
-            p[0]['returntype'] += str(p[2]['scopeno'])
+        p[0]['return'] = p[2]
     else:
-        p[0]['returntype'] = 'VOID'
+        p[0]['return'] = ['VOID']
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -294,20 +301,21 @@ def p_ParameterDecl(p):
     ''' ParameterDecl  		: Type
                             | IdentifierList Type '''
     if len(p) == 2:
-        p[0] = p[1]['type']
+        stri = p[1]['type']
         if p[2][type][0:5] == 'ARRAY':
-            p[0] += str(p[2]['size'])
+            stri += str(p[2]['size'])
         if p[2][type] == 'STRUCT':
-            p[0] += str(p[2]['scopeno'])
-
+            stri += str(p[2]['scopeno'])
+        p[0] = [stri]
     else:
-        p[0] = ''
+        p[0] = []
         for iden in p[1]:
-            p[0] += p[2]['type']
+            stri = p[2]['type']
             if p[2][type][0:5] == 'ARRAY':
-                p[0] += str(p[2]['size'])
+                stri += str(p[2]['size'])
             if p[2][type] == 'STRUCT':
-                p[0] += str(p[2]['scopeno'])
+                stri += str(p[2]['scopeno'])
+            p[0].append(stri)
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
