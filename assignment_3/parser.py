@@ -189,16 +189,16 @@ def p_TypeSpec(p):
         scopeST[currScope][p[1]] = p[-1].copy()
 
 ################################################################################
-def p_Type(p):
+def p_Type1(p):
     ''' Type           		: VARTYPE '''
-    p[0] = {'type' : p[1], 'class' : 'TYPE'}
+    p[0] = {'type' : p[1], 'class' : 'TYPENAME'}
 
-def p_Type(p):
+def p_Type2(p):
     ''' Type           		: LiteralType '''
     p[0] = p[1]
-    p[0]['class'] = 'TYPE'
+    p[0]['class'] = 'TYPENAME'
 
-def p_Type(p):
+def p_Type3(p):
     ''' Type           		: ID '''
     if not checkID(p[1], 'curr'):
         raise KeyError("Type not defined")
@@ -208,9 +208,9 @@ def p_Type(p):
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
 							| StructType
-							| PointerType
-							| SliceType
-                            | MapType '''
+							| PointerType '''
+							# | SliceType
+                            # | MapType '''
     p[0] = p[1]
 
 def p_ArrayType(p):
@@ -259,7 +259,7 @@ def p_PointerType(p):
 #     ''' FunctionType        : FUNC Signature '''
 #     # func(p,"FunctionType")
 
-def p_Signature(p):
+def p_Signature1(p):
     ''' Signature      		: Parameters Type '''
     p[0] = {}
     p[0]['scopeno'] = currScope
@@ -271,7 +271,7 @@ def p_Signature(p):
         stri += str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
-def p_Signature(p):
+def p_Signature2(p):
     ''' Signature      		: Parameters
                             | Parameters Parameters '''
     p[0] = {}
@@ -766,8 +766,6 @@ def p_Operand2(p):# Doubt
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN'''
     p[0]=p[2]
-
-
 
 def p_Literal(p):
     ''' Literal        		: BasicLit '''
