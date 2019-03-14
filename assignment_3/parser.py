@@ -3,7 +3,7 @@ import argparse
 import ply.lex as lex
 import ply.yacc as yacc
 from lexer import *
-# from p_functions import *
+from symbol import *
 
 parser = argparse.ArgumentParser(description = "argument parser")
 parser.add_argument("--in", help = 'Specify input file', required = True)
@@ -32,13 +32,12 @@ def checkID(identifier, typeOf):
         for scope in scopeStack[::-1]:
             if scopeST[scope].getInfo(identifier) is not None:
                 info = scopeST[scope].getInfo(identifier)
-                if typeOf == "**" or info['type'] == typeOf:
+                if typeOf == '' or info['type'] == typeOf:
                     return True
-    else:
-        if scopeST[typeOf].getInfo(identifier) is not None:
-            return True
-        return False
-
+    # else:
+    #     if scopeST[typeOf].getInfo(identifier) is not None:
+    #         return True
+    #     return False
 
     return False
 
@@ -49,7 +48,7 @@ def pushScope(name=None):
     lastScope = currScope
     currScope = scopeNo
     scopeStack.append(currScope)
-    scopeST[currscope] = symbolTable(lastScope)
+    scopeST[currScope] = symbolTable(lastScope)
 
 def popScope():
     global currScope
@@ -68,7 +67,7 @@ def new_var():
 class expr():
     def __init__(self):
         self.place = new_var()
-        self.class =''
+        self.cls = ''
         # self.type=''
         self.value=None
         self.extra={}
@@ -143,6 +142,7 @@ def p_StartScope(p):
 
 def p_EndScope(p):
     ''' EndScope    		: '''
+    print scopeST[currScope].table
     popScope()
 
 def p_StructScope(p):
@@ -156,8 +156,8 @@ def p_FunctionDecl(p):
     if checkID(p[2], 'curr'):
         raise KeyError("Symbol " + name + " already exists")
     else:
-        scopeST[currScope][p[2]] = p[4].copy()
-        scopeST[currScope].update(p[2], 'class', 'FUNC')
+        (scopeST[currScope].table)[p[2]] = p[4].copy()
+        scopeST[currScope].update(p[2], 'cls', 'FUNC')
 
 def p_MethodDecl(p):
     ''' MethodDecl     		: FUNC Parameters ID Signature
@@ -192,19 +192,19 @@ def p_TypeSpec(p):
 ################################################################################
 def p_Type1(p):
     ''' Type           		: VARTYPE '''
-    p[0] = {'type' : p[1], 'class' : 'TYPENAME'}
+    p[0] = {'type' : p[1], 'cls' : 'TYPENAME'}
 
 def p_Type2(p):
     ''' Type           		: LiteralType '''
     p[0] = p[1]
-    p[0]['class'] = 'TYPENAME'
+    p[0]['cls'] = 'TYPENAME'
 
 def p_Type3(p):
     ''' Type           		: ID '''
     if not checkID(p[1], 'curr'):
         raise KeyError("Type not defined")
     else:
-        p[0] = (scopeST[currScope].getInfo(p[1])).copy()
+        p[0] = ((scopeST[currScope].table).getInfo(p[1])).copy()
 
 def p_LiteralType(p):
     ''' LiteralType    		: ArrayType
@@ -225,7 +225,7 @@ def p_StructType(p):
 							| STRUCT StructScope LBRACE RBRACE EndScope '''
     p[0] = {}
     p[0]['type'] = 'STRUCT'
-    if len(p) == 5:
+    if len(p) == 7:
         p[0]['scopeno'] = p[4]
 
 def p_FieldDeclList(p):
@@ -240,7 +240,7 @@ def p_FieldDecl(p):
         if checkID(iden, 'curr'):
             raise KeyError("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
-        scopeST[currScope].update(iden, 'class', 'FIELD')
+        scopeST[currScope].update(iden, 'cls', 'FIELD')
 
 def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
@@ -267,9 +267,9 @@ def p_Signature1(p):
     p[0]['parameters'] = p[1]
     stri = p[2]['type']
     if p[2][type][0:5] == 'ARRAY':
-        stri += str(p[2]['size'])
+        stri += ' '+str(p[2]['size'])
     if p[2][type] == 'STRUCT':
-        stri += str(p[2]['scopeno'])
+        stri += ' '+str(p[2]['scopeno'])
     p[0]['return'] = [stri]
 
 def p_Signature2(p):
@@ -313,9 +313,9 @@ def p_ParameterDecl(p):
         for iden in p[1]:
             stri = p[2]['type']
             if p[2][type][0:5] == 'ARRAY':
-                stri += str(p[2]['size'])
+                stri += ' '+str(p[2]['size'])
             if p[2][type] == 'STRUCT':
-                stri += str(p[2]['scopeno'])
+                stri += ' '+str(p[2]['scopeno'])
             p[0].append(stri)
 
 # def p_InterfaceType(p):
@@ -357,7 +357,7 @@ def p_VarSpec(p):
         if checkID(iden, 'curr'):
             raise KeyError("Symbol " + iden + " already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
-        scopeST[currScope].update(iden, 'class', 'VAR')
+        scopeST[currScope].update(iden, 'cls', 'VAR')
 
         # if p[2][type][0:5] == 'ARRAY':
         #     scopeST[currScope].update(iden, 'size', p[2]['size'])
@@ -382,48 +382,41 @@ def p_IdentifierList(p):
     else:
         p[0] = [p[1]]
 
-# def p_ShortVarDecl(p):
-#     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
-#     if len(p[1]) != len(p[2]):
-#         raise KeyError("Number of arguments do not match")
-#     for i in xrange(len(p[1])):
-#         # scopeST[currScope].update()
+def p_ShortVarDecl(p):
+    ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
+    if len(p[1]) != len(p[3]):
+        raise KeyError("Number of arguments do not match")
+    # for i in xrange(len(p[1])):
+        # scopeST[currScope].update()
 
 ################################################################################
 def p_Block(p):
     ''' Block          		: LBRACE StatementList RBRACE '''
-    p[0]=p[2]
+
     # func(p,"Block")
 
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
 							| Statement SEMICOLON '''
-    if len(p)==3:
-        p[0]=p[1]
-    else:
-        p[0]=p[1]+p[3]
-
     # func(p,"StatementList")
 
 def p_Statement(p):
     ''' Statement      		: Declaration
 							| LabeledStmt
                             | SimpleStmt
+                            | GoStmt
 							| ReturnStmt
 							| BreakStmt
 							| ContinueStmt
-                            | GotoStmt
+							| GotoStmt
+                            | FallthroughStmt
 							| StartScope Block EndScope
 							| IfStmt
                             | SwitchStmt
-                            | FallthroughStmt
+							| SelectStmt
 							| ForStmt
-    '''
-                            # | DeferStmt
-                            # | SelectStmt
-                            # | GoStmt
+                            | DeferStmt '''
     # func(p,"Statement")
-
 
 def p_LabeledStmt(p):
     ''' LabeledStmt    		: ID COLON Statement '''
@@ -435,18 +428,16 @@ def p_SimpleStmt(p):
 							| ExpressionStmt
 							| SendStmt
                             | IncDecStmt
-                            | ExpressionStmt
                             | Assignment '''
-                            # | SendStmt
-    p[0]=p[1]
+    # func(p,"SimpleStmt")
 
 def p_EmptyStmt(p):
     ''' EmptyStmt      		: '''
-    p[0]=[]
+    # func(p,"EmptyStmt")
 
 def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
-    p[0]=p[1].code
+    # func(p,"ExpressionStmt")
 
 def p_SendStmt(p):
     ''' SendStmt 		    : Expression ARROW Expression '''
@@ -461,9 +452,9 @@ def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
     # func(p,"Assignment")
 
-# def p_GoStmt(p):
-#     '''GoStmt               : GO Expression'''
-
+def p_GoStmt(p):
+    '''GoStmt               : GO Expression'''
+    # func(p,"GoStmt")
 
 def p_ReturnStmt(p):
     ''' ReturnStmt     		: RETURN
@@ -526,9 +517,9 @@ def p_ExprSwitchCase(p):
                             | CASE Expression '''
     # func(p,"ExprSwitchCase")
 
-# def p_SelectStmt(p):
-#     ''' SelectStmt     		: SELECT LBRACE RBRACE
-# 							| SELECT LBRACE CommClauseList RBRACE '''
+def p_SelectStmt(p):
+    ''' SelectStmt     		: SELECT LBRACE RBRACE
+							| SELECT LBRACE CommClauseList RBRACE '''
     # func(p,"SelectStmt")
 
 def p_CommClauseList(p):
@@ -581,8 +572,8 @@ def p_RangeClause_1(p):
 							| '''
     # func(p,"RangeClause_1")
 
-# def p_DeferStmt(p):
-#     ''' DeferStmt           : DEFER Expression '''
+def p_DeferStmt(p):
+    ''' DeferStmt           : DEFER Expression '''
     # func(p,"DeferStmt")
 
 ##########################       Expression   ##########################
@@ -751,17 +742,17 @@ def p_Operand(p):
 
 def p_Operand1(p):
     ''' Operand        		: ID'''
-    if checkID(ID,'curr')==False:
-        raise KeyError("Symbol " + name + " doesn't exist, cant access,p_functions.py in line no ")
+    if checkID(p[1],'curr')==False:
+        raise KeyError("Symbol " + p[1] + " doesn't exist, cant access,p_functions.py in line no ")
 
-    if (scopeST[currScope].table)[p[1]]["class"]!='VAR':
+    if (scopeST[currScope].table)[p[1]]["cls"]!='VAR':
         raise KeyError("The identifier used is not variable,p_functions.py in line no ")
 
     p[0]=expr()
-    p[0].class=(scopeST[currScope].table)[p[1]]["class"]
-    if p[0].class=="VAR":
+    p[0].cls=(scopeST[currScope].table)[p[1]]["cls"]
+    if p[0].cls=="VAR":
         p[0].extra["type"]=(scopeST[currScope].table)[p[1]]["type"]
-    elif p[0].class=="FUNC":
+    elif p[0].cls=="FUNC":
         p[0].extra["return"]=(scopeST[currScope].table)[p[1]]["return"]
         p[0].extra["parameters"]=(scopeST[currScope].table)[p[1]]["parameters"]
     else:
