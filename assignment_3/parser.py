@@ -213,7 +213,7 @@ def p_Type3(p):
     ''' Type           		: ID '''
     if checkID(p[1], 'recent') is None:
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
-    elif checkID(p[1], 'recent')['class'] != 'TYPENAME':
+    elif checkID(p[1], 'recent')['cls'] != 'TYPENAME':
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a typename")
     else:
         p[0] = (checkID(p[1], 'recent')).copy()
@@ -315,6 +315,10 @@ def p_ParameterDecl(p):
         p[0] = []
         for iden in p[1]:
             p[0].append(p[2]['type'])
+            if checkID(iden, 'curr') is not None:
+                raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
+            (scopeST[currScope].table)[iden] = p[2].copy()
+            scopeST[currScope].update(iden, 'cls', 'VAR')
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -531,8 +535,8 @@ def p_IfStmt(p):
     endLabel=createLabel()
 
     p[0]=p[2].code
-    # Consider gotoPos goes to Label if positive,similarly gotoZeoroNeg
-    p[0]+=["gotoZeoroNeg,"+p[2].place+","+endLabel]
+    # Consider gotoPos goes to Label if positive,similarly gotoZeroNeg
+    p[0]+=["gotoZeroNeg,"+p[2].place+","+endLabel]
     p[0]+=p[4]
     p[0]+=[endLabel+":"]
 
@@ -733,15 +737,19 @@ def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
 							| unary_op UnaryExpr '''
     if len(p)==2:
+        if p[1].cls == 'FUNC':
+            raise Exception("Line "+str(p.lineno(1))+": "+"No arguments passed")
         p[0]=p[1]
     else:
         p[0]=expr()
         p[0].code=(p[2].code).append(p[1]+','+p[0].place+','+p[1].place)
+        p.set_lineno(0,p.lineno(2))
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand '''
                             # | MethodExpr
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 def p_PrimaryExpr1(p):
     ''' PrimaryExpr    		: PrimaryExpr Selector '''
@@ -772,7 +780,7 @@ def p_PrimaryExpr5(p):
     dic = checkID(p[1].place,'global')
     if dic is None:
         raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
-    elif dic["class"] != "FUNC":
+    elif dic["cls"] != "FUNC":
         raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
 
     # PrimaryExpr should be function
@@ -787,6 +795,7 @@ def p_PrimaryExpr5(p):
 
         # Function call
         p[0] = expr()
+        p[0].cls = 'VAR'
         for i in xrange(len(p[2])):
             p[0].code+=p[2][i].code
             p[0].code+=["=,param_"+str(i)+p[2][i].place]
@@ -794,6 +803,7 @@ def p_PrimaryExpr5(p):
         p[0].code+=["="+p[0].place+',retVal']
         p[0].extra['type']=dic["return"][0]
     ### Multiple returns
+    p.set_lineno(0,p.lineno(1))
 
 def p_Arguments(p):
     ''' Arguments           : LPAREN RPAREN
@@ -807,6 +817,7 @@ def p_Arguments(p):
         p[0]=[]
     else:
         p[0]=p[2]
+    p.set_lineno(0,p.lineno(1))
 
 # def p_Conversion(p):
 #     ''' Conversion        	: Type LPAREN Expression COMMA RPAREN
@@ -833,15 +844,13 @@ def p_Arguments(p):
 def p_Operand(p):
     ''' Operand        		: Literal'''
     p[0]=p[1]
+    p[0].cls = 'VAR'
 
 def p_Operand1(p):
     ''' Operand        		: ID'''
     dic = checkID(p[1],'recent')
     if dic is None:
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
-
-    if dic["cls"]!='VAR':
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a variable")
 
     p[0]=expr()
     p[0].cls=dic["cls"]
@@ -855,6 +864,7 @@ def p_Operand1(p):
     else:
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand")
     p[0].place=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 # def p_Operand2(p):# Doubt
 #     ''' Operand        		: ID PERIOD ID'''
@@ -862,6 +872,8 @@ def p_Operand1(p):
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN'''
     p[0]=p[2]
+    p[0].cls = 'VAR'
+    p.set_lineno(0,p.lineno(1))
 
 def p_Literal(p):
     ''' Literal        		: BasicLit '''
@@ -875,6 +887,7 @@ def p_BasicLit(p):
     p[0].extra["type"]='int'
     # p[0].value=int(p[1])
     p[0].code=["="+','+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
 
 def p_BasicLit1(p):
     ''' BasicLit       		: FLOAT '''
@@ -882,6 +895,7 @@ def p_BasicLit1(p):
     p[0].extra["type"]='float'
     # p[0].value=float(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
 
 def p_BasicLit2(p):
     ''' BasicLit       		: STRING '''
@@ -889,6 +903,7 @@ def p_BasicLit2(p):
     p[0].extra["type"]='string'
     # p[0].value=p[1]
     p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
 
 def p_BasicLit3(p):
     ''' BasicLit       		: IMAG '''
@@ -896,6 +911,7 @@ def p_BasicLit3(p):
     p[0].extra["type"]='complex'
     # p[0].value=complex(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
 
 # def p_FunctionLit(p):
 #     ''' FunctionLit         : FUNC Signature Block '''
