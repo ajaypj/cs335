@@ -7,7 +7,7 @@ from symbol import *
 
 parser = argparse.ArgumentParser(description = "argument parser")
 parser.add_argument("--in", help = 'Specify input file', required = True)
-# parser.add_argument("--out", help = 'Specify output file', required = True)
+parser.add_argument("--out", help = 'Specify output file', required = True)
 args = vars(parser.parse_args())
 
 ################################### Symbol Table #############################################
@@ -21,12 +21,6 @@ labelNo=0
 labelDic={}
 labelDic['0']=None
 currLabel="0"
-
-def printList(list):
-    for i in list:
-        print i
-
-
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -97,7 +91,9 @@ def p_SourceFile(p):
                             | PackageClause ImportDeclList
                             | PackageClause TopLevelDeclList
                             | PackageClause '''
-
+    print currScope
+    for item in scopeST[currScope].table:
+        print item, (scopeST[currScope].table)[item]
 
 def p_PackageClause(p):
     ''' PackageClause  		: PACKAGE ID SEMICOLON '''
@@ -136,21 +132,19 @@ def p_TopLevelDecl(p):
 							# | MethodDecl '''
 
 ################################################################################
-def p_OPENB(p):
-    ''' OPENB          		: '''
-    # func(p,"OPENB")
-
-def p_CLOSEB(p):
-    ''' CLOSEB         		: '''
-    # func(p,"CLOSEB")
-
 def p_StartScope(p):
     ''' StartScope         	: '''
     pushScope()
 
 def p_EndScope(p):
     ''' EndScope    		: '''
-    print scopeST[currScope].table
+    str = ''
+    for i in xrange(len(scopeStack)-1):
+        str += '\t\t'
+    print str, currScope
+    for item in scopeST[currScope].table:
+        print str, item, (scopeST[currScope].table)[item]
+    print ''
     popScope()
 
 def p_StructScope(p):
@@ -162,12 +156,16 @@ def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
 							| FUNC ID StartScope Signature Block EndScope '''
     if checkID(p[2], 'curr'):
-        raise Exception("Symbol " + p[2] + " already exists")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Symbol "+p[2]+" already exists")
     else:
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
     if len(p)==7:
-        print printList(p[5])
+        for i in p[5]:
+            irf.write(i)
+            irf.write('\n')
+        irf.write('\n')
+
 # def p_MethodDecl(p):
 #     ''' MethodDecl     		: FUNC Parameters ID Signature
 #                             | FUNC Parameters ID Signature Block '''
@@ -178,6 +176,7 @@ def p_Declaration(p):
                             | TypeDecl
 							| VarDecl '''
     p[0]=[]
+
 def p_ConstDecl(p):
     ''' ConstDecl           : '''
 
@@ -194,7 +193,7 @@ def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
     if checkID(p[1], 'curr') is not None:
-        raise Exception("Symbol " + p[1] + " already exists")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" already exists")
     elif len(p) == 4:
         (scopeST[currScope].table)[p[1]] = p[3].copy()
     else:
@@ -213,9 +212,9 @@ def p_Type2(p):
 def p_Type3(p):
     ''' Type           		: ID '''
     if checkID(p[1], 'recent') is None:
-        raise Exception("Type not defined")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
     elif checkID(p[1], 'recent')['class'] != 'TYPENAME':
-        raise Exception("Type not defined")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a typename")
     else:
         p[0] = (checkID(p[1], 'recent')).copy()
 
@@ -252,7 +251,7 @@ def p_FieldDecl(p):
 							| IdentifierList Type '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise Exception("Symbol " + iden + " already exists")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
 
@@ -354,7 +353,7 @@ def p_VarSpec(p):
                             | IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise Exception("Symbol " + iden + " already exists")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
@@ -375,7 +374,7 @@ def p_IdentifierList(p):
 def p_ShortVarDecl(p):
     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
     if len(p[1]) != len(p[3]):
-        raise Exception("Number of arguments do not match")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Number of arguments do not match")
     # for i in xrange(len(p[1])):
     #     scopeST[currScope].update()
 
@@ -458,7 +457,7 @@ def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
         # Break assign_op into multiple parts
     if len(p[1])!=len(p[3]):
-        raise Exception("No of Expression in both side of assign_op do not match")
+        raise Exception("Line "+str(p.lineno(2))+": "+"No of expressions do not match")
     p[0]=[]
     for i in range(len(p[1])):
         p[0]+=p[3][i].code
@@ -477,7 +476,6 @@ def p_ReturnStmt(p):
     if len(p)==3:
         p[0]=p[2][0].code
         p[0]+=["=,retVal,"+p[2][0].place]
-
     # func(p,"ReturnStmt")
 
 ### Not Done
@@ -491,15 +489,13 @@ def p_BreakStmt(p):
         if gt is not None:
             p[0]=["goto,"+gt]
         else:
-            raise Exception("Nothing to Break")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing to Break")
     else:
         # check if ID in Label
         if p[2] in labelDic.keys():
             p[0]=["goto,"+p[2]]
         else:
-            raise Exception("LABEL "+ p[2]+" Doesn't exist")
-
-    # func(p,"BreakStmt")
+            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+ p[2]+" doesn't exist")
 
 def p_ContinueStmt(p):
     ''' ContinueStmt   		: CONTINUE
@@ -508,15 +504,12 @@ def p_ContinueStmt(p):
         if currLabel != "0":
             p[0]=["goto,"+currLabel]
         else:
-            raise Exception("Nothing To CONTINUE")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing To continue")
     else:
         if p[2] in labelDic.keys():
             p[0]=["goto,"+p[2]]
         else:
-            raise Exception("LABEL "+ p[2]+" Doesn't exist")
-
-
-    # func(p,"ContinueStmt")
+            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+p[2]+" doesn't exist")
 
 # Doubt
 def p_LabeledStmt(p):
@@ -524,19 +517,14 @@ def p_LabeledStmt(p):
     labelDic[p[1]]="Created"
     p[0]=[p[1]+':',p[2].code]
 
-
 def p_GotoStmt(p):
     ''' GotoStmt       		: GOTO ID '''
     if p[2] in labelDic.keys():
         p[0]=["goto,"+p[2]]
-    # func(p,"GotoStmt")
 
 ################################################################################
 def p_IfStmt(p):
     ''' IfStmt         		: IF Expression StartScope Block EndScope'''
-
-                            # | IF Expression StartScope Block EndScope ELSE StartScope Block EndScope
-                            # | IF Expression StartScope Block EndScope ELSE StartScope IfStmt EndScope
                             # | IF SimpleStmt SEMICOLON Expression Block ELSE IfStmt
                             # | IF SimpleStmt SEMICOLON Expression Block ELSE Block
                             # | IF SimpleStmt SEMICOLON Expression Block
@@ -561,37 +549,36 @@ def p_IfStmt1(p):
     p[0]+=p[4]
 
 def p_IfStmt2(p):
-    ''' IfStmt         		: IF Expression StartScope Block EndScope ELSE StartScope IfStmt EndScope'''
+    ''' IfStmt         		: IF Expression StartScope Block EndScope ELSE IfStmt '''
     p[0]=p[2].code
     ifLabel=createLabel()
     endLabel=createLabel()
     p[0]+=["gotoPos,"+p[2].place+","+ifLabel]
-    p[0]+=p[8]
+    p[0]+=p[7]
     p[0]+=["goto,"+endLabel]
     p[0]+=[ifLabel+":"]
     p[0]+=p[4]
 
 def p_ForStmt(p):
-    ''' ForStmt : FOR ForStmt1 Block '''
+    ''' ForStmt : FOR ForSig StartScope Block EndScope '''
     forLabel=createLabel()
     endLabel=createLabel()
     p[0]=p[2][0]
     p[0]+=[forLabel+":"]
     p[0]+=p[2][1].code
     p[0]+=["gotoNeg,"+p[2][1].place+","+endLabel]
-    p[0]+=p[3]
+    p[0]+=p[4]
     p[0]+=p[2][2]
     p[0]+=["goto,"+forLabel]
     p[0]+=[endLabel+":"]
 
-def p_ForStmt1(p):
-    ''' ForStmt1 		    : ForClause'''
-    p[0]=p[1]
-# def p_ForStmt1(p):
-#     ''' ForStmt1 		    : Condition
+def p_ForSig(p):
+    ''' ForSig 		    : ForClause'''
+#     ''' ForSig 		    : Condition
 #     | ForClause
 #     | RangeClause '''
-#     # func(p,"ForStmt1")
+#     # func(p,"ForSig")
+    p[0]=p[1]
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
@@ -784,18 +771,19 @@ def p_PrimaryExpr5(p):
     '''
     dic = checkID(p[1].place,'global')
     if dic is None:
-        raise Exception("Expected a name of function")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
     elif dic["class"] != "FUNC":
-        raise Exception("Expected a name of function")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
+
     # PrimaryExpr should be function
     if len(p[2]) != len(dic['parameters']):
-        raise Exception(str(len(dic['parameters']))+"parameters expected")
+        raise Exception("Line "+str(p.lineno(2))+": "+str(len(dic['parameters']))+" parameters expected for "+p[1].place)
     else:
         for i in xrange(len(p[2])):
             if 'type' not in (p[2][i].extra).keys():
-                raise Exception(i+"th type doesn't match in "+p[1].place)
+                raise Exception("Line "+str(p.lineno(2))+": "+i+"th type doesn't match for "+p[1].place)
             elif (p[2][i].extra)['type'] != dic['parameters'][i]:
-                raise Exception(i+"th type doesn't match in "+p[1].place)
+                raise Exception("Line "+str(p.lineno(2))+": "+i+"th type doesn't match for "+p[1].place)
 
         # Function call
         p[0] = expr()
@@ -824,10 +812,10 @@ def p_Arguments(p):
 #     ''' Conversion        	: Type LPAREN Expression COMMA RPAREN
 # 							| Type LPAREN Expression RPAREN '''
 #     # func(p,"Conversion")
-
+#
 # def p_MethodExpr(p):
 #     ''' MethodExpr       	: Type PERIOD ID '''
-    # func(p,"MethodExpr")
+#     func(p,"MethodExpr")
 #
 # def p_Slice(p):
 #     ''' Slice          		: LBRACK COLON RBRACK
@@ -836,11 +824,11 @@ def p_Arguments(p):
 # 							| LBRACK Expression COLON Expression RBRACK
 # 							| LBRACK COLON Expression COLON Expression RBRACK
 # 							| LBRACK Expression COLON Expression COLON Expression RBRACK '''
-    # func(p,"Slice")
-
+#     func(p,"Slice")
+#
 # def p_TypeAssertion(p):
 #     ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
-    # func(p,"TypeAssertion")
+#     func(p,"TypeAssertion")
 
 def p_Operand(p):
     ''' Operand        		: Literal'''
@@ -850,10 +838,10 @@ def p_Operand1(p):
     ''' Operand        		: ID'''
     dic = checkID(p[1],'recent')
     if dic is None:
-        raise Exception("Symbol " + p[1] + " doesn't exist, cant access,p_functions.py in line no ")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
 
     if dic["cls"]!='VAR':
-        raise Exception("The identifier used is not variable,p_functions.py in line no ")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a variable")
 
     p[0]=expr()
     p[0].cls=dic["cls"]
@@ -865,7 +853,7 @@ def p_Operand1(p):
         p[0].extra["return"]=dic["return"]
         p[0].extra["parameters"]=dic["parameters"]
     else:
-        raise Exception("The variable"+p[1]+"cannot be an operand")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand")
     p[0].place=p[1]
 
 # def p_Operand2(p):# Doubt
@@ -888,14 +876,12 @@ def p_BasicLit(p):
     # p[0].value=int(p[1])
     p[0].code=["="+','+p[0].place+","+p[1]]
 
-
 def p_BasicLit1(p):
     ''' BasicLit       		: FLOAT '''
     p[0]=expr()
     p[0].extra["type"]='float'
     # p[0].value=float(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
-
 
 def p_BasicLit2(p):
     ''' BasicLit       		: STRING '''
@@ -911,18 +897,14 @@ def p_BasicLit3(p):
     # p[0].value=complex(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
 
-
-
 # def p_FunctionLit(p):
 #     ''' FunctionLit         : FUNC Signature Block '''
-
-
+#
 # def p_CompositeLit(p):
 #     ''' CompositeLit   		: ID LiteralValue
 #                             | LiteralType LiteralValue
 #                             | LBRACK ELLIPSIS RBRACK Operand LiteralValue '''
-#     #
-
+#
 # def p_LiteralValue(p):
 #     ''' LiteralValue   		: LBRACE RBRACE
 # 							| SEMICOLON RBRACE
@@ -930,8 +912,8 @@ def p_BasicLit3(p):
 # 							| SEMICOLON ElementList RBRACE
 # 							| LBRACE ElementList COMMA RBRACE
 # 							| SEMICOLON ElementList COMMA RBRACE '''
-    # func(p,"LiteralValue")
-
+#     # func(p,"LiteralValue")
+#
 # def p_ElementList(p):
 #     ''' ElementList    		: KeyedElement
 # 							| ElementList COMMA KeyedElement '''
@@ -950,7 +932,6 @@ def p_BasicLit3(p):
 # def p_Element(p):
 #     ''' Element        		: Expression
 # 							| LiteralValue '''
-
 
 def p_assign_op(p):
     ''' assign_op      		: ASSIGN
@@ -1038,5 +1019,7 @@ f = open(args["in"], "r")
 data = f.read()
 f.close()
 
+irf = open(args["out"], "w")
 result = parser.parse(data,debug=1)
+irf.close()
 # print (result)
