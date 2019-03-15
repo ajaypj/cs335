@@ -44,7 +44,7 @@ special = ['COM']
 tokens = operators + numbers + strings + special + ['ID','VARTYPE'] + list(reserved.values())
 
 ###################################### Type
-vartypes = ['int16','int8','int32','int64','int','bool','string','uint','uint16','uint32','uint64','uintptr','float32','float64','complex64','complex128']
+vartypes = ['int16','int8','int32','int64','int','bool','string','uint','uint16','uint32','uint64','uintptr','float32','float64','float','complex64','complex128']
 
 ################################### Operators and delimiters
 t_ADD = r'\+'

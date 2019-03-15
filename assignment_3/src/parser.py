@@ -75,7 +75,7 @@ class expr():
     def __init__(self):
         self.place = new_var()
         self.cls = ''
-        # self.type=''
+        self.type=''
         self.value=None
         self.extra={}
         self.code=[]
@@ -156,7 +156,7 @@ def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartScope Signature EndScope
 							| FUNC ID StartScope Signature Block EndScope '''
     if checkID(p[2], 'curr'):
-        raise Exception("Line "+str(p.lineno(2))+": "+"Symbol "+p[2]+" already exists")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Symbol "+p[2]+" already exists.")
     else:
         (scopeST[currScope].table)[p[2]] = p[4].copy()
         scopeST[currScope].update(p[2], 'cls', 'FUNC')
@@ -193,7 +193,7 @@ def p_TypeSpec(p):
     ''' TypeSpec       		: ID ASSIGN Type
                             | ID Type '''
     if checkID(p[1], 'curr') is not None:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" already exists")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" already exists.")
     elif len(p) == 4:
         (scopeST[currScope].table)[p[1]] = p[3].copy()
     else:
@@ -212,9 +212,9 @@ def p_Type2(p):
 def p_Type3(p):
     ''' Type           		: ID '''
     if checkID(p[1], 'recent') is None:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist.")
     elif checkID(p[1], 'recent')['cls'] != 'TYPENAME':
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a typename")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" is not a typename.")
     else:
         p[0] = (checkID(p[1], 'recent')).copy()
 
@@ -229,7 +229,7 @@ def p_LiteralType(p):
 def p_ArrayType(p):
     ''' ArrayType      		: LBRACK Expression RBRACK Type ''' # Must be integer
     p[0] = {}
-    p[0]['type'] = 'ARRAY(' + p[4] + ')'
+    p[0]['type'] = 'ARRAY(' + p[4]['type'] + ')'
     # p[0]['size'] will be calculated
 
 def p_StructType(p):
@@ -251,14 +251,14 @@ def p_FieldDecl(p):
 							| IdentifierList Type '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
 
 def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
     p[0] = {}
-    p[0]['type'] = 'POINTER(' + p[2] + ')'
+    p[0]['type'] = 'POINTER(' + p[2]['type'] + ')'
 
 # def p_SliceType(p):
 #     ''' SliceType      		: LBRACK RBRACK Type '''
@@ -316,7 +316,7 @@ def p_ParameterDecl(p):
         for iden in p[1]:
             p[0].append(p[2]['type'])
             if checkID(iden, 'curr') is not None:
-                raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
+                raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
             (scopeST[currScope].table)[iden] = p[2].copy()
             scopeST[currScope].update(iden, 'cls', 'VAR')
 
@@ -357,7 +357,7 @@ def p_VarSpec(p):
                             | IdentifierList Type ASSIGN LBRACE ExpressionList RBRACE '''
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
-            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
@@ -378,14 +378,18 @@ def p_IdentifierList(p):
 def p_ShortVarDecl(p):
     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
     if len(p[1]) != len(p[3]):
-        raise Exception("Line "+str(p.lineno(2))+": "+"Number of arguments do not match")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Number of arguments do not match.")
     # for i in xrange(len(p[1])):
     #     scopeST[currScope].update()
 
 ################################################################################
 def p_Block(p):
-    ''' Block          		: LBRACE StatementList RBRACE '''
-    p[0]=p[2]
+    ''' Block          		: LBRACE StatementList RBRACE
+                            | LBRACE RBRACE '''
+    if len(p) > 3:
+        p[0]=p[2]
+    else:
+        p[0]=[]
     # func(p,"Block")
 
 def p_StatementList(p):
@@ -461,17 +465,34 @@ def p_Assignment(p):
     ''' Assignment     		: ExpressionList assign_op ExpressionList '''
         # Break assign_op into multiple parts
     if len(p[1])!=len(p[3]):
-        raise Exception("Line "+str(p.lineno(2))+": "+"No of expressions do not match")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Number of expressions do not match.")
     p[0]=[]
     for i in range(len(p[1])):
         p[0]+=p[3][i].code
 
     for i in range(len(p[1])):
         if len(p[2])==2:
-            p[0]+=[p[2][0]+','+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+            if p[1][i].type == 'float' and p[3][i].type == 'int':
+                var = new_var()
+                p[0] += ['=inttofloat'+','+var+','+p[3][i].place]
+                p[0] += ['float'+p[2][0]+','+p[1][i].place +","+p[1][i].place +","+var]
+            elif p[1][i].type != p[3][i].type:
+                raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch ["+str(i)+"].")
+            elif p[1][i].type == 'float' or p[1][i].type == 'int':
+                p[0] += [p[1][i].type+p[2][0]+','+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+            elif p[1][i].type == 'string' and p[2][0] == '+':
+                p[0] += [p[1][i].type+p[2][0]+','+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
+            else:
+                raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform operation"+p[2]+"["+str(i)+"].")
         else:
-            p[0]+=[p[2][0]+','+p[1][i].place +","+p[3][i].place]
-
+            if p[1][i].type == 'float' and p[3][i].type == 'int':
+                var = new_var()
+                p[0] += ['=inttofloat'+','+var+','+p[3][i].place]
+                p[0] += [p[2][0]+','+p[1][i].place +","+var]
+            elif p[1][i].type != p[3][i].type:
+                raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch ["+str(i)+"].")
+            else:
+                p[0] += [p[2][0]+','+p[1][i].place +","+p[3][i].place]
     # print p[0]
 
 def p_ReturnStmt(p):
@@ -493,13 +514,13 @@ def p_BreakStmt(p):
         if gt is not None:
             p[0]=["goto,"+gt]
         else:
-            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing to Break")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing to Break.")
     else:
         # check if ID in Label
         if p[2] in labelDic.keys():
             p[0]=["goto,"+p[2]]
         else:
-            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+ p[2]+" doesn't exist")
+            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+ p[2]+" doesn't exist.")
 
 def p_ContinueStmt(p):
     ''' ContinueStmt   		: CONTINUE
@@ -508,12 +529,12 @@ def p_ContinueStmt(p):
         if currLabel != "0":
             p[0]=["goto,"+currLabel]
         else:
-            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing To continue")
+            raise Exception("Line "+str(p.lineno(1))+": "+"Nothing To continue.")
     else:
         if p[2] in labelDic.keys():
             p[0]=["goto,"+p[2]]
         else:
-            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+p[2]+" doesn't exist")
+            raise Exception("Line "+str(p.lineno(2))+": "+"Label "+p[2]+" doesn't exist.")
 
 # Doubt
 def p_LabeledStmt(p):
@@ -682,11 +703,7 @@ def p_ExpressionList(p):
 def p_Expression(p):
     ''' Expression     		: Expression1 '''
                             # | UnaryExpr assign_op Expression
-    if len(p)==2:
-        p[0]=p[1]
-    else:
-        p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+    p[0] = p[1]
 
 def p_Expression1(p):
     ''' Expression1    		: Expression2
@@ -696,6 +713,8 @@ def p_Expression1(p):
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+        p[0].type='bool'
+        p.set_lineno(0,p.lineno(2))
 
 def p_Expression2(p):
     ''' Expression2    		: Expression3
@@ -705,6 +724,8 @@ def p_Expression2(p):
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+        p[0].type='bool'
+        p.set_lineno(0,p.lineno(2))
 
 def p_Expression3(p):
     ''' Expression3    		: Expression4
@@ -713,7 +734,25 @@ def p_Expression3(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+        p[0].code=p[1].code+p[3].code
+        if p[1].type == 'float' and p[3].type == 'int':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
+        elif p[1].type == 'int' and p[3].type == 'float':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
+        elif p[1].type == 'int' and p[3].type == 'int':
+            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+        elif p[1].type == 'float' and p[3].type == 'float':
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+        elif p[1].type == 'string' and p[3].type == 'string':
+            p[0].code.append('string'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+        else:
+            raise Exception("Line "+str(p.lineno(2))+": "+"Can't compare these types.")
+        p[0].type = 'bool'
+        p.set_lineno(0,p.lineno(2))
 
 def p_Expression4(p):
     ''' Expression4    		: Expression5
@@ -722,7 +761,29 @@ def p_Expression4(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+        p[0].code=p[1].code+p[3].code
+        if p[1].type == 'float' and p[3].type == 'int':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
+            p[0].type = 'float'
+        elif p[1].type == 'int' and p[3].type == 'float':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
+            p[0].type = 'float'
+        elif p[1].type == 'int' and p[3].type == 'int':
+            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].type = 'int'
+        elif p[1].type == 'float' and p[3].type == 'float':
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].type = 'float'
+        elif p[1].type == 'string' and p[3].type == 'string' and p[2] == '+':
+            p[0].code.append('string'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].type = 'string'
+        else:
+            raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2]+" on these types.")
+        p.set_lineno(0,p.lineno(2))
 
 def p_Expression5(p):
     ''' Expression5    		: UnaryExpr
@@ -731,19 +792,42 @@ def p_Expression5(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
+        p[0].code=p[1].code+p[3].code
+        if p[1].type == 'float' and p[3].type == 'int':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
+            p[0].type = 'float'
+        elif p[1].type == 'int' and p[3].type == 'float':
+            var = new_var()
+            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
+            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
+            p[0].type = 'float'
+        elif p[1].type == 'int' and p[3].type == 'int':
+            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].type = 'int'
+        elif p[1].type == 'float' and p[3].type == 'float':
+            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].type = 'float'
+        else:
+            raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2]+" on these types.")
+        p.set_lineno(0,p.lineno(2))
 
 def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
 							| unary_op UnaryExpr '''
     if len(p)==2:
         if p[1].cls == 'FUNC':
-            raise Exception("Line "+str(p.lineno(1))+": "+"No arguments passed")
+            raise Exception("Line "+str(p.lineno(1))+": "+"No arguments passed.")
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=(p[2].code).append(p[1]+','+p[0].place+','+p[1].place)
-        p.set_lineno(0,p.lineno(2))
+        p[0].code=p[2].code+[p[1]+','+p[0].place+','+p[2].place]
+        if p[1] == '*':
+            p[0].type = (p[2].type)[8:-1]
+        else:
+            p[0].type = p[2].type
+        p.set_lineno(0,p.lineno(1))
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand '''
@@ -779,19 +863,17 @@ def p_PrimaryExpr5(p):
     '''
     dic = checkID(p[1].place,'global')
     if dic is None:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name.")
     elif dic["cls"] != "FUNC":
-        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name.")
 
     # PrimaryExpr should be function
     if len(p[2]) != len(dic['parameters']):
-        raise Exception("Line "+str(p.lineno(2))+": "+str(len(dic['parameters']))+" parameters expected for "+p[1].place)
+        raise Exception("Line "+str(p.lineno(2))+": "+str(len(dic['parameters']))+" parameters expected for "+p[1].place+".")
     else:
         for i in xrange(len(p[2])):
-            if 'type' not in (p[2][i].extra).keys():
-                raise Exception("Line "+str(p.lineno(2))+": "+i+"th type doesn't match for "+p[1].place)
-            elif (p[2][i].extra)['type'] != dic['parameters'][i]:
-                raise Exception("Line "+str(p.lineno(2))+": "+i+"th type doesn't match for "+p[1].place)
+            if p[2][i].type != dic['parameters'][i]:
+                raise Exception("Line "+str(p.lineno(2))+": "+str(i)+"th type doesn't match for "+p[1].place+".")
 
         # Function call
         p[0] = expr()
@@ -801,7 +883,7 @@ def p_PrimaryExpr5(p):
             p[0].code+=["=,param_"+str(i)+p[2][i].place]
         p[0].code=["jump,"+p[1].place]
         p[0].code+=["="+p[0].place+',retVal']
-        p[0].extra['type']=dic["return"][0]
+        p[0].type=dic["return"][0]
     ### Multiple returns
     p.set_lineno(0,p.lineno(1))
 
@@ -850,19 +932,19 @@ def p_Operand1(p):
     ''' Operand        		: ID'''
     dic = checkID(p[1],'recent')
     if dic is None:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist.")
 
     p[0]=expr()
     p[0].cls=dic["cls"]
     if p[0].cls=="VAR":
-        p[0].extra["type"]=dic["type"]
+        p[0].type=dic["type"]
         if dic['type'] == 'STRUCT':
             p[0].extra["scopeno"] = dic["scopeno"]
     elif p[0].cls=="FUNC":
         p[0].extra["return"]=dic["return"]
         p[0].extra["parameters"]=dic["parameters"]
     else:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand")
+        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand.")
     p[0].place=p[1]
     p.set_lineno(0,p.lineno(1))
 
@@ -870,7 +952,7 @@ def p_Operand1(p):
 #     ''' Operand        		: ID PERIOD ID'''
 
 def p_Operand3(p):
-    ''' Operand        		: LPAREN Expression RPAREN'''
+    ''' Operand        		: LPAREN Expression RPAREN '''
     p[0]=p[2]
     p[0].cls = 'VAR'
     p.set_lineno(0,p.lineno(1))
@@ -884,7 +966,7 @@ def p_Literal(p):
 def p_BasicLit(p):
     ''' BasicLit       		: INT '''
     p[0]=expr()
-    p[0].extra["type"]='int'
+    p[0].type='int'
     # p[0].value=int(p[1])
     p[0].code=["="+','+p[0].place+","+p[1]]
     p.set_lineno(0,p.lineno(1))
@@ -892,7 +974,7 @@ def p_BasicLit(p):
 def p_BasicLit1(p):
     ''' BasicLit       		: FLOAT '''
     p[0]=expr()
-    p[0].extra["type"]='float'
+    p[0].type='float'
     # p[0].value=float(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
     p.set_lineno(0,p.lineno(1))
@@ -900,7 +982,7 @@ def p_BasicLit1(p):
 def p_BasicLit2(p):
     ''' BasicLit       		: STRING '''
     p[0]=expr()
-    p[0].extra["type"]='string'
+    p[0].type='string'
     # p[0].value=p[1]
     p[0].code=["=,"+p[0].place+","+p[1]]
     p.set_lineno(0,p.lineno(1))
@@ -908,7 +990,7 @@ def p_BasicLit2(p):
 def p_BasicLit3(p):
     ''' BasicLit       		: IMAG '''
     p[0]=expr()
-    p[0].extra["type"]='complex'
+    p[0].type='complex'
     # p[0].value=complex(p[1])
     p[0].code=["=,"+p[0].place+","+p[1]]
     p.set_lineno(0,p.lineno(1))
@@ -964,6 +1046,7 @@ def p_assign_op(p):
 							| AND_NOT_ASSIGN
     '''
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
     # func(p,"assign_op")
 
 def p_rel_op(p):
@@ -999,8 +1082,8 @@ def p_unary_op(p):
 							| NOT
 							| XOR
 							| MUL
-							| AND
-							| ARROW '''
+							| AND '''
+							# | ARROW '''
     p[0]=p[1]
 
 ################################### Precedence #############################################

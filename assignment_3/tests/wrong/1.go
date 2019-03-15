@@ -2,7 +2,7 @@ package main;
 
 import "fmt";
 
-func add(a int, b int) int{
+func add(a int, b int) int {
 	return a+b;
 };
 
@@ -13,8 +13,8 @@ func main() {
 	for i = 0; i < 10; i++ {
 		var v int;
 		v = 0;
-		if v != 2{
-			sum += add(sum, i);
+		if v != 2 {
+			sum += add(sum);
 		};
 	};
 	// fmt.Println(sum);
