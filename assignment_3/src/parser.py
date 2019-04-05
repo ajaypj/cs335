@@ -395,8 +395,8 @@ def p_Block(p):
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
 							| Statement SEMICOLON '''
-    print p[1]
-    print p[2]
+    # print p[1]
+    # print p[2]
     if len(p)==3:
         # print p[1]
         p[0]=p[1]

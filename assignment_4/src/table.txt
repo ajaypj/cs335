@@ -1,0 +1,4 @@
+0
+fmt {'cls': 'PACKAGE'}
+main {'cls': 'FUNC', 'args': None, 'return': ['VOID'], 'funcID': 1}
+time {'cls': 'PACKAGE'}
