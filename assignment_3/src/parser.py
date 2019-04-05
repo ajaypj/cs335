@@ -379,8 +379,11 @@ def p_ShortVarDecl(p):
     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
     if len(p[1]) != len(p[3]):
         raise Exception("Line "+str(p.lineno(2))+": "+"Number of arguments do not match.")
-    # for i in xrange(len(p[1])):
-    #     scopeST[currScope].update()
+    for i in xrange(len(p[1])):
+        if checkID(p[1][i], 'curr') is not None:
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1][i]+" already exists.")
+        scopeST[currScope].insert(p[1][i], p[3][i].type)
+        scopeST[currScope].update(p[1][i], 'cls', 'VAR')
 
 ################################################################################
 def p_Block(p):
@@ -395,10 +398,7 @@ def p_Block(p):
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
 							| Statement SEMICOLON '''
-    # print p[1]
-    # print p[2]
     if len(p)==3:
-        # print p[1]
         p[0]=p[1]
     else:
         p[0]=p[1]+p[2]

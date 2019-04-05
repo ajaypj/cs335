@@ -23,6 +23,4 @@ func main() {
 	b7 := 70.1;
 	b8 := 80.1;
 	b9 := 90.1;
-	
-	fmt.Println(i, j, k, c, python, java);
 };

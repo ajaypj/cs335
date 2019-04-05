@@ -566,14 +566,14 @@ def p_Assignment(p):
             elif p[1][i].type == 'string' and p[2][0] == '+':
                 p[0] += [p[1][i].type+p[2][0]+','+p[1][i].place +","+p[1][i].place +","+p[3][i].place]
             else:
-                raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform operation"+p[2]+"["+str(i)+"].")
+                raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform operation "+p[2]+", number "+str(i)+".")
         else:
             if p[1][i].type == 'float' and p[3][i].type == 'int':
                 var = new_var()
                 p[0] += ['=inttofloat'+','+var+','+p[3][i].place]
                 p[0] += [p[2][0]+','+p[1][i].place +","+var]
             elif p[1][i].type != p[3][i].type:
-                raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch ["+str(i)+"].")
+                raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch for expression "+str(i)+".")
             else:
                 p[0] += [p[2][0]+','+p[1][i].place +","+p[3][i].place]
     # print p[0]
@@ -1206,7 +1206,6 @@ def p_assign_op(p):
     '''
     p[0]=p[1]
     p.set_lineno(0,p.lineno(1))
-    # func(p,"assign_op")
 
 def p_rel_op(p):
     ''' rel_op         		: EQL
@@ -1217,6 +1216,7 @@ def p_rel_op(p):
 							| GEQ
     '''
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 def p_add_op(p):
     ''' add_op         		: ADD
@@ -1224,6 +1224,7 @@ def p_add_op(p):
 							| OR
 							| XOR '''
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 def p_mul_op(p):
     ''' mul_op         		: MUL
@@ -1234,6 +1235,7 @@ def p_mul_op(p):
 							| AND
 							| AND_NOT '''
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 def p_unary_op(p):
     ''' unary_op       		: ADD
@@ -1244,6 +1246,7 @@ def p_unary_op(p):
 							| AND '''
 							# | ARROW '''
     p[0]=p[1]
+    p.set_lineno(0,p.lineno(1))
 
 ################################### Precedence #############################################
 precedence = (
