@@ -91,9 +91,9 @@ def p_SourceFile(p):
                             | PackageClause ImportDeclList
                             | PackageClause TopLevelDeclList
                             | PackageClause '''
-    # print currScope
-    # for iden in scopeST[currScope].table:
-    #     print iden, (scopeST[currScope].table)[iden]
+    print currScope
+    for iden in scopeST[currScope].table:
+        print iden, (scopeST[currScope].table)[iden]
 
 def p_PackageClause(p):
     ''' PackageClause  		: PACKAGE ID SEMICOLON '''
@@ -163,12 +163,12 @@ def p_StartScope(p):
 
 def p_EndScope(p):
     ''' EndScope    		: '''
-    # str = ''
-    # for i in xrange(len(scopeStack)-1):
-    #     str += '\t\t'
-    # print str, currScope
-    # for iden in scopeST[currScope].table:
-    #     print str, iden, (scopeST[currScope].table)[iden]
+    str = ''
+    for i in xrange(len(scopeStack)-1):
+        str += '\t\t'
+    print str, currScope
+    for iden in scopeST[currScope].table:
+        print str, iden, (scopeST[currScope].table)[iden]
     popScope()
 
 def p_StartFuncScope(p):
@@ -974,7 +974,8 @@ def p_PrimaryExpr1(p):
         sc=int(p[1].type[7:])
         if p[2] in (scopeST[sc].table).keys():
             p[0]=expr()
-            p[0].type=(scopeST[sc].table)[p[2]]
+            p[0].cls = 'VAR'
+            p[0].type=(scopeST[sc].table)[p[2]]['type']
             p[0].code=p[1].code
             p[0].code+=["=,"+p[0].place+","+p[1].place+"."+p[2]]
         else:
@@ -996,6 +997,7 @@ def p_PrimaryExpr2(p):
         p[0]=expr()
         p[0].type=p[1].type[5:-1]
         temp1=new_var()
+        p[0].cls = 'VAR'
         p[0].code=p[1].code
         p[0].code+=["*,"+temp1+","+p[2].place+","+str(typeWidth[p[0].type])]
         p[0].code+=["+,"+temp1+",start("+p[1].place+"),"+temp1]
@@ -1023,7 +1025,7 @@ def p_PrimaryExpr5(p):
         raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name.")
 
     # PrimaryExpr should be function
-    if len(p[2]) != len(dic['parameter']):
+    if len(p[2]) != len(dic['args']):
         raise Exception("Line "+str(p.lineno(2))+": "+str(len(dic['args']))+" args expected for "+p[1].place+".")
     else:
         for i in xrange(len(p[2])):

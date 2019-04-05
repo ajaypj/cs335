@@ -1,4 +1,12 @@
+		1
+		y {'width': 4, 'type': 'int', 'cls': 'FIELD'}
+		x {'width': 4, 'type': 'int', 'cls': 'FIELD'}
+				3
+				S {'width': 1, 'offset': 13, 'type': 'bool', 'cls': 'VAR'}
+		2
+		S {'width': 4, 'offset': 12, 'type': 'int', 'cls': 'VAR'}
+		example {'width': 8, 'cls': 'VAR', 'structID': 1, 'offset': 8, 'type': 'STRUCT 1'}
 0
 fmt {'cls': 'PACKAGE'}
-main {'cls': 'FUNC', 'args': None, 'return': ['VOID'], 'funcID': 1}
-time {'cls': 'PACKAGE'}
+main {'rType': 'VOID', 'mem': 13, 'args': [], 'cls': 'FUNC', 'pMem': 0, 'funcID': 2}
+S {'width': 8, 'cls': 'TYPENAME', 'type': 'STRUCT 1', 'structID': 1}
