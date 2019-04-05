@@ -37,10 +37,10 @@ def checkID(identifier, typeOf):
     return None
 
 def pushScope(name=None, cl=None):
+    global currScope
     if name:
         scopeST[currScope].insert(name)
         scopeST[currScope].update(name, 'cls', cl)
-    global currScope
     global scopeNo
     scopeNo += 1
     lastScope = currScope
@@ -189,8 +189,8 @@ def p_FunctionDecl(p):
 							| FUNC ID StartFuncScope Signature Block EndScope '''
     code = [p[2]+":"]
     code += ["push ebp"]
-    code += ["mov esp, ebp"]
-    code += ["sub $"+str((scopeST[0].table)[p[2]]['mem'])+", esp"]
+    code += ["mov esp,ebp"]
+    code += ["sub $"+str((scopeST[0].table)[p[2]]['mem'])+",esp"]
     code += ["push ebx", "push esi", "push edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -204,13 +204,13 @@ def p_FunctionDecl(p):
 #     # func(p,"MethodDecl")
 
 def p_Declaration(p):
-    ''' Declaration    		: ConstDecl
-                            | TypeDecl
+    ''' Declaration    		: TypeDecl
 							| VarDecl '''
+                            # | ConstDecl '''
     p[0]=[]
 
-def p_ConstDecl(p):
-    ''' ConstDecl           : '''
+# def p_ConstDecl(p):
+#     ''' ConstDecl           : '''
 
 def p_TypeDecl(p):
     ''' TypeDecl       		: TYPE TypeSpec
@@ -371,8 +371,8 @@ def p_ParameterDecl(p):
             (scopeST[currScope].table)[iden] = p[2].copy()
             scopeST[currScope].update(iden, 'cls', 'VAR')
 
-            scopeST[currScope].update(iden, 'offset', currOffset)
             global currOffset
+            scopeST[currScope].update(iden, 'offset', currOffset)
             currOffset -= p[2]['width']
             (scopeST[0].table)[currFunc]['pMem'] += p[2]['width']
 
@@ -418,8 +418,8 @@ def p_VarSpec(p):
         (scopeST[currScope].table)[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
-        scopeST[currScope].update(iden, 'offset', currOffset+p[2]['width'])
         global currOffset
+        scopeST[currScope].update(iden, 'offset', currOffset+p[2]['width'])
         currOffset += p[2]['width']
         (scopeST[0].table)[currFunc]['mem'] += p[2]['width']
 
@@ -458,8 +458,8 @@ def p_ShortVarDecl(p):
             scopeST[currScope].update(p[1][i], 'width', typeWidth[p[3][i].type])
 
         w = (scopeST[currScope]).table[p[1][i]]['width']
-        scopeST[currScope].update(p[1][i], 'offset', currOffset + w)
         global currOffset
+        scopeST[currScope].update(p[1][i], 'offset', currOffset + w)
         currOffset += w
         (scopeST[0].table)[currFunc]['mem'] += w
 
@@ -1042,8 +1042,8 @@ def p_PrimaryExpr5(p):
         p[0].code+=["call,"+p[1].place]
 
         p[0].cls = 'VAR'
-        p[0].code+=["=, "+p[0].place+', eax']
-        p[0].code+=["add $"+str(dic['pMem'])+", esp"]
+        p[0].code+=["=,"+p[0].place+",eax"]
+        p[0].code+=["add $"+str(dic['pMem'])+",esp"]
         p[0].code+=["pop edx","pop ecx","pop eax"]
         p[0].type=dic['rType']
     ### Multiple returns
@@ -1139,18 +1139,37 @@ def p_BasicLit1(p):
     p.set_lineno(0,p.lineno(1))
 
 def p_BasicLit2(p):
-    ''' BasicLit       		: STRING '''
-    p[0]=expr()
-    p[0].type='string'
-    p[0].value=p[1]
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
-
-def p_BasicLit3(p):
     ''' BasicLit       		: IMAG '''
     p[0]=expr()
     p[0].type='complex'
     p[0].value=complex(p[1])
+    p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
+
+def p_BasicLit3(p):
+    ''' BasicLit       		: BOOLVAL '''
+    p[0]=expr()
+    p[0].type='bool'
+    if p[1]=='true':
+        p[0].value=1
+    else:
+        p[0].value=0
+    p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
+
+def p_BasicLit4(p):
+    ''' BasicLit       		: RUNE '''
+    p[0]=expr()
+    p[0].type='char'
+    p[0].value=p[1]
+    p[0].code=["=,"+p[0].place+","+p[1]]
+    p.set_lineno(0,p.lineno(1))
+
+def p_BasicLit5(p):
+    ''' BasicLit       		: STRING '''
+    p[0]=expr()
+    p[0].type='string'
+    p[0].value=p[1]
     p[0].code=["=,"+p[0].place+","+p[1]]
     p.set_lineno(0,p.lineno(1))
 
