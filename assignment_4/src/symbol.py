@@ -3,17 +3,15 @@ class symbolTable:
     def __init__(self, par=None):
         self.table = {}
         self.parent = par
-        self.mem = 0
 
     # Checks whether "name" lies in the symbol table
     def lookUp(self, name):
         return (name in self.table)
 
     # Inserts if already not present
-    def insert(self, name, type):
+    def insert(self, name):
         if (not self.lookUp(name)):
             (self.table)[name] = {}
-            (self.table)[name]['type'] = type
 
     # Returns the argument list of the variable else returns None
     # Note that type is always a key in argument list
