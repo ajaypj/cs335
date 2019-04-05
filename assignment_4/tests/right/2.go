@@ -12,8 +12,8 @@ func main() {
   var S int;
 	S = 0;
 
-  example.x=2;
-  example.y=1;
+  example.x = 2;
+  example.y = 1;
 
   if S == 0 {
     var S bool;

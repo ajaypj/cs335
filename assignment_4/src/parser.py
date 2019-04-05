@@ -1039,7 +1039,7 @@ def p_PrimaryExpr5(p):
         p[0].code+=["push eax","push ecx","push edx"]
         for exp in p[2][::-1]:
             p[0].code+=["push "+exp.place]
-        p[0].code+=["call,"+p[1].place]
+        p[0].code+=["call "+p[1].place]
 
         p[0].cls = 'VAR'
         p[0].code+=["=,"+p[0].place+",eax"]
