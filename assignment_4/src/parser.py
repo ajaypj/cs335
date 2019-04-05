@@ -583,15 +583,14 @@ def p_ReturnStmt(p):
 							| RETURN Expression '''
     if len(p)==3:
         p[0] = p[2].code
-        p[0] += ["mov,"+p[2].place+",eax"]
-        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp, esp"]
+        p[0] += ["mov "+p[2].place+",eax"]
+        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp,esp"]
         p[0] += ["pop ebp"]
         p[0] += ["ret"]
     else:
-        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp, esp"]
+        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp,esp"]
         p[0] += ["pop ebp"]
         p[0] += ["ret"]
-
 
 ### Not Done
 def p_BreakStmt(p):
