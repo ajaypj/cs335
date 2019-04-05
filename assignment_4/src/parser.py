@@ -19,7 +19,7 @@ scopeST[0] = symbolTable()
 
 currFunc = ''
 currOffset = 0
-typeWidth = {"int":4, "float":8, "bool":1, "char":1}
+typeWidth = {"int":4, "float":8, "bool":1, "char":1, "string":32}
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -453,12 +453,12 @@ def p_ShortVarDecl(p):
             else:
                 ((scopeST[currScope]).table[p[1][i]]).update(p[3][i].extra)
         else:
-            scopeST[currScope].update(iden, 'cls', 'VAR')
-            scopeST[currScope].update(iden, 'type', p[3][i].type)
-            scopeST[currScope].update(iden, 'width', typeWidth[p[3][i].type])
+            scopeST[currScope].update(p[1][i], 'cls', 'VAR')
+            scopeST[currScope].update(p[1][i], 'type', p[3][i].type)
+            scopeST[currScope].update(p[1][i], 'width', typeWidth[p[3][i].type])
 
         w = (scopeST[currScope]).table[p[1][i]]['width']
-        scopeST[currScope].update(iden, 'offset', currOffset + w)
+        scopeST[currScope].update(p[1][i], 'offset', currOffset + w)
         global currOffset
         currOffset += w
         (scopeST[0].table)[currFunc]['mem'] += w
