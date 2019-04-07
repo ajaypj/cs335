@@ -176,7 +176,7 @@ def p_StartStructScope(p):
     if currTypeDef != '':
         c = checkID(currTypeDef, 'recent')
         c['cls'] = 'TYPENAME'
-        c['type'] = 'STRUCT '+str(currScope)
+        c['type'] = 'struct '+str(currScope)
         c['width'] = 0
 
 def p_StartFuncScope(p):
@@ -198,10 +198,10 @@ def p_FunctionDecl(p):
     global currFunc
     currFunc = ''
     code = [p[2]+":"]
-    code += ["push ebp"]
-    code += ["mov esp,ebp"]
-    code += ["sub $"+str(scopeST[0].table[p[2]]['mem'])+",esp"]
-    code += ["push ebx", "push esi", "push edi"]
+    code += ["push %ebp"]
+    code += ["mov %esp,%ebp"]
+    code += ["sub $"+str(scopeST[0].table[p[2]]['mem'])+",%esp"]
+    code += ["push %ebx", "push %esi", "push %edi"]
     for stmt in code:
         irf.write(stmt+'\n')
     if len(p)==7:
@@ -282,7 +282,7 @@ def p_LiteralType(p):
 def p_ArrayType(p):
     ''' ArrayType      		: LBRACK Expression RBRACK Type '''
     p[0] = {}
-    p[0]['type'] = 'ARRAY(' + p[4]['type'] + ')'
+    p[0]['type'] = 'array(' + p[4]['type'] + ')'
     if p[2].value is not None:
         if p[2].type!="int": # Must be integer
             raise Exception("Line "+str(p.lineno(1))+": "+"Array index must be an integer")
@@ -296,7 +296,7 @@ def p_StructType(p):
     ''' StructType     		: STRUCT StartStructScope LBRACE FieldDeclList RBRACE EndScope
 							| STRUCT StartStructScope LBRACE RBRACE EndScope '''
     p[0] = {}
-    p[0]['type'] = 'STRUCT'
+    p[0]['type'] = 'struct'
     p[0]['width'] = 0
     if len(p) == 7:
         p[0]['type'] += ' '+str(p[4]['ID'])
@@ -320,8 +320,8 @@ def p_FieldDecl(p):
         if checkID(iden, 'curr') is not None:
             raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
         if currTypeDef != '':
-            s = 'STRUCT '+str(currScope)
-            if p[2]['type'].count(s) != p[2]['type'].count('POINTER('+s+')'):
+            s = 'struct '+str(currScope)
+            if p[2]['type'].count(s) != p[2]['type'].count('pointer('+s+')'):
                 raise Exception("Line "+str(p.lineno(1))+": "+"You can only use pointers to "+currTypeDef+".")
         scopeST[currScope].table[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
@@ -330,7 +330,7 @@ def p_FieldDecl(p):
 def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
     p[0] = {}
-    p[0]['type'] = 'POINTER(' + p[2]['type'] + ')'
+    p[0]['type'] = 'pointer(' + p[2]['type'] + ')'
     p[0]['width'] = 4
 
 # def p_SliceType(p):
@@ -357,7 +357,7 @@ def p_Signature1(p):
     if len(p) > 2:
         scopeST[0].table[currFunc]['rType'] = p[2]['type']
     else:
-        scopeST[0].table[currFunc]['rType'] = 'VOID'
+        scopeST[0].table[currFunc]['rType'] = 'void'
     scopeST[0].table[currFunc]['cls'] = 'FUNC'
 
 def p_Parameters(p):
@@ -597,13 +597,13 @@ def p_ReturnStmt(p):
 							| RETURN Expression '''
     if len(p)==3:
         p[0] = p[2].code
-        p[0] += ["mov "+p[2].place+",eax"]
-        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp,esp"]
-        p[0] += ["pop ebp"]
+        p[0] += ["mov "+p[2].place+",%eax"]
+        p[0] += ["pop %edi", "pop %esi","pop %ebx","mov %ebp,%esp"]
+        p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
-        p[0] += ["pop edi", "pop esi","pop ebx","mov ebp,esp"]
-        p[0] += ["pop ebp"]
+        p[0] += ["pop %edi", "pop %esi","pop %ebx","mov %ebp,%esp"]
+        p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 
 ### Not Done
@@ -981,7 +981,7 @@ def p_PrimaryExpr1(p):
     ''' PrimaryExpr    		: PrimaryExpr Selector '''
     # PrimaryExpr should be struct
     # add offset in struct
-    if p[1].type[:6]!="STRUCT":
+    if p[1].type[:6]!="struct":
         Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a struct")
     else:
         sc=int(p[1].type[7:])
@@ -1002,7 +1002,7 @@ def p_Selector(p):
 def p_PrimaryExpr2(p):
     ''' PrimaryExpr    		: PrimaryExpr Index '''
     # PrimaryExpr Should be array
-    if p[1].type[:5]!="ARRAY":
+    if p[1].type[:5]!="array":
         raise Exception("Line "+str(p.lineno(1))+": "+p[1]+" is not an array")
     elif p[2].type!="int":
         raise Exception("Line "+str(p.lineno(1))+": Array index must be an integer")
@@ -1046,17 +1046,17 @@ def p_PrimaryExpr5(p):
                 raise Exception("Line "+str(p.lineno(2))+": "+str(i)+"th type doesn't match for "+p[1].place+".")
         # Function call
         p[0] = expr()
+        p[0].type=dic['rType']
         for i in xrange(len(p[2])):
             p[0].code+=p[2][i].code
-        p[0].code+=["push eax","push ecx","push edx"]
+        p[0].code+=["push %eax","push %ecx","push %edx"]
         for exp in p[2][::-1]:
             p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]
 
-        p[0].code+=["=,"+p[0].place+",eax"]
-        p[0].code+=["add $"+str(dic['pMem'])+",esp"]
-        p[0].code+=["pop edx","pop ecx","pop eax"]
-        p[0].type=dic['rType']
+        p[0].code+=["=,"+p[0].place+",%eax"]
+        p[0].code+=["add $"+str(dic['pMem'])+",%esp"]
+        p[0].code+=["pop %edx","pop %ecx","pop %eax"]
     p.set_lineno(0,p.lineno(1))
 
 def p_Arguments(p):

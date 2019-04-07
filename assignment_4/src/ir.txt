@@ -1,0 +1,29 @@
+main:
+push %ebp
+mov %esp,%ebp
+sub $16,%esp
+push %ebx
+push %esi
+push %edi
+=,var_1,2
+=,i,var_1
+=,var_3,10
+=,a,var_3
+=,var_5,6
+=,b,var_5
+Ifnotequalvalgoto,i,1,label_0
+int+,var_11,a,b
+=,c,var_11
+goto,label_3
+label_0:
+Ifnotequalvalgoto,i,2,label_1
+int-,var_16,a,b
+=,c,var_16
+goto,label_3
+label_1:
+Ifnotequalvalgoto,i,3,label_2
+int*,var_21,a,b
+=,c,var_21
+goto,label_3
+label_2:
+label_3:
