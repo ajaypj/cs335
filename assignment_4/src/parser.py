@@ -232,8 +232,8 @@ def p_TypeSpecList(p):
                             | TypeSpecList TypeSpec SEMICOLON '''
 
 def p_TypeSpec(p):
-    ''' TypeSpec       		: ID SaveType ASSIGN Type
-                            | ID SaveType Type '''
+    ''' TypeSpec       		: ID SaveTypeName ASSIGN Type
+                            | ID SaveTypeName Type '''
     global currTypeDef
     currTypeDef = ''
     if len(p) == 4:
@@ -242,8 +242,8 @@ def p_TypeSpec(p):
         scopeST[currScope].table[p[1]] = p[2].copy()
     scopeST[currScope].update(p[1], 'cls', 'TYPENAME')
 
-def p_SaveType(p):
-    ''' SaveType       	    : '''
+def p_SaveTypeName(p):
+    ''' SaveTypeName        : '''
     if checkID(p[-1], 'curr') is not None:
         raise Exception("Line "+str(p.lineno(-1))+": "+"Symbol "+p[-1]+" already exists.")
     else:
