@@ -4,7 +4,7 @@ import "fmt";
 
 func main() {
 	var i, j int;
-	c, python := 1, 0;
+	c, python := i, 0;
 	var a1 int;
 	var a2 int;
 	var a3 int;

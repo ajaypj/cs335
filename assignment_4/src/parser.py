@@ -17,6 +17,7 @@ currScope = 0
 scopeST = {}
 scopeST[0] = symbolTable()
 
+currTypeDef = ''
 currFunc = ''
 currOffset = 0
 typeWidth = {"int":4, "float":8, "bool":1, "char":1, "string":32}
@@ -36,11 +37,10 @@ def checkID(identifier, typeOf):
 
     return None
 
-def pushScope(name=None, cl=None):
+def pushScope(name=None):
     global currScope
     if name:
         scopeST[currScope].insert(name)
-        scopeST[currScope].update(name, 'cls', cl)
     global scopeNo
     scopeNo += 1
     lastScope = currScope
@@ -74,7 +74,6 @@ def createLabel():
 class expr():
     def __init__(self):
         self.place = new_var()
-        self.cls = ''
         self.type=''
         self.value=None
         self.extra={}
@@ -93,7 +92,7 @@ def p_SourceFile(p):
                             | PackageClause '''
     print currScope
     for iden in scopeST[currScope].table:
-        print iden, (scopeST[currScope].table)[iden]
+        print iden, scopeST[currScope].table[iden]
 
 def p_PackageClause(p):
     ''' PackageClause  		: PACKAGE ID SEMICOLON '''
@@ -111,14 +110,14 @@ def p_ImportDecl(p):
     if len(p)==3:
         if checkID(p[2], 'global') is not None:
             raise Exception("Line "+str(p.lineno(1))+": "+"Package "+p[2]+" already declared.")
-        (scopeST[0].table)[p[2][1:-1]]={}
-        (scopeST[0].table)[p[2][1:-1]]['cls'] ="PACKAGE"
+        scopeST[0].table[p[2][1:-1]]={}
+        scopeST[0].table[p[2][1:-1]]['cls'] ="PACKAGE"
     elif len(p)==5:
         for str in p[3]:
             if checkID(str, 'global') is not None:
                 raise Exception("Line "+str(p.lineno(1))+": "+"Package "+str+" already declared.")
-            (scopeST[0].table)[str]={}
-            (scopeST[0].table)[str]['cls'] ="PACKAGE"
+            scopeST[0].table[str]={}
+            scopeST[0].table[str]['cls'] ="PACKAGE"
 
 # def p_ImportDecl(p):
 #     ''' ImportDecl     		: IMPORT LPAREN ImportSpecList RPAREN
@@ -168,29 +167,40 @@ def p_EndScope(p):
         str += '\t\t'
     print str, currScope
     for iden in scopeST[currScope].table:
-        print str, iden, (scopeST[currScope].table)[iden]
+        print str, iden, scopeST[currScope].table[iden]
     popScope()
 
+def p_StartStructScope(p):
+    ''' StartStructScope    : '''
+    pushScope()
+    if currTypeDef != '':
+        c = checkID(currTypeDef, 'recent')
+        c['cls'] = 'TYPENAME'
+        c['type'] = 'STRUCT '+str(currScope)
+        c['width'] = 0
+
 def p_StartFuncScope(p):
-    ''' StartFuncScope          : '''
+    ''' StartFuncScope      : '''
     if checkID(p[-1], 'curr'):
-        raise Exception("Line "+str(p.lineno(0))+": "+"Function "+p[-1]+" already exists.")
+        raise Exception("Line "+str(p.lineno(-1))+": "+"Function "+p[-1]+" already exists.")
     else:
-        pushScope(p[-1], 'FUNC')
+        pushScope(p[-1])
         global currFunc
         global currOffset
         currFunc = p[-1]
         currOffset = -8
-        (scopeST[0].table)[currFunc]['pMem'] = 0
+        scopeST[0].table[currFunc]['pMem'] = 0
 
 ################################################################################
 def p_FunctionDecl(p):
     ''' FunctionDecl   		: FUNC ID StartFuncScope Signature EndScope
 							| FUNC ID StartFuncScope Signature Block EndScope '''
+    global currFunc
+    currFunc = ''
     code = [p[2]+":"]
     code += ["push ebp"]
     code += ["mov esp,ebp"]
-    code += ["sub $"+str((scopeST[0].table)[p[2]]['mem'])+",esp"]
+    code += ["sub $"+str(scopeST[0].table[p[2]]['mem'])+",esp"]
     code += ["push ebx", "push esi", "push edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -222,15 +232,24 @@ def p_TypeSpecList(p):
                             | TypeSpecList TypeSpec SEMICOLON '''
 
 def p_TypeSpec(p):
-    ''' TypeSpec       		: ID ASSIGN Type
-                            | ID Type '''
-    if checkID(p[1], 'curr') is not None:
-        raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" already exists.")
-    elif len(p) == 4:
-        (scopeST[currScope].table)[p[1]] = p[3].copy()
+    ''' TypeSpec       		: ID SaveType ASSIGN Type
+                            | ID SaveType Type '''
+    global currTypeDef
+    currTypeDef = ''
+    if len(p) == 4:
+        scopeST[currScope].table[p[1]] = p[3].copy()
     else:
-        (scopeST[currScope].table)[p[1]] = p[2].copy()
+        scopeST[currScope].table[p[1]] = p[2].copy()
     scopeST[currScope].update(p[1], 'cls', 'TYPENAME')
+
+def p_SaveType(p):
+    ''' SaveType       	    : '''
+    if checkID(p[-1], 'curr') is not None:
+        raise Exception("Line "+str(p.lineno(-1))+": "+"Symbol "+p[-1]+" already exists.")
+    else:
+        scopeST[currScope].insert(p[-1])
+        global currTypeDef
+        currTypeDef = p[-1]
 
 ################################################################################
 def p_Type1(p):
@@ -240,6 +259,7 @@ def p_Type1(p):
 def p_Type2(p):
     ''' Type           		: LiteralType '''
     p[0] = p[1]
+    typeWidth.update({p[0]['type'] : p[0]['width']})
 
 def p_Type3(p):
     ''' Type           		: ID '''
@@ -263,25 +283,22 @@ def p_ArrayType(p):
     ''' ArrayType      		: LBRACK Expression RBRACK Type '''
     p[0] = {}
     p[0]['type'] = 'ARRAY(' + p[4]['type'] + ')'
-    p[0]['eType'] = p[4]
     if p[2].value is not None:
         if p[2].type!="int": # Must be integer
             raise Exception("Line "+str(p.lineno(1))+": "+"Array index must be an integer")
         else:
-            p[0]['size']=p[2].value
             p[0]['width']=p[4]['width']*p[2].value
     else:
         raise Exception("Line "+str(p.lineno(1))+": "+"Our program currently only allows arrays with explicitly mentioned values")
-    # p[0]['size'] will be calculated
+    # p[0]['width'] will be calculated
 
 def p_StructType(p):
-    ''' StructType     		: STRUCT StartScope LBRACE FieldDeclList RBRACE EndScope
-							| STRUCT StartScope LBRACE RBRACE EndScope '''
+    ''' StructType     		: STRUCT StartStructScope LBRACE FieldDeclList RBRACE EndScope
+							| STRUCT StartStructScope LBRACE RBRACE EndScope '''
     p[0] = {}
     p[0]['type'] = 'STRUCT'
     p[0]['width'] = 0
     if len(p) == 7:
-        p[0]['structID'] = p[4]['ID']
         p[0]['type'] += ' '+str(p[4]['ID'])
         p[0]['width'] += p[4]['width']
 
@@ -293,7 +310,7 @@ def p_FieldDeclList(p):
     if len(p) == 3:
         p[0]['width'] = p[1]
     else:
-        p[0]['width'] = p[1] + p[2]
+        p[0]['width'] = p[1]['width'] + p[2]
 
 def p_FieldDecl(p):
     ''' FieldDecl      		: IdentifierList Type STRING
@@ -302,7 +319,11 @@ def p_FieldDecl(p):
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
             raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
-        (scopeST[currScope].table)[iden] = p[2].copy()
+        if currTypeDef != '':
+            s = 'STRUCT '+str(currScope)
+            if p[2]['type'].count(s) != p[2]['type'].count('POINTER('+s+')'):
+                raise Exception("Line "+str(p.lineno(1))+": "+"You can only use pointers to "+currTypeDef+".")
+        scopeST[currScope].table[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
         p[0] += p[2]['width']
 
@@ -310,7 +331,6 @@ def p_PointerType(p):
     ''' PointerType    		: MUL Type '''
     p[0] = {}
     p[0]['type'] = 'POINTER(' + p[2]['type'] + ')'
-    p[0]['eType'] = p[2]
     p[0]['width'] = 4
 
 # def p_SliceType(p):
@@ -332,13 +352,13 @@ def p_Signature1(p):
                             # | Parameters Parameters '''
     global currOffset
     currOffset = 0
-    (scopeST[0].table)[currFunc]['mem'] = 0
-    (scopeST[0].table)[currFunc]['funcID'] = currScope
-    (scopeST[0].table)[currFunc]['args'] = p[1]
+    scopeST[0].table[currFunc]['mem'] = 0
+    scopeST[0].table[currFunc]['args'] = p[1]
     if len(p) > 2:
-        (scopeST[0].table)[currFunc]['rType'] = p[2]['type']
+        scopeST[0].table[currFunc]['rType'] = p[2]['type']
     else:
-        (scopeST[0].table)[currFunc]['rType'] = 'VOID'
+        scopeST[0].table[currFunc]['rType'] = 'VOID'
+    scopeST[0].table[currFunc]['cls'] = 'FUNC'
 
 def p_Parameters(p):
     ''' Parameters     		: LPAREN RPAREN
@@ -368,13 +388,13 @@ def p_ParameterDecl(p):
             p[0].append(p[2]['type'])
             if checkID(iden, 'curr') is not None:
                 raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
-            (scopeST[currScope].table)[iden] = p[2].copy()
+            scopeST[currScope].table[iden] = p[2].copy()
             scopeST[currScope].update(iden, 'cls', 'VAR')
 
             global currOffset
             scopeST[currScope].update(iden, 'offset', currOffset)
             currOffset -= p[2]['width']
-            (scopeST[0].table)[currFunc]['pMem'] += p[2]['width']
+            scopeST[0].table[currFunc]['pMem'] += p[2]['width']
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -415,13 +435,13 @@ def p_VarSpec(p):
     for iden in p[1]:
         if checkID(iden, 'curr') is not None:
             raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
-        (scopeST[currScope].table)[iden] = p[2].copy()
+        scopeST[currScope].table[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'VAR')
 
         global currOffset
         scopeST[currScope].update(iden, 'offset', currOffset+p[2]['width'])
         currOffset += p[2]['width']
-        (scopeST[0].table)[currFunc]['mem'] += p[2]['width']
+        scopeST[0].table[currFunc]['mem'] += p[2]['width']
 
 # def p_VarSpec(p):
 #     '''	VarSpec			    : IdentifierList ASSIGN ExpressionList
@@ -447,21 +467,15 @@ def p_ShortVarDecl(p):
         if checkID(p[1][i], 'curr') is not None:
             raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1][i]+" already exists.")
         scopeST[currScope].insert(p[1][i])
-        if p[3][i].extra:
-            if (p[3][i].extra)['cls'] != 'VAR':
-                raise Exception("Line "+str(p.lineno(2))+": "+"Invalid expression "+p[3][i].place+" .")
-            else:
-                ((scopeST[currScope]).table[p[1][i]]).update(p[3][i].extra)
-        else:
-            scopeST[currScope].update(p[1][i], 'cls', 'VAR')
-            scopeST[currScope].update(p[1][i], 'type', p[3][i].type)
-            scopeST[currScope].update(p[1][i], 'width', typeWidth[p[3][i].type])
+        scopeST[currScope].update(p[1][i], 'cls', 'VAR')
+        scopeST[currScope].update(p[1][i], 'type', p[3][i].type)
+        scopeST[currScope].update(p[1][i], 'width', typeWidth[p[3][i].type])
 
         w = (scopeST[currScope]).table[p[1][i]]['width']
         global currOffset
         scopeST[currScope].update(p[1][i], 'offset', currOffset + w)
         currOffset += w
-        (scopeST[0].table)[currFunc]['mem'] += w
+        scopeST[0].table[currFunc]['mem'] += w
 
         p[0] += p[3][i].code + ['='+','+p[1][i]+','+p[3][i].place]
 
@@ -945,14 +959,14 @@ def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
 							| unary_op UnaryExpr '''
     if len(p)==2:
-        if p[1].cls != 'VAR':
-            raise Exception("Line "+str(p.lineno(1))+": "+"No variable named "+p[1].place)
+        if p[1].extra and p[1].extra['cls'] != 'VAR':
+            raise Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a variable.")
         p[0]=p[1]
     else:
         p[0]=expr()
         p[0].code=p[2].code+[p[1]+','+p[0].place+','+p[2].place]
         if p[1] == '*':
-            p[0].type = (p[2].type)[8:-1]
+            p[0].type = p[2].type[8:-1]
         else:
             p[0].type = p[2].type
         p.set_lineno(0,p.lineno(1))
@@ -973,12 +987,12 @@ def p_PrimaryExpr1(p):
         sc=int(p[1].type[7:])
         if p[2] in (scopeST[sc].table).keys():
             p[0]=expr()
-            p[0].cls = 'VAR'
-            p[0].type=(scopeST[sc].table)[p[2]]['type']
+            p[0].type=scopeST[sc].table[p[2]]['type']
             p[0].code=p[1].code
             p[0].code+=["=,"+p[0].place+","+p[1].place+"."+p[2]]
         else:
             Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2])
+    p.set_lineno(0,p.lineno(1))
 
 def p_Selector(p):
     ''' Selector       		: PERIOD ID '''
@@ -996,11 +1010,11 @@ def p_PrimaryExpr2(p):
         p[0]=expr()
         p[0].type=p[1].type[5:-1]
         temp1=new_var()
-        p[0].cls = 'VAR'
         p[0].code=p[1].code
         p[0].code+=["*,"+temp1+","+p[2].place+","+str(typeWidth[p[0].type])]
         p[0].code+=["+,"+temp1+",start("+p[1].place+"),"+temp1]
         p[0].code+=["load_from_mem,"+p[0].place+","+temp1]
+    p.set_lineno(0,p.lineno(1))
 
 def p_Index(p):
     ''' Index          		: LBRACK Expression RBRACK '''
@@ -1030,7 +1044,6 @@ def p_PrimaryExpr5(p):
         for i in xrange(len(p[2])):
             if p[2][i].type != dic['args'][i]:
                 raise Exception("Line "+str(p.lineno(2))+": "+str(i)+"th type doesn't match for "+p[1].place+".")
-
         # Function call
         p[0] = expr()
         for i in xrange(len(p[2])):
@@ -1040,12 +1053,10 @@ def p_PrimaryExpr5(p):
             p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]
 
-        p[0].cls = 'VAR'
         p[0].code+=["=,"+p[0].place+",eax"]
         p[0].code+=["add $"+str(dic['pMem'])+",esp"]
         p[0].code+=["pop edx","pop ecx","pop eax"]
         p[0].type=dic['rType']
-    ### Multiple returns
     p.set_lineno(0,p.lineno(1))
 
 def p_Arguments(p):
@@ -1087,7 +1098,6 @@ def p_Arguments(p):
 def p_Operand(p):
     ''' Operand        		: Literal'''
     p[0]=p[1]
-    p[0].cls = 'VAR'
     p[0].code=p[1].code
 
 def p_Operand1(p):
@@ -1098,10 +1108,9 @@ def p_Operand1(p):
 
     p[0]=expr()
     p[0].extra=dic.copy()
-    p[0].cls=dic['cls']
-    if p[0].cls=='VAR':
+    if dic['cls']=='VAR':
         p[0].type=dic['type']
-    elif p[0].cls!='FUNC' and p[0].cls!='PACKAGE':
+    elif dic['cls']!='FUNC' and dic['cls']!='PACKAGE':
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand.")
     p[0].place=p[1]
     p.set_lineno(0,p.lineno(1))
@@ -1112,7 +1121,6 @@ def p_Operand1(p):
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN '''
     p[0]=p[2]
-    p[0].cls = 'VAR'
     p.set_lineno(0,p.lineno(1))
 
 def p_Literal(p):
