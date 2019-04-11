@@ -7,6 +7,10 @@ type S struct {
   z *S;
 };
 
+func sum(s S) int {
+	return s.x + s.y;
+};
+
 func main() {
   var example *S;
 
@@ -20,5 +24,5 @@ func main() {
     var S bool;
   };
 
-	// fmt.Println(sum);
+	S = sum(*example);
 };

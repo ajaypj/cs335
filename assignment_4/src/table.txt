@@ -1,0 +1,9 @@
+				2
+		1
+		n {'width': 4, 'offset': -8, 'type': 'int', 'cls': 'VAR'}
+		3
+		fib {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
+0
+fmt {'cls': 'PACKAGE'}
+main {'mem': 4, 'cls': 'FUNC', 'rType': 'void', 'args': [], 'pMem': 0}
+FibonacciRecursion {'mem': 0, 'cls': 'FUNC', 'rType': 'int', 'args': ['int'], 'pMem': 4}

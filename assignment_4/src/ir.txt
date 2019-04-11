@@ -1,0 +1,69 @@
+FibonacciRecursion:
+push %ebp
+mov %esp,%ebp
+sub $0,%esp
+push %ebx
+push %esi
+push %edi
+=,var_1,1
+int<=,var_2,n,var_1
+gotoZeroNeg,var_2,label_0
+mov n,%eax
+pop %edi
+pop %esi
+pop %ebx
+mov %ebp,%esp
+pop %ebp
+ret
+label_0:
+=,var_6,1
+int-,var_7,n,var_6
+push %eax
+push %ecx
+push %edx
+push var_7
+call FibonacciRecursion
+=,var_8,%eax
+add $4,%esp
+pop %edx
+pop %ecx
+pop %eax
+=,var_11,2
+int-,var_12,n,var_11
+push %eax
+push %ecx
+push %edx
+push var_12
+call FibonacciRecursion
+=,var_13,%eax
+add $4,%esp
+pop %edx
+pop %ecx
+pop %eax
+int+,var_14,var_8,var_13
+mov var_14,%eax
+pop %edi
+pop %esi
+pop %ebx
+mov %ebp,%esp
+pop %ebp
+ret
+main:
+push %ebp
+mov %esp,%ebp
+sub $4,%esp
+push %ebx
+push %esi
+push %edi
+=,var_17,10
+push %eax
+push %ecx
+push %edx
+push var_17
+call FibonacciRecursion
+=,var_18,%eax
+add $4,%esp
+pop %edx
+pop %ecx
+pop %eax
+=,fib,var_18

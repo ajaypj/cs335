@@ -20,6 +20,7 @@ scopeST[0] = symbolTable()
 currTypeDef = ''
 currFunc = ''
 currOffset = 0
+structOffset = 0
 typeWidth = {"int":4, "float":8, "bool":1, "char":1, "string":32}
 
 def checkID(identifier, typeOf):
@@ -173,6 +174,8 @@ def p_EndScope(p):
 def p_StartStructScope(p):
     ''' StartStructScope    : '''
     pushScope()
+    global structOffset
+    structOffset = 0
     if currTypeDef != '':
         c = checkID(currTypeDef, 'recent')
         c['cls'] = 'TYPENAME'
@@ -325,6 +328,10 @@ def p_FieldDecl(p):
                 raise Exception("Line "+str(p.lineno(1))+": "+"You can only use pointers to "+currTypeDef+".")
         scopeST[currScope].table[iden] = p[2].copy()
         scopeST[currScope].update(iden, 'cls', 'FIELD')
+
+        global structOffset
+        scopeST[currScope].update(iden, 'sOffset', structOffset)
+        structOffset += p[2]['width']
         p[0] += p[2]['width']
 
 def p_PointerType(p):

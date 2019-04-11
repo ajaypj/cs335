@@ -1,5 +1,4 @@
-break
-continue
+break/continue
 conversion
-array
-struct
+array/struct copy when calling functions
+pointer locations
