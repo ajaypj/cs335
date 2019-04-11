@@ -378,23 +378,19 @@ def p_ParameterList(p):
         p[0] = p[1] + p[3]
 
 def p_ParameterDecl(p):
-    ''' ParameterDecl  		: Type
-                            | IdentifierList Type '''
-    if len(p) == 2:
-        p[0] = [p[1]['type']]
-    else:
-        p[0] = []
-        for iden in p[1]:
-            p[0].append(p[2]['type'])
-            if checkID(iden, 'curr') is not None:
-                raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
-            scopeST[currScope].table[iden] = p[2].copy()
-            scopeST[currScope].update(iden, 'cls', 'VAR')
+    ''' ParameterDecl  		: IdentifierList Type '''
+    p[0] = []
+    for iden in p[1]:
+        p[0].append(p[2]['type'])
+        if checkID(iden, 'curr') is not None:
+            raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+iden+" already exists.")
+        scopeST[currScope].table[iden] = p[2].copy()
+        scopeST[currScope].update(iden, 'cls', 'VAR')
 
-            global currOffset
-            scopeST[currScope].update(iden, 'offset', currOffset)
-            currOffset -= p[2]['width']
-            scopeST[0].table[currFunc]['pMem'] += p[2]['width']
+        global currOffset
+        scopeST[currScope].update(iden, 'offset', currOffset)
+        currOffset -= p[2]['width']
+        scopeST[0].table[currFunc]['pMem'] += p[2]['width']
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
