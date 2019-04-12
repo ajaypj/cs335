@@ -4,6 +4,8 @@ import "fmt";
 
 func main() {
 	var i, j int;
+	var p = 22;
+	var q float = 22;
 	c, python := i, 0;
 	var a1 int;
 	var a2 int;
