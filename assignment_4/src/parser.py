@@ -192,7 +192,7 @@ def p_StartFuncScope(p):
         global currOffset
         currFunc = p[-1]
         currOffset = -8
-        scopeST[0].table[currFunc]['pMem'] = 0
+        scopeST[0].table[currFunc]['aMem'] = 0
 
 ################################################################################
 def p_FunctionDecl(p):
@@ -203,7 +203,7 @@ def p_FunctionDecl(p):
     code = [p[2]+":"]
     code += ["push %ebp"]
     code += ["mov %ebp,%esp"]
-    code += ["sub $"+str(scopeST[0].table[p[2]]['mem'])+",%esp"]
+    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+",%esp"]
     code += ["push %ebx", "push %esi", "push %edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -331,7 +331,7 @@ def p_FieldDecl(p):
         scopeST[currScope].update(iden, 'cls', 'FIELD')
 
         global structOffset
-        scopeST[currScope].update(iden, 'sOffset', structOffset)
+        scopeST[currScope].update(iden, 'fOffset', structOffset)
         structOffset += p[2]['width']
         p[0] += p[2]['width']
 
@@ -360,7 +360,7 @@ def p_Signature1(p):
                             # | Parameters Parameters '''
     global currOffset
     currOffset = 0
-    scopeST[0].table[currFunc]['mem'] = 0
+    scopeST[0].table[currFunc]['vMem'] = 0
     scopeST[0].table[currFunc]['args'] = p[1]
     if len(p) > 2:
         scopeST[0].table[currFunc]['rType'] = p[2]['type']
@@ -398,7 +398,7 @@ def p_ParameterDecl(p):
         global currOffset
         scopeST[currScope].update(iden, 'offset', currOffset)
         currOffset -= p[2]['width']
-        scopeST[0].table[currFunc]['pMem'] += p[2]['width']
+        scopeST[0].table[currFunc]['aMem'] += p[2]['width']
 
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
@@ -487,7 +487,7 @@ def p_VarSpec(p):
         global currOffset
         scopeST[currScope].update(iden, 'offset', currOffset + w)
         currOffset += w
-        scopeST[0].table[currFunc]['mem'] += w
+        scopeST[0].table[currFunc]['vMem'] += w
 
 def p_IdentifierList(p):
     ''' IdentifierList 		: ID
@@ -516,7 +516,7 @@ def p_ShortVarDecl(p):
         global currOffset
         scopeST[currScope].update(iden, 'offset', currOffset + w)
         currOffset += w
-        scopeST[0].table[currFunc]['mem'] += w
+        scopeST[0].table[currFunc]['vMem'] += w
 
         p[0] += p[3][i].code + ['='+','+iden+','+p[3][i].place]
 
@@ -1090,7 +1090,7 @@ def p_PrimaryExpr5(p):
         p[0].code+=["call "+p[1].place]
 
         p[0].code+=["=,"+p[0].place+",%eax"]
-        p[0].code+=["add $"+str(dic['pMem'])+",%esp"]
+        p[0].code+=["add $"+str(dic['aMem'])+",%esp"]
         p[0].code+=["pop %edx","pop %ecx","pop %eax"]
     p.set_lineno(0,p.lineno(1))
 
