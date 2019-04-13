@@ -41,10 +41,10 @@ numbers = ['INT','FLOAT','IMAG']
 strings = ['STRING','RUNE']
 special = ['COM']
 
-tokens = operators + numbers + strings + special + ['ID','VARTYPE'] + list(reserved.values())
+tokens = operators + numbers + strings + special + ['ID','VARTYPE','BOOLVAL'] + list(reserved.values())
 
 ###################################### Type
-vartypes = ['int16','int8','int32','int64','int','bool','string','uint','uint16','uint32','uint64','uintptr','float32','float64','float','complex64','complex128']
+vartypes = ['int','float','bool','rune','string','int16','int8','int32','int64','uint','uint16','uint32','uint64','uintptr','float32','float64','complex64','complex128']
 
 ################################### Operators and delimiters
 t_ADD = r'\+'
@@ -132,6 +132,8 @@ def t_ID(t):
     t.type = reserved.get(t.value,'ID')
     if t.value in vartypes:
         t.type = 'VARTYPE'
+    if t.value in ['true', 'false']:
+        t.type = 'BOOLVAL'
     return t
 
 ###################################### Comments

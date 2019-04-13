@@ -7,7 +7,7 @@ func main() {
 	x = 0;
 
   var s,t,u string;
-  s = t * u;
+  s = t + u;
 
   var p *int;
   *x = p;
