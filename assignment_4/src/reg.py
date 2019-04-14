@@ -9,8 +9,6 @@ regs={"eax":{"live":0},
 "edi":{"live":0}
 }
 
-# print (regs)
-
 named_reg=["eax", "ebx", "ecx", "edx", "esi", "edi", "esp", "ebp"]
 
 unused_temp_vars=list()
@@ -27,13 +25,11 @@ def get_reg(name, width):
 			temp_vars[name]={"ro":i, "so":-1, "width":width}
 			unused_temp_vars.append(name)
 			return i
-	# print("ok")
 	old_temp_var = unused_temp_vars[0]
 	old_reg=temp_vars[old_temp_var]["ro"]
 	code+= ["push %{}".format(old_reg)]
-	print(unused_temp_vars[0])
+	# print(unused_temp_vars[0])
 	del unused_temp_vars[0]
-	# print("ok")
 	unused_temp_vars.append(name)
 	temp_vars[name]={"ro":old_reg, "so":-1, "width":width}
 	#old reg changes
@@ -55,8 +51,9 @@ def write_list(file, a_list):
 		file.write(" ")
 	file.write("\n")
 
-def remove_used_temp_var(name):
+def remove_used_temp_var_in_reg(name):
 	global regs, unused_temp_vars, temp_vars, temp_offset, function_width, code
+	# print("DELETING", name)
 	unused_temp_vars.remove(name)
 	del temp_vars[name]
 
@@ -67,7 +64,7 @@ def transfer_reg_to_left(old, new, width): #check the width of the new reg
 	else:
 		temp_vars[new]={"ro":get_reg(new), "so":-1, "width":width}
 	unused_temp_vars.append(new)
-	remove_used_temp_var(old)
+	remove_used_temp_var_in_reg(old)
 
 def get_type(name):
 	# print(name)
@@ -102,24 +99,20 @@ file.close()
 # print(ir)
 
 for i in ir:
-	print(i)
-	# if len(i)==1: # labels and ret
-	# 	print(i[0])
+	# print(i)
 	# print(regs)
-	print(temp_vars)
+	# print(temp_vars)
 	if i[0] in ["push", "pop", "call", "mov", "sub", "funcstart"]: # push and pop
 		temp_str=""
-		for lund in i:
-			temp_str+=lund+' '
+		for word in i:
+			temp_str += word+' '
 		code+= [temp_str]
 
 	elif i[0]=="int+":
-		# print("ok")
 		left_temp_var_name = split_var(i[1])[0]
 		width = split_var(i[1])[1]
 		# print(left_temp_var_name, width)
 		if (get_type(i[2]),get_type(i[3])) == ("c","c"): #c+c
-			# print("ok")
 			const1 = i[2]
 			const2 = i[3]
 			new_reg=get_reg(left_temp_var_name, width)
@@ -139,14 +132,14 @@ for i in ir:
 			transfer_reg_to_left(temp_var_name, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","c"): #m+c
-			if i[2]=="tmp":
+			if "tmp" in i[2]:
 				temp_var_name = split_var(i[2])[0]
 				const = i[3]
 				new_reg=get_reg(left_temp_var_name, width)
 				code+= ["mov %{}, dword ptr [rbp - {}]".format(new_reg, temp_vars[temp_var_name]["so"])]
 				code+= ["add %{}, {}".format(new_reg, const)]
-				remove_used_temp_var(temp_var_name)
-			elif i[2]=="var":
+				del temp_vars[temp_var_name]
+			elif "var" in i[2]:
 				var_offset = int(split_var(i[2])[1])
 				const = i[3]
 				new_reg=get_reg(left_temp_var_name, width)
@@ -154,14 +147,14 @@ for i in ir:
 				code+= ["add %{}, {}".format(new_reg, const)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("c","m"): #c+m
-			if i[3]=="tmp":
+			if "tmp" in i[3]:
 				temp_var_name = split_var(i[3])[0]
 				const = i[2]
 				new_reg=get_reg(left_temp_var_name, width)
 				code+= ["mov %{}, dword ptr [rbp - {}]".format(new_reg, temp_vars[temp_var_name]["so"])]
 				code+= ["add %{}, {}".format(new_reg, const)]
-				remove_used_temp_var(temp_var_name)
-			elif i[3]=="var":
+				del temp_vars[temp_var_name]
+			elif "var" in i[3]:
 				var_offset = int(split_var(i[3])[1])
 				const = i[2]
 				new_reg=get_reg(left_temp_var_name, width)
@@ -169,35 +162,35 @@ for i in ir:
 				code+= ["add %{}, {}".format(new_reg, const)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","r"): #r+r
-			if i[2]=="tmp" and i[3]=="tmp":
+			if "tmp" in i[2] and "tmp" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
 				code+= ["add %{}, %{}".format(temp_vars[temp_var_name1]["ro"], temp_vars[temp_var_name2]["ro"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
-				remove_used_temp_var(temp_var_name2)
+				remove_used_temp_var_in_reg(temp_var_name2)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","m"): #r+m
-			if i[2]=="tmp" and i[3]=="tmp":
+			if "tmp" in i[2] and "tmp" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
 				code+= ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], temp_vars[temp_var_name2]["so"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
 
-			if i[2]=="tmp" and i[3]=="var":
+			if "tmp" in i[2] and "var" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				var_offset = int(split_var(i[3])[1])
 				code+= ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], var_offset)]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","r"): #m+r
-			if i[2]=="tmp" and i[3]=="tmp":
+			if "tmp" in i[2] and "tmp" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
 				code+= ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name2]["ro"], temp_vars[temp_var_name1]["so"])]
 				transfer_reg_to_left(temp_var_name2, left_temp_var_name, width)
-				remove_used_temp_var(temp_var_name1)
+				del temp_vars[temp_var_name1]
 
-			elif i[2]=="var" and i[3]=="tmp":
+			elif "var" in i[2] and "tmp" in i[3]:
 				var_offset = int(split_var(i[2])[1])
 				temp_var_name1 = split_var(i[3])[0]
 				code+= ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], var_offset)]
@@ -207,25 +200,25 @@ for i in ir:
 			loc1=""
 			loc2=""
 			new_reg=get_reg(left_temp_var_name, width)
-			if i[2]=="tmp" and i[3]=="tmp":
+			if "tmp" in i[2] and "tmp" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
 				loc1 = temp_vars[temp_var_name1]["so"]
 				loc2 = temp_vars[temp_var_name2]["so"]
 
-			elif i[2]=="tmp" and i[3]=="var":
+			elif "tmp" in i[2] and "var" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				var_offset = int(split_var(i[3])[2])
 				loc1 = temp_vars[temp_var_name1]["so"]
 				loc2 = var_offset
 
-			elif i[2]=="var" and i[3]=="tmp":
+			elif "var" in i[2] and "tmp" in i[3]:
 				var_offset = int(split_var(i[2])[2])
 				temp_var_name1 = str(split_var(i[3])[0]+split_var(i[3])[1])
 				loc1 = var_offset
 				loc2 = temp_vars[temp_var_name1]["so"]
 
-			elif i[2]=="var" and i[3]=="var":
+			elif "var" in i[2] and "var" in i[3]:
 				var_offset1 = int(split_var(i[2])[2])
 				var_offset1 = int(split_var(i[3])[2])
 				loc1 = var_offset1
