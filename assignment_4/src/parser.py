@@ -199,7 +199,7 @@ def p_FunctionDecl(p):
 							| FUNC ID StartFuncScope Signature Block EndScope '''
     global currFunc
     currFunc = ''
-    code = ["funcstart "+p[2]+":"]
+    code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
     code += ["push %ebp"]
     code += ["mov %ebp, %esp"]
     code += ["sub %esp, $"+str(scopeST[0].table[p[2]]['vMem'])]
