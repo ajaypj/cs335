@@ -2,7 +2,6 @@ B:
 break/continue
 
 S:
-array/struct copy when calling functions
-return array/struct
+return value
 heap/data
 unaryexpr
