@@ -1,7 +1,9 @@
+from collections import OrderedDict
+
 class symbolTable:
 
     def __init__(self, par=None):
-        self.table = {}
+        self.table = OrderedDict()
         self.parent = par
 
     # Checks whether "name" lies in the symbol table

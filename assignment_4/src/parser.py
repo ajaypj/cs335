@@ -1083,7 +1083,7 @@ def p_PrimaryExpr2(p):
         p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
         p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
         p[0].code+=["int- "+addr+", %ebp, "+var2]
-        p[0].code+=["load_from_mem "+p[0].place+", "+addr]
+        p[0].code+=["load "+p[0].place+", "+addr]
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):
@@ -1123,7 +1123,26 @@ def p_PrimaryExpr5(p):
             p[0].code+=p[2][i].code
         p[0].code+=["push %eax", "push %ecx", "push %edx"]
         for exp in p[2][::-1]:
-            p[0].code+=["push "+exp.place]
+            if exp.type[:6]=="struct":
+                sc = int(exp.type[7:])
+                name = exp.place.split('\"')[1]
+                offset = int(exp.place.split(':')[1])
+                for field in reversed(scopeST[sc].table):
+                    dic2 = scopeST[sc].table[field]
+                    if dic2["type"][:6]=="struct" or dic2["type"][:5]=="array":
+                        raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass structs of basic types.")
+                    p[0].code += ['store var\"'+name+'.'+field+'\":'+str(offset-dic2['fOffset'])+':'+str(dic2['width'])]
+            elif exp.type[:5]=="array":
+                name = exp.place.split('\"')[1]
+                offset = int(exp.place.split(':')[1])
+                arrWidth = int(exp.place.split(':')[2])
+                elemType = exp.type[6:-1]
+                if elemType[:6]=="struct" or elemType[:5]=="array":
+                    raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass arrays of basic types.")
+                for i in xrange(arrWidth/typeWidth[elemType]):
+                    p[0].code += ['store var\"'+name+'['+str(i)+']'+'\":'+str(offset-i*typeWidth[elemType])+':'+str(typeWidth[elemType])]
+            else:
+                p[0].code+=["store "+exp.place]
         p[0].code+=["call "+p[1].place]
 
         p[0].code+=["= "+p[0].place+", %eax"]
