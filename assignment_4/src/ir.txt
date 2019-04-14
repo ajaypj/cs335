@@ -5,15 +5,15 @@ sub %esp, $4
 push %ebx
 push %esi
 push %edi
-int* tmp0:4, $0, $0
-int* tmp1:4, $1, $1
-int* tmp2:4, $2, $2
-int* tmp3:4, $3, $3
-int* tmp4:4, $4, $4
-int* tmp5:4, $5, $5
-int* tmp6:4, $6, $6
-int* tmp7:4, $7, $7
-int+ tmp8:4, tmp6:4, tmp7:4
+int+ tmp0:4, $0, $0
+int+ tmp1:4, $1, $1
+int+ tmp2:4, $2, $2
+int+ tmp3:4, $3, $3
+int+ tmp4:4, $4, $4
+int+ tmp5:4, $5, $5
+int+ tmp6:4, $6, $6
+int+ tmp7:4, tmp6:4, $7
+int+ tmp8:4, tmp7:4, $7
 int+ tmp9:4, tmp5:4, tmp8:4
 int+ tmp10:4, tmp4:4, tmp9:4
 int+ tmp11:4, tmp3:4, tmp10:4

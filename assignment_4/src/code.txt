@@ -1,0 +1,23 @@
+ok
+funcstart 16 main: 
+push %ebp 
+mov %ebp %esp 
+sub %esp $4 
+push %ebx 
+push %esi 
+push %edi 
+mov %edx, $0
+add %edx, $0
+mov %ebx, $1
+add %ebx, $1
+mov %eax, $2
+add %eax, $2
+mov %ecx, $3
+add %ecx, $3
+mov %esi, $4
+add %esi, $4
+mov %edi, $5
+add %edi, $5
+push %edx
+mov %edx, $6
+add %edx, $6
