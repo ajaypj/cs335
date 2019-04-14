@@ -637,7 +637,7 @@ def p_ReturnStmt(p):
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
-        p[0] += ["pop %edi", "pop %esi","pop %ebx","mov %esp,%ebp"]
+        p[0] = ["pop %edi", "pop %esi","pop %ebx","mov %esp,%ebp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 

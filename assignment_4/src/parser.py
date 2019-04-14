@@ -21,7 +21,7 @@ currTypeDef = ''
 currFunc = ''
 currOffset = 0
 structOffset = 0
-typeWidth = {"int":4, "float":8, "bool":1, "char":1, "string":32}
+typeWidth = {"int":4, "float":8, "bool":1, "rune":4, "string":32}
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -54,30 +54,29 @@ def popScope():
     currScope = scopeStack.pop()
     currScope = scopeStack[-1]
 
-varNo=0
+tmpNo=0
 labelNo=0
 labelDic={} # Stores parent of label
 labelDic['0']=None
 currLabel="0"
 
-def new_var():
-    global varNo
-    retVal='var_'+str(varNo)
-    varNo+=1
+def new_tmp(type):
+    global tmpNo
+    retVal='tmp'+str(tmpNo)+':'+str(typeWidth[type])
+    tmpNo+=1
     return retVal
 
 def createLabel():
     global labelNo
-    retVal='label_'+str(labelNo)
+    retVal='label'+str(labelNo)
     labelNo+=1
     return retVal
 
-class expr():
+class expr:
     def __init__(self):
-        self.place = new_var()
         self.type=''
         self.value=None
-        self.extra={}
+        self.place=''
         self.code=[]
 
 def p_error(p):
@@ -202,8 +201,8 @@ def p_FunctionDecl(p):
     currFunc = ''
     code = [p[2]+":"]
     code += ["push %ebp"]
-    code += ["mov %ebp,%esp"]
-    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+",%esp"]
+    code += ["mov %ebp, %esp"]
+    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
     code += ["push %ebx", "push %esi", "push %edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -214,7 +213,7 @@ def p_FunctionDecl(p):
 # def p_MethodDecl(p):
 #     ''' MethodDecl     		: FUNC Parameters ID Signature
 #                             | FUNC Parameters ID Signature Block '''
-#     # func(p,"MethodDecl")
+#     # func(p, "MethodDecl")
 
 def p_Declaration(p):
     ''' Declaration    		: TypeDecl
@@ -343,16 +342,16 @@ def p_PointerType(p):
 
 # def p_SliceType(p):
 #     ''' SliceType      		: LBRACK RBRACK Type '''
-#     # func(p,"SliceType")
+#     # func(p, "SliceType")
 #
 # def p_MapType(p):
 #     ''' MapType        		: MAP LBRACK Type RBRACK Type '''
-#     # func(p,"MapType")
+#     # func(p, "MapType")
 
 ################################################################################
 # def p_FunctionType(p):
 #     ''' FunctionType        : FUNC Signature '''
-#     # func(p,"FunctionType")
+#     # func(p, "FunctionType")
 
 def p_Signature1(p):
     ''' Signature      		: Parameters
@@ -403,23 +402,23 @@ def p_ParameterDecl(p):
 # def p_InterfaceType(p):
 #     ''' InterfaceType 		: INTERFACE LBRACE RBRACE
 #                             | INTERFACE LBRACE MethodSpecList RBRACE '''
-#     # func(p,"InterfaceType")
+#     # func(p, "InterfaceType")
 #
 # def p_MethodSpecList(p):
 #     ''' MethodSpecList      : MethodSpec SEMICOLON
 #                             | MethodSpecList MethodSpec SEMICOLON '''
-#     # func(p,"MethodSpecList")
+#     # func(p, "MethodSpecList")
 #
 # def p_MethodSpec(p):
 #     ''' MethodSpec        	: ID Signature
 #                             | ID Type '''
-#     # func(p,"MethodSpec")
+#     # func(p, "MethodSpec")
 #
 # def p_ChannelType(p):
 #     ''' ChannelType 		: CHAN Type
 #                             | CHAN ARROW Type
 #                             | ARROW CHAN Type '''
-#     # func(p,"ChannelType")
+#     # func(p, "ChannelType")
 
 ################################################################################
 def p_VarDecl(p):
@@ -469,19 +468,19 @@ def p_VarSpec(p):
             p[0] += p[e][i].code
             if len(p)==5 or len(p)==7:
                 if p[2]['type'] == 'float' and p[e][i].type == 'int':
-                    var = new_var()
-                    p[0] += ['=inttofloat'+','+var+','+p[e][i].place]
-                    p[0] += ['=,'+iden+','+var]
+                    var = new_tmp('float')
+                    p[0] += ['=inttofloat '+var+', '+p[e][i].place]
+                    p[0] += ['= '+iden+', '+var]
                 elif p[2]['type'] != p[e][i].type:
                     raise Exception("Line "+str(p.lineno(3))+": "+"Type mismatch for variable "+iden+".")
                 else:
-                    p[0] += ['=,'+iden+','+p[e][i].place]
+                    p[0] += ['= '+iden+', '+p[e][i].place]
             else:
                 scopeST[currScope].insert(iden)
                 scopeST[currScope].update(iden, 'cls', 'VAR')
                 scopeST[currScope].update(iden, 'type', p[e][i].type)
                 scopeST[currScope].update(iden, 'width', typeWidth[p[e][i].type])
-                p[0] += ['='+','+iden+','+p[e][i].place]
+                p[0] += ['= '+iden+', '+p[e][i].place]
 
         w = scopeST[currScope].table[iden]['width']
         global currOffset
@@ -496,7 +495,7 @@ def p_IdentifierList(p):
         p[0] = p[1] + [p[3]]
     else:
         p[0] = [p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_ShortVarDecl(p):
     ''' ShortVarDecl   		: IdentifierList DEFINE ExpressionList '''
@@ -518,7 +517,7 @@ def p_ShortVarDecl(p):
         currOffset += w
         scopeST[0].table[currFunc]['vMem'] += w
 
-        p[0] += p[3][i].code + ['='+','+iden+','+p[3][i].place]
+        p[0] += p[3][i].code + ['= '+iden+', '+p[3][i].place]
 
 ################################################################################
 def p_Block(p):
@@ -528,7 +527,7 @@ def p_Block(p):
         p[0]=p[2]
     else:
         p[0]=[]
-    # func(p,"Block")
+    # func(p, "Block")
 
 def p_StatementList(p):
     ''' StatementList  		: StatementList Statement SEMICOLON
@@ -537,7 +536,7 @@ def p_StatementList(p):
         p[0]=p[1]
     else:
         p[0]=p[1]+p[2]
-    # func(p,"StatementList")
+    # func(p, "StatementList")
 
 def p_Statement(p):
     ''' Statement      		: Declaration
@@ -557,7 +556,7 @@ def p_Statement(p):
     # | SelectStmt
     # | RecvStmt
     # | DeferStmt
-    # func(p,"Statement")
+    # func(p, "Statement")
     if len(p)==2:
         p[0]=p[1]
     else:
@@ -574,17 +573,17 @@ def p_SimpleStmt(p):
 
 def p_EmptyStmt(p):
     ''' EmptyStmt      		: '''
-    # func(p,"EmptyStmt")
+    # func(p, "EmptyStmt")
     p[0]=[]
 
 def p_ExpressionStmt(p):
     ''' ExpressionStmt 		: Expression '''
     p[0]=p[1].code
-    # func(p,"ExpressionStmt")
+    # func(p, "ExpressionStmt")
 
 # def p_SendStmt(p):
 #     ''' SendStmt 		    : Expression ARROW Expression '''
-#     func(p,"SendStmt")
+#     func(p, "SendStmt")
 
 def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
@@ -596,7 +595,7 @@ def p_IncDecStmt(p):
         str='+'
     else:
         str='-'
-    str+=p[1].place+','+p[1].place+',1'
+    str+=p[1].place+', '+p[1].place+', 1'
     p[0]+=[str]
 
 def p_Assignment(p):
@@ -605,26 +604,28 @@ def p_Assignment(p):
     # Break assign_op into multiple parts
     if len(p[2])==2:
         if p[1].type == 'float' and p[3].type == 'int':
-            var = new_var()
-            p[0] += ['=inttofloat'+','+var+','+p[3].place]
-            p[0] += ['float'+p[2][0]+','+p[1].place +','+p[1].place +','+var]
+            var = new_tmp('float')
+            p[0] += ['=inttofloat '+var+', '+p[3].place]
+            p[0] += ['float'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+var]
         elif p[1].type != p[3].type:
             raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch for "+p[2]+".")
-        elif p[1].type == 'float' or p[1].type == 'int':
-            p[0] += [p[1].type+p[2][0]+','+p[1].place +','+p[1].place +','+p[3].place]
+        elif p[1].type == 'int':
+            p[0] += ['int'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
+        elif p[1].type == 'float':
+            p[0] += ['float'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
         elif p[1].type == 'string' and p[2][0] == '+':
-            p[0] += [p[1].type+p[2][0]+','+p[1].place +','+p[1].place +','+p[3].place]
+            p[0] += ['string'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2][0]+" on given types.")
     else:
         if p[1].type == 'float' and p[3].type == 'int':
-            var = new_var()
-            p[0] += ['=inttofloat'+','+var+','+p[3].place]
-            p[0] += ['=,'+p[1].place +','+var]
+            var = new_tmp('float')
+            p[0] += ['=inttofloat '+var+', '+p[3].place]
+            p[0] += ['= '+p[1].place +', '+var]
         elif p[1].type != p[3].type:
             raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch for "+p[2]+".")
         else:
-            p[0] += ['=,'+p[1].place +','+p[3].place]
+            p[0] += ['= '+p[1].place +', '+p[3].place]
     # print p[0]
 
 def p_ReturnStmt(p):
@@ -632,12 +633,19 @@ def p_ReturnStmt(p):
 							| RETURN Expression '''
     if len(p)==3:
         p[0] = p[2].code
-        p[0] += ["mov %eax,"+p[2].place]
-        p[0] += ["pop %edi", "pop %esi","pop %ebx","mov %esp,%ebp"]
+        if scopeST[0].table[currFunc]['rType'] == 'float' and p[2].type == 'int':
+            var = new_tmp('float')
+            p[0] += ['=inttofloat '+var+', '+p[2].place]
+            p[0] += ["retval "+var]
+        elif scopeST[0].table[currFunc]['rType'] != p[2].type:
+            raise Exception("Line "+str(p.lineno(1))+": "+"Type mismatch for return value.")
+        else:
+            p[0] += ["retval "+p[2].place]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
-        p[0] += ["pop %edi", "pop %esi","pop %ebx","mov %esp,%ebp"]
+        p[0] = ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 
@@ -650,13 +658,13 @@ def p_BreakStmt(p):
         # if currLabel in labelDic.keys():
         gt=labelDic[currLabel]
         if gt is not None:
-            p[0]=["goto,"+gt]
+            p[0]=["goto "+gt]
         else:
             raise Exception("Line "+str(p.lineno(1))+": "+"Nothing to Break.")
     else:
         # check if ID in Label
         if p[2] in labelDic.keys():
-            p[0]=["goto,"+p[2]]
+            p[0]=["goto "+p[2]]
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Label "+ p[2]+" doesn't exist.")
 
@@ -665,12 +673,12 @@ def p_ContinueStmt(p):
 							| CONTINUE ID '''
     if len(p)==2:
         if currLabel != "0":
-            p[0]=["goto,"+currLabel]
+            p[0]=["goto "+currLabel]
         else:
             raise Exception("Line "+str(p.lineno(1))+": "+"Nothing To continue.")
     else:
         if p[2] in labelDic.keys():
-            p[0]=["goto,"+p[2]]
+            p[0]=["goto "+p[2]]
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Label "+p[2]+" doesn't exist.")
 
@@ -678,12 +686,12 @@ def p_ContinueStmt(p):
 def p_LabeledStmt(p):
     ''' LabeledStmt    		: ID COLON Statement '''
     labelDic[p[1]]="Created"
-    p[0]=[p[1]+':',p[2].code]
+    p[0]=[p[1]+':', p[2].code]
 
 def p_GotoStmt(p):
     ''' GotoStmt       		: GOTO ID '''
     if p[2] in labelDic.keys():
-        p[0]=["goto,"+p[2]]
+        p[0]=["goto "+p[2]]
     else:
         raise Exception("Line "+str(p.lineno(2))+": "+"Label "+p[2]+" doesn't exist.")
 
@@ -696,8 +704,8 @@ def p_IfStmt(p):
     endLabel=createLabel()
 
     p[0]=p[2].code
-    # Consider gotoPos goes to Label if positive,similarly gotoZeroNeg
-    p[0]+=["gotoZeroNeg,"+p[2].place+","+endLabel]
+    # Consider gotoPos goes to Label if positive, similarly gotoZeroNeg
+    p[0]+=["gotoZeroNeg "+p[2].place+", "+endLabel]
     p[0]+=p[4]
     p[0]+=[endLabel+":"]
 
@@ -707,9 +715,9 @@ def p_IfStmt1(p):
     # Printed in the format  Else ifLabel If endLabel
     ifLabel=createLabel()
     endLabel=createLabel()
-    p[0]+=["gotoPos,"+p[2].place+","+ifLabel]
+    p[0]+=["gotoPos "+p[2].place+", "+ifLabel]
     p[0]+=p[8]
-    p[0]+=["goto,"+endLabel]
+    p[0]+=["goto "+endLabel]
     p[0]+=[ifLabel+":"]
     p[0]+=p[4]
 
@@ -718,9 +726,9 @@ def p_IfStmt2(p):
     p[0]=p[2].code
     ifLabel=createLabel()
     endLabel=createLabel()
-    p[0]+=["gotoPos,"+p[2].place+","+ifLabel]
+    p[0]+=["gotoPos "+p[2].place+", "+ifLabel]
     p[0]+=p[7]
-    p[0]+=["goto,"+endLabel]
+    p[0]+=["goto "+endLabel]
     p[0]+=[ifLabel+":"]
     p[0]+=p[4]
 
@@ -731,10 +739,10 @@ def p_ForStmt(p):
     p[0]=p[2][0]
     p[0]+=[forLabel+":"]
     p[0]+=p[2][1].code
-    p[0]+=["gotoNeg,"+p[2][1].place+","+endLabel]
+    p[0]+=["gotoNeg "+p[2][1].place+", "+endLabel]
     p[0]+=p[4]
     p[0]+=p[2][2]
-    p[0]+=["goto,"+forLabel]
+    p[0]+=["goto "+forLabel]
     p[0]+=[endLabel+":"]
 
 def p_ForSig(p):
@@ -742,32 +750,32 @@ def p_ForSig(p):
 #     ''' ForSig 		    : Condition
 #     | ForClause
 #     | RangeClause '''
-#     # func(p,"ForSig")
+#     # func(p, "ForSig")
     p[0]=p[1]
 
 def p_Condition(p):
     ''' Condition 		    : Expression '''
     p[0]=p[1]
-    # func(p,"Condition")
+    # func(p, "Condition")
 
 def p_ForClause(p):
     ''' ForClause 		    : SimpleStmt SEMICOLON Condition SEMICOLON SimpleStmt '''
-    p[0]=[p[1],p[3],p[5]]
-    # func(p,"ForClause")
+    p[0]=[p[1], p[3], p[5]]
+    # func(p, "ForClause")
 
 # def p_RangeClause(p):
 #     ''' RangeClause 		: RangeClause_1 RANGE Expression '''
-#     # func(p,"RangeClause")
+#     # func(p, "RangeClause")
 #
 # def p_RangeClause_1(p):
 #     ''' RangeClause_1 		: ExpressionList ASSIGN
 # 							| IdentifierList DEFINE
 # 							| '''
-#     # func(p,"RangeClause_1")
+#     # func(p, "RangeClause_1")
 
 def p_SwitchStmt(p):
     ''' SwitchStmt          : ExprSwitchStmt '''
-    # func(p,"SwitchStmt")
+    # func(p, "SwitchStmt")
     p[0]=p[1]
 
 def p_ExprSwitchStmt(p):
@@ -778,12 +786,12 @@ def p_ExprSwitchStmt(p):
                             # | SWITCH LBRACE RBRACE
                             # | SWITCH SimpleStmt SEMICOLON Expression LBRACE ExprCaseClauseList RBRACE
                             # | SWITCH SimpleStmt SEMICOLON Expression LBRACE RBRACE
-    # func(p,"ExprSwitchStmt")
+    # func(p, "ExprSwitchStmt")
     defaultLabel=''
     defaultCode=[]
     p[0]=[]
     endLabel=createLabel()
-    for idx,clause in enumerate(p[4]):
+    for idx, clause in enumerate(p[4]):
         exp_var=clause[0]
         stmt_code=clause[1]
         if type(exp_var)=='str':#Default case
@@ -791,13 +799,13 @@ def p_ExprSwitchStmt(p):
             defaultCode=stmt_code
         else:
             if exp_var.type!=p[2].type:
-                Exception("Line "+p.lineno(1)+" :cannot compare"+exp_var.value+" and switch expression" )
+                Exception("Line "+p.lineno(1)+" : Cannot compare "+exp_var.value+" and switch expression." )
             if exp_var.value is not None:
-                p[0].append("Ifnotequalvalgoto,"+p[2].place+","+str(exp_var.value)+","+clause[2])
+                p[0].append("Ifnotequalvalgoto "+p[2].place+", "+str(exp_var.value)+", "+clause[2])
             else:
-                p[0].append("Ifnotequalgoto,"+exp_var.place+","+p[2].place+","+clause[2])
+                p[0].append("Ifnotequalgoto "+exp_var.place+", "+p[2].place+", "+clause[2])
             p[0]+=stmt_code
-            p[0].append("goto,"+endLabel)
+            p[0].append("goto "+endLabel)
             p[0].append(clause[2]+":")# Part ends here
     if defaultLabel!='':
         p[0]+=defaultCode
@@ -807,7 +815,7 @@ def p_ExprSwitchStmt(p):
 def p_ExprCaseClauseList(p):
     ''' ExprCaseClauseList  : ExprCaseClause
                             | ExprCaseClauseList ExprCaseClause '''
-    # func(p,"ExprCaseClauseList")
+    # func(p, "ExprCaseClauseList")
     if len(p)==2:
         p[0]=[p[1]]
     else:
@@ -816,8 +824,8 @@ def p_ExprCaseClauseList(p):
 def p_ExprCaseClause(p):
     ''' ExprCaseClause      : ExprSwitchCase COLON StatementList '''
     caseLabel=createLabel()
-    p[0]=[p[1],p[3],caseLabel]
-    # func(p,"ExprCaseClause")
+    p[0]=[p[1], p[3], caseLabel]
+    # func(p, "ExprCaseClause")
 
 def p_ExprSwitchCase(p):
     ''' ExprSwitchCase      : DEFAULT
@@ -828,45 +836,45 @@ def p_ExprSwitchCase(p):
         p[0]="DEFAULT"
     else:
         p[0]=p[2]
-    # func(p,"ExprSwitchCase")
+    # func(p, "ExprSwitchCase")
 
 # def p_FallthroughStmt(p):
 #     ''' FallthroughStmt     : FALLTHROUGH '''
-    # func(p,"FallthroughStmt")
+    # func(p, "FallthroughStmt")
 
 # def p_GoStmt(p):
 #     '''GoStmt               : GO Expression'''
-#     # func(p,"GoStmt")
+#     # func(p, "GoStmt")
 #
 # def p_SelectStmt(p):
 #     ''' SelectStmt     		: SELECT LBRACE RBRACE
 # 							| SELECT LBRACE CommClauseList RBRACE '''
-#     # func(p,"SelectStmt")
+#     # func(p, "SelectStmt")
 #
 # def p_CommClauseList(p):
 #     ''' CommClauseList     	: CommClause
 #                             | CommClauseList CommClause '''
-#     # func(p,"CommClause")
+#     # func(p, "CommClause")
 #
 # def p_CommClause(p):
 #     ''' CommClause     		: CommCase COLON StatementList '''
-#     # func(p,"CommClause")
+#     # func(p, "CommClause")
 #
 # def p_CommCase(p):
 #     ''' CommCase       		: CASE SendStmt
 # 							| DEFAULT
 # 							| CASE RecvStmt '''
-#     # func(p,"CommCase")
+#     # func(p, "CommCase")
 #
 # def p_RecvStmt(p):
 #     ''' RecvStmt       		: ExpressionList ASSIGN Expression
 # 							| Expression
 # 							| IdentifierList DEFINE Expression '''
-#     # func(p,"RecvStmt")
+#     # func(p, "RecvStmt")
 #
 # def p_DeferStmt(p):
 #     ''' DeferStmt           : DEFER Expression '''
-#     # func(p,"DeferStmt")
+#     # func(p, "DeferStmt")
 
 ##########################       Expression   ##########################
 def p_ExpressionList(p):
@@ -889,9 +897,10 @@ def p_Expression1(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
         p[0].type='bool'
-        p.set_lineno(0,p.lineno(2))
+        p[0].place=new_tmp(p[0].type)
+        p[0].code=p[1].code+p[3].code+[p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place]
+        p.set_lineno(0, p.lineno(2))
 
 def p_Expression2(p):
     ''' Expression2    		: Expression3
@@ -900,9 +909,10 @@ def p_Expression2(p):
         p[0]=p[1]
     else:
         p[0]=expr()
-        p[0].code=p[1].code+p[3].code+[p[2]+','+p[0].place+','+p[1].place+','+p[3].place]
         p[0].type='bool'
-        p.set_lineno(0,p.lineno(2))
+        p[0].place=new_tmp(p[0].type)
+        p[0].code=p[1].code+p[3].code+[p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place]
+        p.set_lineno(0, p.lineno(2))
 
 def p_Expression3(p):
     ''' Expression3    		: Expression4
@@ -911,25 +921,26 @@ def p_Expression3(p):
         p[0]=p[1]
     else:
         p[0]=expr()
+        p[0].type = 'bool'
+        p[0].place=new_tmp(p[0].type)
         p[0].code=p[1].code+p[3].code
         if p[1].type == 'float' and p[3].type == 'int':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[3].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+var)
         elif p[1].type == 'int' and p[3].type == 'float':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[1].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+var+', '+p[3].place)
         elif p[1].type == 'int' and p[3].type == 'int':
-            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'float' and p[3].type == 'float':
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'string' and p[3].type == 'string':
-            p[0].code.append('string'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
+            p[0].code.append('string'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Can't compare given types.")
-        p[0].type = 'bool'
-        p.set_lineno(0,p.lineno(2))
+        p.set_lineno(0, p.lineno(2))
 
 def p_Expression4(p):
     ''' Expression4    		: Expression5
@@ -940,27 +951,32 @@ def p_Expression4(p):
         p[0]=expr()
         p[0].code=p[1].code+p[3].code
         if p[1].type == 'float' and p[3].type == 'int':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[3].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+var)
         elif p[1].type == 'int' and p[3].type == 'float':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[1].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+var+', '+p[3].place)
         elif p[1].type == 'int' and p[3].type == 'int':
-            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
             p[0].type = 'int'
+            p[0].place = new_tmp('int')
+            p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'float' and p[3].type == 'float':
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'string' and p[3].type == 'string' and p[2] == '+':
-            p[0].code.append('string'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
             p[0].type = 'string'
+            p[0].place = new_tmp('string')
+            p[0].code.append('string'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2]+" on given types.")
-        p.set_lineno(0,p.lineno(2))
+        p.set_lineno(0, p.lineno(2))
 
 def p_Expression5(p):
     ''' Expression5    		: UnaryExpr
@@ -971,85 +987,95 @@ def p_Expression5(p):
         p[0]=expr()
         p[0].code=p[1].code+p[3].code
         if p[1].type == 'float' and p[3].type == 'int':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[3].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+var)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[3].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+var)
         elif p[1].type == 'int' and p[3].type == 'float':
-            var = new_var()
-            p[0].code.append('=inttofloat'+','+var+','+p[1].place)
-            p[0].code.append('float'+p[2]+','+p[0].place+','+var+','+p[3].place)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            var = new_tmp('float')
+            p[0].code.append('=inttofloat '+var+', '+p[1].place)
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+var+', '+p[3].place)
         elif p[1].type == 'int' and p[3].type == 'int':
-            p[0].code.append('int'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
             p[0].type = 'int'
+            p[0].place = new_tmp('int')
+            p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'float' and p[3].type == 'float':
-            p[0].code.append('float'+p[2]+','+p[0].place+','+p[1].place+','+p[3].place)
             p[0].type = 'float'
+            p[0].place = new_tmp('float')
+            p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         else:
             raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2]+" on given types.")
-        p.set_lineno(0,p.lineno(2))
+        p.set_lineno(0, p.lineno(2))
 
 def p_UnaryExpr(p):
     ''' UnaryExpr      		: PrimaryExpr
 							| unary_op UnaryExpr '''
     if len(p)==2:
-        if p[1].extra and p[1].extra['cls'] != 'VAR':
+        if p[1].type=='':
             raise Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a variable.")
-        p[0]=p[1]
+        p[0] = p[1]
     else:
-        p[0]=expr()
-        p[0].code=p[2].code+[p[1]+','+p[0].place+','+p[2].place]
-        if p[1] == '*':
+        p[0] = expr()
+        if p[1]=='*':
             p[0].type = p[2].type[8:-1]
-        else:
-            p[0].type = p[2].type
-        p.set_lineno(0,p.lineno(1))
+        elif p[1]=='+' or p[1]=='-':
+            if p[2].type=='int' or p[2].type=='float':
+                p[0].type = p[2].type
+                p[0].place = new_tmp(p[0].type)
+                p[0].code = p[2].code+['unary'+p[1]+' '+p[0].place+', '+p[2].place]
+            else:
+                raise Exception("Line "+str(p.lineno(1))+": "+"Can't use "+p[1].place+" on this type.")
+        p.set_lineno(0, p.lineno(1))
 
 def p_PrimaryExpr(p):
     ''' PrimaryExpr    		: Operand '''
                             # | MethodExpr
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_PrimaryExpr1(p):
     ''' PrimaryExpr    		: PrimaryExpr Selector '''
     # PrimaryExpr should be struct
     # add offset in struct
     if p[1].type[:6]!="struct":
-        Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a struct")
+        Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a struct.")
     else:
         sc=int(p[1].type[7:])
         if p[2] in (scopeST[sc].table).keys():
             p[0]=expr()
             p[0].type=scopeST[sc].table[p[2]]['type']
+            p[0].place=new_tmp(p[0].type)
             p[0].code=p[1].code
-            p[0].code+=["=,"+p[0].place+","+p[1].place+"."+p[2]]
+            p[0].code+=["= "+p[0].place+", "+p[1].place+"."+p[2]]
         else:
-            Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2])
-    p.set_lineno(0,p.lineno(1))
+            Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2]+".")
+    p.set_lineno(0, p.lineno(1))
 
 def p_Selector(p):
     ''' Selector       		: PERIOD ID '''
     p[0]=p[2]
-    # func(p,"Selector")
+    # func(p, "Selector")
 
 def p_PrimaryExpr2(p):
     ''' PrimaryExpr    		: PrimaryExpr Index '''
     # PrimaryExpr Should be array
     if p[1].type[:5]!="array":
-        raise Exception("Line "+str(p.lineno(1))+": "+p[1]+" is not an array")
+        raise Exception("Line "+str(p.lineno(1))+": "+p[1]+" is not an array.")
     elif p[2].type!="int":
-        raise Exception("Line "+str(p.lineno(1))+": Array index must be an integer")
+        raise Exception("Line "+str(p.lineno(1))+": Array index must be an integer.")
     else:
         p[0]=expr()
         p[0].type=p[1].type[5:-1]
-        temp1=new_var()
+        p[0].place=new_tmp(p[0].type)
+        var=new_tmp('int')
         p[0].code=p[1].code
-        p[0].code+=["*,"+temp1+","+p[2].place+","+str(typeWidth[p[0].type])]
-        p[0].code+=["+,"+temp1+",start("+p[1].place+"),"+temp1]
-        p[0].code+=["load_from_mem,"+p[0].place+","+temp1]
-    p.set_lineno(0,p.lineno(1))
+        p[0].code+=["int* "+var+", "+p[2].place+", "+str(typeWidth[p[0].type])]
+        p[0].code+=["int+ "+var+", start("+p[1].place+"), "+var]
+        p[0].code+=["load_from_mem "+p[0].place+", "+var]
+    p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):
     ''' Index          		: LBRACK Expression RBRACK '''
@@ -1066,7 +1092,7 @@ def p_Index(p):
 def p_PrimaryExpr5(p):
     ''' PrimaryExpr    		: PrimaryExpr Arguments
     '''
-    dic = checkID(p[1].place,'global')
+    dic = checkID(p[1].place, 'global')
     if dic is None:
         raise Exception("Line "+str(p.lineno(1))+": "+"Expected function name.")
     elif dic["cls"] != "FUNC":
@@ -1081,18 +1107,20 @@ def p_PrimaryExpr5(p):
                 raise Exception("Line "+str(p.lineno(2))+": "+str(i)+"th type doesn't match for "+p[1].place+".")
         # Function call
         p[0] = expr()
-        p[0].type=dic['rType']
+        p[0].type = dic['rType']
+        p[0].place = new_tmp(p[0].type)
+
         for i in xrange(len(p[2])):
             p[0].code+=p[2][i].code
-        p[0].code+=["push %eax","push %ecx","push %edx"]
+        p[0].code+=["push %eax", "push %ecx", "push %edx"]
         for exp in p[2][::-1]:
             p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]
 
-        p[0].code+=["=,"+p[0].place+",%eax"]
-        p[0].code+=["add $"+str(dic['aMem'])+",%esp"]
-        p[0].code+=["pop %edx","pop %ecx","pop %eax"]
-    p.set_lineno(0,p.lineno(1))
+        p[0].code+=["= "+p[0].place+", %eax"]
+        p[0].code+=["add $"+str(dic['aMem'])+", %esp"]
+        p[0].code+=["pop %edx", "pop %ecx", "pop %eax"]
+    p.set_lineno(0, p.lineno(1))
 
 def p_Arguments(p):
     ''' Arguments           : LPAREN RPAREN
@@ -1106,16 +1134,16 @@ def p_Arguments(p):
         p[0]=[]
     else:
         p[0]=p[2]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 # def p_Conversion(p):
 #     ''' Conversion        	: Type LPAREN Expression COMMA RPAREN
 # 							| Type LPAREN Expression RPAREN '''
-#     # func(p,"Conversion")
+#     # func(p, "Conversion")
 #
 # def p_MethodExpr(p):
 #     ''' MethodExpr       	: Type PERIOD ID '''
-#     func(p,"MethodExpr")
+#     func(p, "MethodExpr")
 #
 # def p_Slice(p):
 #     ''' Slice          	: LBRACK COLON RBRACK
@@ -1124,31 +1152,30 @@ def p_Arguments(p):
 # 							| LBRACK Expression COLON Expression RBRACK
 # 							| LBRACK COLON Expression COLON Expression RBRACK
 # 							| LBRACK Expression COLON Expression COLON Expression RBRACK '''
-#     func(p,"Slice")
+#     func(p, "Slice")
 #
 # def p_TypeAssertion(p):
 #     ''' TypeAssertion  		: PERIOD LPAREN Type RPAREN '''
-#     func(p,"TypeAssertion")
+#     func(p, "TypeAssertion")
 
 def p_Operand(p):
     ''' Operand        		: Literal'''
     p[0]=p[1]
-    p[0].code=p[1].code
 
 def p_Operand1(p):
     ''' Operand        		: ID'''
-    dic = checkID(p[1],'recent')
+    dic = checkID(p[1], 'recent')
     if dic is None:
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" doesn't exist.")
 
-    p[0]=expr()
-    p[0].extra=dic.copy()
+    p[0] = expr()
+    p[0].place = p[1]
     if dic['cls']=='VAR':
-        p[0].type=dic['type']
+        p[0].type = dic['type']
+        p[0].place = 'var\"'+p[1]+'\":'+str(dic['offset'])+':'+str(dic['width'])
     elif dic['cls']!='FUNC' and dic['cls']!='PACKAGE':
         raise Exception("Line "+str(p.lineno(1))+": "+"Symbol "+p[1]+" cannot be an operand.")
-    p[0].place=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 # def p_Operand2(p):# Doubt
 #     ''' Operand        		: ID PERIOD ID'''
@@ -1156,37 +1183,38 @@ def p_Operand1(p):
 def p_Operand3(p):
     ''' Operand        		: LPAREN Expression RPAREN '''
     p[0]=p[2]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_Literal(p):
     ''' Literal        		: BasicLit '''
                             # | FunctionLit
 							# | CompositeLit
     p[0]=p[1]
+    p[0].place='$'+p[0].place
 
 def p_BasicLit(p):
     ''' BasicLit       		: INT '''
     p[0]=expr()
     p[0].type='int'
     p[0].value=int(p[1])
-    p[0].code=["="+','+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p[0].place=p[1]
+    p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit1(p):
     ''' BasicLit       		: FLOAT '''
     p[0]=expr()
     p[0].type='float'
     p[0].value=float(p[1])
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p[0].place=p[1]
+    p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit2(p):
     ''' BasicLit       		: IMAG '''
     p[0]=expr()
     p[0].type='complex'
     p[0].value=complex(p[1])
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p[0].place=p[1]
+    p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit3(p):
     ''' BasicLit       		: BOOLVAL '''
@@ -1194,26 +1222,27 @@ def p_BasicLit3(p):
     p[0].type='bool'
     if p[1]=='true':
         p[0].value=1
+        p[0].place='1'
     else:
         p[0].value=0
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+        p[0].place='0'
+    p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit4(p):
     ''' BasicLit       		: RUNE '''
     p[0]=expr()
     p[0].type='int'
     p[0].value=ord(p[1])
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p[0].place=str(ord(p[1]))
+    p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit5(p):
     ''' BasicLit       		: STRING '''
     p[0]=expr()
     p[0].type='string'
     p[0].value=p[1]
-    p[0].code=["=,"+p[0].place+","+p[1]]
-    p.set_lineno(0,p.lineno(1))
+    p[0].place=p[1]
+    p.set_lineno(0, p.lineno(1))
 
 # def p_FunctionLit(p):
 #     ''' FunctionLit         : FUNC Signature Block '''
@@ -1230,22 +1259,22 @@ def p_BasicLit5(p):
 # 							| SEMICOLON ElementList RBRACE
 # 							| LBRACE ElementList COMMA RBRACE
 # 							| SEMICOLON ElementList COMMA RBRACE '''
-#     # func(p,"LiteralValue")
+#     # func(p, "LiteralValue")
 #
 # def p_ElementList(p):
 #     ''' ElementList    		: KeyedElement
 # 							| ElementList COMMA KeyedElement '''
-#     # func(p,"ElementList")
+#     # func(p, "ElementList")
 #
 # def p_KeyedElement(p):
 #     ''' KeyedElement   		: Element
 # 							| Key COLON Element '''
-#     # func(p,"KeyedElement")
+#     # func(p, "KeyedElement")
 #
 # def p_Key(p):
 #     ''' Key            		: Expression
 # 							| LiteralValue '''
-#     # func(p,"Key")
+#     # func(p, "Key")
 #
 # def p_Element(p):
 #     ''' Element        		: Expression
@@ -1266,7 +1295,7 @@ def p_assign_op(p):
 							| AND_NOT_ASSIGN
     '''
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_rel_op(p):
     ''' rel_op         		: EQL
@@ -1277,7 +1306,7 @@ def p_rel_op(p):
 							| GEQ
     '''
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_add_op(p):
     ''' add_op         		: ADD
@@ -1285,7 +1314,7 @@ def p_add_op(p):
 							| OR
 							| XOR '''
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_mul_op(p):
     ''' mul_op         		: MUL
@@ -1296,7 +1325,7 @@ def p_mul_op(p):
 							| AND
 							| AND_NOT '''
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 def p_unary_op(p):
     ''' unary_op       		: ADD
@@ -1307,31 +1336,31 @@ def p_unary_op(p):
 							| AND '''
 							# | ARROW '''
     p[0]=p[1]
-    p.set_lineno(0,p.lineno(1))
+    p.set_lineno(0, p.lineno(1))
 
 ################################### Precedence #############################################
 precedence = (
-    ('nonassoc','ID','STRING','INT','FLOAT','IMAG','STRUCT'),
-    ('left','COMMA'),
-    ('left','LBRACE','RBRACE' ),
-    ('right','ASSIGN','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN'),
-    ('right','DEFINE'),
-    ('left','LOR'),
-    ('left','LAND'),
-    ('left','OR'),
-    ('left','XOR'),
-    ('left','AND'),
-    ('left','EQL','NEQ'),
-    ('left','LSS','GTR','LEQ','GEQ'),
-    ('left','SHL','SHR'),
-    ('left','ADD','SUB'),
-    ('left','MUL','QUO','REM'),
-    ('right','NOT','INC','DEC'),
-    ('left','LPAREN','RPAREN','LBRACK','RBRACK','ARROW','PERIOD'),
-    ('nonassoc','BREAK','DEFAULT','FUNC',
-     'INTERFACE','SELECT','CASE','DEFER','GO','MAP',
-     'CHAN','ELSE','GOTO','PACKAGE','SWITCH','CONST','FALLTHROUGH',
-     'IF','RANGE','TYPE','CONTINUE','FOR','IMPORT','RETURN','VAR')
+    ('nonassoc', 'ID', 'STRING', 'INT', 'FLOAT', 'IMAG', 'STRUCT'),
+    ('left', 'COMMA'),
+    ('left', 'LBRACE', 'RBRACE' ),
+    ('right', 'ASSIGN', 'ADD_ASSIGN', 'SUB_ASSIGN', 'MUL_ASSIGN', 'QUO_ASSIGN', 'REM_ASSIGN', 'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN', 'SHL_ASSIGN', 'SHR_ASSIGN'),
+    ('right', 'DEFINE'),
+    ('left', 'LOR'),
+    ('left', 'LAND'),
+    ('left', 'OR'),
+    ('left', 'XOR'),
+    ('left', 'AND'),
+    ('left', 'EQL', 'NEQ'),
+    ('left', 'LSS', 'GTR', 'LEQ', 'GEQ'),
+    ('left', 'SHL', 'SHR'),
+    ('left', 'ADD', 'SUB'),
+    ('left', 'MUL', 'QUO', 'REM'),
+    ('right', 'NOT', 'INC', 'DEC'),
+    ('left', 'LPAREN', 'RPAREN', 'LBRACK', 'RBRACK', 'ARROW', 'PERIOD'),
+    ('nonassoc', 'BREAK', 'DEFAULT', 'FUNC',
+     'INTERFACE', 'SELECT', 'CASE', 'DEFER', 'GO', 'MAP',
+     'CHAN', 'ELSE', 'GOTO', 'PACKAGE', 'SWITCH', 'CONST', 'FALLTHROUGH',
+     'IF', 'RANGE', 'TYPE', 'CONTINUE', 'FOR', 'IMPORT', 'RETURN', 'VAR')
 )
 
 ########################### Build the parser ###################################
@@ -1342,6 +1371,6 @@ data = f.read()
 f.close()
 
 irf = open(args["out"], "w")
-result = parser.parse(data,debug=1)
+result = parser.parse(data, debug=1)
 irf.close()
 # print (result)
