@@ -21,7 +21,7 @@ currTypeDef = ''
 currFunc = ''
 currOffset = 0
 structOffset = 0
-typeWidth = {"int":4, "float":8, "bool":1, "rune":4, "string":32}
+typeWidth = {"int":4, "float":8, "bool":1, "rune":4, "string":8}
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -202,7 +202,7 @@ def p_FunctionDecl(p):
     code = [p[2]+":"]
     code += ["push %ebp"]
     code += ["mov %ebp, %esp"]
-    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
+    code += ["sub %esp, $"+str(scopeST[0].table[p[2]]['vMem'])]
     code += ["push %ebx", "push %esi", "push %edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -600,7 +600,7 @@ def p_IncDecStmt(p):
 
 def p_Assignment(p):
     ''' Assignment     		: UnaryExpr assign_op Expression '''
-    p[0]=p[3].code
+    p[0] = p[1].code + p[3].code
     # Break assign_op into multiple parts
     if len(p[2])==2:
         if p[1].type == 'float' and p[3].type == 'int':
@@ -1016,7 +1016,8 @@ def p_UnaryExpr(p):
     if len(p)==2:
         if p[1].type=='':
             raise Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a variable.")
-        p[0] = p[1]
+        else:
+            p[0] = p[1]
     else:
         p[0] = expr()
         if p[1]=='*':
@@ -1043,13 +1044,15 @@ def p_PrimaryExpr1(p):
     if p[1].type[:6]!="struct":
         Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a struct.")
     else:
-        sc=int(p[1].type[7:])
+        sc = int(p[1].type[7:])
+        name = p[1].place.split('\"')[1]
+        offset = int(p[1].place.split(':')[1])
         if p[2] in (scopeST[sc].table).keys():
-            p[0]=expr()
-            p[0].type=scopeST[sc].table[p[2]]['type']
-            p[0].place=new_tmp(p[0].type)
-            p[0].code=p[1].code
-            p[0].code+=["= "+p[0].place+", "+p[1].place+"."+p[2]]
+            dic = scopeST[sc].table[p[2]]
+            p[0] = expr()
+            p[0].type = dic['type']
+            p[0].place = 'var\"'+name+'.'+p[2]+'\":'+str(offset-dic['fOffset'])+':'+str(dic['width'])
+            p[0].code = p[1].code
         else:
             Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2]+".")
     p.set_lineno(0, p.lineno(1))
@@ -1068,13 +1071,19 @@ def p_PrimaryExpr2(p):
         raise Exception("Line "+str(p.lineno(1))+": Array index must be an integer.")
     else:
         p[0]=expr()
-        p[0].type=p[1].type[5:-1]
+        name = p[1].place.split('\"')[1]
+        offset = int(p[1].place.split(':')[1])
+        p[0].type=p[1].type[6:-1]
         p[0].place=new_tmp(p[0].type)
-        var=new_tmp('int')
         p[0].code=p[1].code
-        p[0].code+=["int* "+var+", "+p[2].place+", "+str(typeWidth[p[0].type])]
-        p[0].code+=["int+ "+var+", start("+p[1].place+"), "+var]
-        p[0].code+=["load_from_mem "+p[0].place+", "+var]
+
+        var1=new_tmp('int') # Element offset
+        var2=new_tmp('int') # Final offset
+        addr=new_tmp('int') # Address of element
+        p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
+        p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
+        p[0].code+=["int- "+addr+", %ebp, "+var2]
+        p[0].code+=["load_from_mem "+p[0].place+", "+addr]
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):
@@ -1118,7 +1127,7 @@ def p_PrimaryExpr5(p):
         p[0].code+=["call "+p[1].place]
 
         p[0].code+=["= "+p[0].place+", %eax"]
-        p[0].code+=["add $"+str(dic['aMem'])+", %esp"]
+        p[0].code+=["add %esp, $"+str(dic['aMem'])]
         p[0].code+=["pop %edx", "pop %ecx", "pop %eax"]
     p.set_lineno(0, p.lineno(1))
 

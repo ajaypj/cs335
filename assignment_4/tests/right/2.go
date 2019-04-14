@@ -12,17 +12,17 @@ func sum(s S) int {
 };
 
 func main() {
-  var example *S;
+  var example S;
 
-  var S int;
-  S = 0;
+  var S [3]int;
+  S[2] = 0;
 
-  (*example).x = -2;
-  (*example).y = 1;
+  example.x = -2;
+  example.y = 1;
 
-  if S == 0 {
-    var S bool;
-  };
-
-	S = sum(*example);
+  // if S == 0 {
+  //   var S bool;
+  // };
+  //
+	// S = sum(example);
 };
