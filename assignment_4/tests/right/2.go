@@ -16,7 +16,8 @@ func main() {
   var S [3]int;
 
   example.x = -2;
-  S[2] = 0;
+  i := 2;
+  S[i] = 0;
 
   example.y = 1;
 	S[0] = sum(example, S);

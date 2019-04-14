@@ -199,7 +199,7 @@ def p_FunctionDecl(p):
 							| FUNC ID StartFuncScope Signature Block EndScope '''
     global currFunc
     currFunc = ''
-    code = [p[2]+":"]
+    code = ["funcstart "+p[2]+":"]
     code += ["push %ebp"]
     code += ["mov %ebp, %esp"]
     code += ["sub %esp, $"+str(scopeST[0].table[p[2]]['vMem'])]
@@ -362,6 +362,8 @@ def p_Signature1(p):
     scopeST[0].table[currFunc]['vMem'] = 0
     scopeST[0].table[currFunc]['args'] = p[1]
     if len(p) > 2:
+        if p[2]['type'][:6]=='struct' or p[2]['type'][:5]=='array':
+            raise Exception("Line "+str(p.lineno(1))+": "+"Sorry, you can only return basic types.")
         scopeST[0].table[currFunc]['rType'] = p[2]['type']
     else:
         scopeST[0].table[currFunc]['rType'] = 'void'
@@ -375,6 +377,7 @@ def p_Parameters(p):
         p[0] = p[2]
     else:
         p[0] = []
+    p.set_lineno(0, p.lineno(1))
 
 def p_ParameterList(p):
     ''' ParameterList  		: ParameterDecl
@@ -588,7 +591,7 @@ def p_ExpressionStmt(p):
 def p_IncDecStmt(p):
     ''' IncDecStmt     		: Expression INC
                             | Expression DEC '''
-    # Check that Expression is a variable or UnaryExpr
+    # Check if expression is a variable or UnaryExpr
     p[0]=p[1].code
     str=''
     if p[2]=='++':
@@ -641,11 +644,13 @@ def p_ReturnStmt(p):
             raise Exception("Line "+str(p.lineno(1))+": "+"Type mismatch for return value.")
         else:
             p[0] += ["retval "+p[2].place]
+        p[0] += ["freetmp"]
         p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
-        p[0] = ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
+        p[0] = ["freetmp"]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 
@@ -1131,7 +1136,7 @@ def p_PrimaryExpr5(p):
                     dic2 = scopeST[sc].table[field]
                     if dic2["type"][:6]=="struct" or dic2["type"][:5]=="array":
                         raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass structs of basic types.")
-                    p[0].code += ['store var\"'+name+'.'+field+'\":'+str(offset-dic2['fOffset'])+':'+str(dic2['width'])]
+                    p[0].code += ['push var\"'+name+'.'+field+'\":'+str(offset-dic2['fOffset'])+':'+str(dic2['width'])]
             elif exp.type[:5]=="array":
                 name = exp.place.split('\"')[1]
                 offset = int(exp.place.split(':')[1])
@@ -1140,9 +1145,9 @@ def p_PrimaryExpr5(p):
                 if elemType[:6]=="struct" or elemType[:5]=="array":
                     raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass arrays of basic types.")
                 for i in xrange(arrWidth/typeWidth[elemType]):
-                    p[0].code += ['store var\"'+name+'['+str(i)+']'+'\":'+str(offset-i*typeWidth[elemType])+':'+str(typeWidth[elemType])]
+                    p[0].code += ['push var\"'+name+'['+str(i)+']'+'\":'+str(offset-i*typeWidth[elemType])+':'+str(typeWidth[elemType])]
             else:
-                p[0].code+=["store "+exp.place]
+                p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]
 
         p[0].code+=["= "+p[0].place+", %eax"]

@@ -1,0 +1,5 @@
+		1
+		x {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
+0
+fmt {'cls': 'PACKAGE'}
+main {'vMem': 4, 'args': [], 'aMem': 0, 'cls': 'FUNC', 'rType': 'void'}
