@@ -1,23 +1,37 @@
-ok
-funcstart 16 main: 
-push %ebp 
-mov %ebp %esp 
-sub %esp $4 
-push %ebx 
-push %esi 
-push %edi 
-mov %edx, $0
-add %edx, $0
-mov %ebx, $1
-add %ebx, $1
-mov %eax, $2
-add %eax, $2
-mov %ecx, $3
-add %ecx, $3
-mov %esi, $4
-add %esi, $4
-mov %edi, $5
-add %edi, $5
-push %edx
-mov %edx, $6
-add %edx, $6
+['funcstart', '16', 'main:']
+{}
+['push', '%ebp']
+{}
+['mov', '%ebp', '%esp']
+{}
+['sub', '%esp', '$4']
+{}
+['push', '%ebx']
+{}
+['push', '%esi']
+{}
+['push', '%edi']
+{}
+['int+', 'tmp0:4', '$0', '$0']
+{}
+['int+', 'tmp1:4', '$1', '$1']
+{'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}}
+['int+', 'tmp2:4', '$2', '$2']
+{'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}}
+['int+', 'tmp3:4', '$3', '$3']
+{'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}}
+['int+', 'tmp4:4', '$4', '$4']
+{'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}}
+['int+', 'tmp5:4', '$5', '$5']
+{'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}}
+['int+', 'tmp6:4', '$6', '$6']
+{'tmp0': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp5': {'so': -1, 'ro': 'ecx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}}
+tmp0
+['int+', 'tmp7:4', 'tmp6:4', '$7']
+{'tmp6': {'so': -1, 'ro': 'eax', 'width': '4'}, 'tmp0': {'so': 104, 'ro': -1, 'width': '4'}, 'tmp5': {'so': -1, 'ro': 'ecx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}}
+['int+', 'tmp8:4', 'tmp7:4', '$7']
+{'tmp0': {'so': 104, 'ro': -1, 'width': '4'}, 'tmp5': {'so': -1, 'ro': 'ecx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp7': {'so': -1, 'ro': 'eax', 'width': '4'}}
+['int+', 'tmp9:4', 'tmp5:4', 'tmp8:4']
+{'tmp0': {'so': 104, 'ro': -1, 'width': '4'}, 'tmp5': {'so': -1, 'ro': 'ecx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp8': {'so': -1, 'ro': 'eax', 'width': '4'}}
+['int+', 'tmp10:4', 'tmp4:4', 'tmp9:4']
+{'tmp0': {'so': 104, 'ro': -1, 'width': '4'}, 'tmp5': {'so': -1, 'ro': 'ecx', 'width': '4'}, 'tmp2': {'so': -1, 'ro': 'esi', 'width': '4'}, 'tmp3': {'so': -1, 'ro': 'edi', 'width': '4'}, 'tmp4': {'so': -1, 'ro': 'edx', 'width': '4'}, 'tmp1': {'so': -1, 'ro': 'ebx', 'width': '4'}, 'tmp8': {'so': -1, 'ro': 'eax', 'width': '4'}}

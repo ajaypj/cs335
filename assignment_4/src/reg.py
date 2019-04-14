@@ -31,11 +31,13 @@ def get_reg(name, width):
 	old_temp_var = unused_temp_vars[0]
 	old_reg=temp_vars[old_temp_var]["ro"]
 	code+= ["push %{}".format(old_reg)]
+	print(unused_temp_vars[0])
 	del unused_temp_vars[0]
+	# print("ok")
 	unused_temp_vars.append(name)
-	regs[old_reg]["live"]=1
 	temp_vars[name]={"ro":old_reg, "so":-1, "width":width}
 	#old reg changes
+	regs[old_reg]["live"]=1
 	temp_offset+= int(width)
 	temp_vars[old_temp_var]["so"]=function_width+temp_offset
 	temp_vars[old_temp_var]["ro"]=-1
@@ -68,16 +70,16 @@ def transfer_reg_to_left(old, new, width): #check the width of the new reg
 	remove_used_temp_var(old)
 
 def get_type(name):
+	# print(name)
+	name=split_var(name)[0]
 	global regs, unused_temp_vars, temp_vars, temp_offset, function_width, code
 	if "var" in name:
 		return "m"
 	elif "tmp" in name:
-		for i in temp_vars:
-			if i==name:
-				if temp_vars[i]["ro"]!=-1:
-					return "r"
-				else:
-					return "m"
+		if temp_vars[name]["ro"]!=-1:
+			return "r"
+		else:
+			return "m"
 	elif name[1:].isdigit():
 		return "c"
 	else:
@@ -100,10 +102,11 @@ file.close()
 # print(ir)
 
 for i in ir:
-	# print(i)
+	print(i)
 	# if len(i)==1: # labels and ret
 	# 	print(i[0])
-
+	# print(regs)
+	print(temp_vars)
 	if i[0] in ["push", "pop", "call", "mov", "sub", "funcstart"]: # push and pop
 		temp_str=""
 		for lund in i:
@@ -124,16 +127,16 @@ for i in ir:
 			code+= ["add %{}, {}".format(new_reg, const2)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","c"): #r+c
-			temp_var_name = split_var(i[1])[0]
+			temp_var_name = split_var(i[2])[0]
 			const = i[3]
 			code+= ["add %{}, {}".format(temp_vars[temp_var_name]["ro"], const)]
-			transfer_reg_to_left(temp_var_name, left_temp_var_name)
+			transfer_reg_to_left(temp_var_name, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("c","r"): #c+r
 			temp_var_name = split_var(i[3])[0]
 			const = i[2]
 			code+= ["add %{}, {}".format(temp_vars[temp_var_name]["ro"], const)]
-			transfer_reg_to_left(temp_var_name, left_temp_var_name)
+			transfer_reg_to_left(temp_var_name, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","c"): #m+c
 			if i[2]=="tmp":
