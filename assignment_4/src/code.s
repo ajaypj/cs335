@@ -1,4 +1,7 @@
-factorial:
+.data
+print_int:
+	.string "%d"
+add:
 	push %ebp
 	mov %esp, %ebp
 	sub $0, %esp
@@ -6,35 +9,9 @@ factorial:
 	push %esi
 	push %edi
 	mov 8(%ebp), %eax
-	cmp $1, %eax
-	setle %eax
-	cmp $0, %eax
-	jle label0
-	mov $1, 24(%ebp)
+	add 12(%ebp), %eax
+	mov %eax, 28(%ebp)
 	sub $0, %esp
-	pop %edi
-	pop %esi
-	pop %ebx
-	mov %ebp, %esp
-	pop %ebp
-	ret
-label0:
-	mov 8(%ebp), %eax
-	sub $1, %eax
-	sub $4, %esp
-	push %eax
-	push %ecx
-	push %edx
-	push %eax
-	call factorial
-	add $4, %esp
-	pop %edx
-	pop %ecx
-	pop %eax
-	mov 8(%ebp), %eax
-	imul -16(%ebp), %eax
-	mov %eax, 24(%ebp)
-	sub $4, %esp
 	pop %edi
 	pop %esi
 	pop %ebx
@@ -44,23 +21,44 @@ label0:
 main:
 	push %ebp
 	mov %esp, %ebp
-	sub $4, %esp
+	sub $12, %esp
 	push %ebx
 	push %esi
 	push %edi
-	sub $4, %esp
-	push %eax
-	push %ecx
-	push %edx
-	push $10
-	call factorial
-	add $4, %esp
-	pop %edx
-	pop %ecx
-	pop %eax
-	mov -20(%ebp), %eax
+	mov $0, -4(%ebp)
+	mov $0, -8(%ebp)
+label2:
+	mov -8(%ebp), %eax
+	cmp $10, %eax
+	setl %eax
+	cmp $0, %eax
+	jle label3
+	mov $0, -12(%ebp)
+	mov -12(%ebp), %eax
+	cmp $2, %eax
+	setne %eax
+	cmp $0, %eax
+	jg label0
+	mov -4(%ebp), %eax
+	sub -8(%ebp), %eax
 	mov %eax, -4(%ebp)
-	sub $4, %esp
+	jump label1
+label0:
+	mov -4(%ebp), %eax
+	add -8(%ebp), %eax
+	mov %eax, -4(%ebp)
+label1:
+	jump label2
+label3:
+	push %ebp
+	mov %esp, %ebp
+	push %eax
+	push $print_int
+	call printf
+	add  $8, %esp
+	mov %ebp, %esp
+	pop %ebp
+	sub $0, %esp
 	pop %edi
 	pop %esi
 	pop %ebx

@@ -129,6 +129,7 @@ for line in ir:
 			code += ["mov %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"],-offset)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[1]) == "m":
+			offset2=0
 			if "var" in i[1]:
 				offset2 = int(split_var(i[1])[1])
 			elif "tmp#" in i[1]:
@@ -303,7 +304,19 @@ for line in ir:
 
 	elif i[0][:5]=="label":
 	    code += [line[:-1]]
+	elif i[0] == "print":# this assumes all other instructions are finished
+		code.append("push %ebp")
+		code.append("mov %esp, %ebp")
+		code.append("push %eax")
+		code.append("push $print_int")
+		code.append("call printf")
+		code.append("add  $8, %esp")
+		code.append("mov %ebp, %esp")
+		code.append("pop %ebp")
 
+print(".data")
+print("print_int:")
+print("\t.string \"%d\"")
 for i in code:
 	if ":" in i:
 		print(i)

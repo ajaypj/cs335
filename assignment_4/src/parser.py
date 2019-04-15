@@ -555,6 +555,7 @@ def p_Statement(p):
 							| IfStmt
                             | ForStmt
                             | SwitchStmt
+                            | PrintStmt
     '''
     # | FallthroughStmt
     # | GoStmt
@@ -566,6 +567,14 @@ def p_Statement(p):
         p[0]=p[1]
     else:
         p[0]=p[2]
+
+def p_PrintStmt(p):
+    '''PrintStmt            : PRINT LPAREN Expression RPAREN
+    '''
+    if p[3].type != 'int':
+        raise Exception("Line "+str(p.lineno(2))+": "+"Print only allows integer")
+    else:
+        p[0] = ["print "+p[3].place]
 
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl

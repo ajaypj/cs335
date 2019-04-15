@@ -20,6 +20,6 @@ func main() {
 			sum = sum - i;
 		};
 	};
-	// fmt.Println(sum);
+	print(sum);
 	return;
 };
