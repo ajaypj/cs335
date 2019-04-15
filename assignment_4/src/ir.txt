@@ -5,9 +5,10 @@ sub $8, %esp
 push %ebx
 push %esi
 push %edi
-int* tmp#0:4, $2, $5
+int* tmp#0:4, var"x":4:4, $5
 int- tmp#1:4, $4, tmp#0:4
 = var"y":8:4, tmp#1:4
+= var"x":4:4, var"y":8:4
 freetmp
 pop %edi
 pop %esi
