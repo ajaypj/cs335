@@ -5,11 +5,23 @@ sub $8, %esp
 push %ebx
 push %esi
 push %edi
-int* tmp#0:4, var"x":4:4, $5
-int- tmp#1:4, $4, tmp#0:4
-= var"y":8:4, tmp#1:4
-= var"x":4:4, var"y":8:4
-freetmp
+int* tmp#0:4, $0, $0
+int* tmp#1:4, $1, $1
+int* tmp#2:4, $2, $2
+int* tmp#3:4, $3, $3
+int* tmp#4:4, $4, $4
+int* tmp#5:4, $5, $5
+int* tmp#6:4, $6, $6
+int* tmp#7:4, $7, $7
+int+ tmp#8:4, tmp#6:4, tmp#7:4
+int+ tmp#9:4, tmp#5:4, tmp#8:4
+int+ tmp#10:4, tmp#4:4, tmp#9:4
+int+ tmp#11:4, tmp#3:4, tmp#10:4
+int+ tmp#12:4, tmp#2:4, tmp#11:4
+int+ tmp#13:4, tmp#1:4, tmp#12:4
+int+ tmp#14:4, tmp#0:4, tmp#13:4
+= var"x":4:4, tmp#14:4
+funcend
 pop %edi
 pop %esi
 pop %ebx

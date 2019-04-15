@@ -644,12 +644,12 @@ def p_ReturnStmt(p):
             raise Exception("Line "+str(p.lineno(1))+": "+"Type mismatch for return value.")
         else:
             p[0] += ["retval "+p[2].place]
-        p[0] += ["freetmp"]
+        p[0] += ["funcend"]
         p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
-        p[0] = ["freetmp"]
+        p[0] = ["funcend"]
         p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]

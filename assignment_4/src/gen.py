@@ -1,21 +1,21 @@
 import re
 from collections import OrderedDict
 
-regs = OrderedDict()
-regs["eax"] = 0
-regs["ecx"] = 0
-regs["edx"] = 0
-regs["ebx"] = 0
-regs["esi"] = 0
-regs["edi"] = 0
+init_regs = OrderedDict()
+init_regs["eax"] = 0
+init_regs["ecx"] = 0
+init_regs["edx"] = 0
+init_regs["ebx"] = 0
+init_regs["esi"] = 0
+init_regs["edi"] = 0
 
-named_reg=["eax", "ecx", "edx", "ebx", "esi", "edi", "esp", "ebp"]
+regs = None
+unused_temp_vars_in_reg = None
+temp_vars = None
+function_width = None
+temp_offset = None
 
-unused_temp_vars_in_reg=list()
-temp_vars=dict()
-function_width=100
-temp_offset=0
-code=list()
+code = list()
 
 def get_reg(name, width):
 	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
@@ -67,7 +67,7 @@ def transfer_reg_to_left(old, new, width): #check the width of the new reg
 	if temp_vars[old]["ro"]!=-1:
 		temp_vars[new]={"ro":temp_vars[old]["ro"], "so":-1, "width":width}
 	else:
-		temp_vars[new]={"ro":get_reg(new), "so":-1, "width":width}
+		temp_vars[new]={"ro":get_reg(new, width), "so":-1, "width":width}
 	unused_temp_vars_in_reg.append(new)
 	remove_used_temp_var_in_reg(old)
 
@@ -112,10 +112,14 @@ for line in ir:
 	# print(temp_vars)
 	# print(unused_temp_vars_in_reg)
 	if i[0] == "funcstart":
+		regs = init_regs.copy()
+		unused_temp_vars_in_reg = list()
+		temp_vars = dict()
 		function_width = int(i[1])
+		temp_offset = 0
 		code += [i[2]]
 
-	if i[0] == "freetmp":
+	if i[0] == "funcend":
 		code += ["sub ${}, %esp".format(temp_offset)]
 
 	if i[0] == "retval":
@@ -134,7 +138,7 @@ for line in ir:
 			code += ["mov %{}, %eax".format(temp_vars[temp_var_name]["ro"])]
 			remove_used_temp_var_in_reg(temp_var_name)
 
-	elif i[0] in ["pop", "call", "mov", "add", "sub"]: # push and pop
+	elif i[0] in ["pop", "call", "mov", "add", "sub", "ret"]: # push and pop
 		code += [line[:-1]]
 
 	elif i[0] == "push":
