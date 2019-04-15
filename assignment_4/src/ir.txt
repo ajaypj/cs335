@@ -1,13 +1,13 @@
-funcstart 12 factorial:
+funcstart 20 main:
 push %ebp
 mov %esp, %ebp
-sub $0, %esp
+sub $8, %esp
 push %ebx
 push %esi
 push %edi
-int<= tmp#0:1, var"n":-8:4, $1
-gotoZeroNeg tmp#0:1, label0
-retval $1
+int* tmp#0:4, $2, $5
+int- tmp#1:4, $4, tmp#0:4
+= var"y":8:4, tmp#1:4
 freetmp
 pop %edi
 pop %esi
@@ -15,42 +15,3 @@ pop %ebx
 mov %ebp, %esp
 pop %ebp
 ret
-label0:
-int- tmp#1:4, var"n":-8:4, $1
-push %eax
-push %ecx
-push %edx
-push tmp#1:4
-call factorial
-= tmp#2:4, %eax
-add $4, %esp
-pop %edx
-pop %ecx
-pop %eax
-int* tmp#3:4, var"n":-8:4, tmp#2:4
-retval tmp#3:4
-freetmp
-pop %edi
-pop %esi
-pop %ebx
-mov %ebp, %esp
-pop %ebp
-ret
-funcstart 16 main:
-push %ebp
-mov %esp, %ebp
-sub $4, %esp
-push %ebx
-push %esi
-push %edi
-push %eax
-push %ecx
-push %edx
-push $10
-call factorial
-= tmp#4:4, %eax
-add $4, %esp
-pop %edx
-pop %ecx
-pop %eax
-= var"fac":4:4, tmp#4:4
