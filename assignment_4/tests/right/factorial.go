@@ -13,4 +13,5 @@ func factorial(n int) int {
 func main() {
 	var fac int;
 	fac = factorial(10);
+  return;
 };

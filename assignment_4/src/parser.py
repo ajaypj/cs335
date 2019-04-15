@@ -362,10 +362,10 @@ def p_Signature1(p):
     scopeST[0].table[currFunc]['vMem'] = 0
     scopeST[0].table[currFunc]['args'] = p[1]
     if len(p) > 2:
-        if p[2]['type'][:6]=='struct' or p[2]['type'][:5]=='array':
-            raise Exception("Line "+str(p.lineno(1))+": "+"Sorry, you can only return basic types.")
+        scopeST[0].table[currFunc]['rOff'] = -(8 + scopeST[0].table[currFunc]['aMem'] + 12)
         scopeST[0].table[currFunc]['rType'] = p[2]['type']
     else:
+        scopeST[0].table[currFunc]['rOff'] = None
         scopeST[0].table[currFunc]['rType'] = 'void'
     scopeST[0].table[currFunc]['cls'] = 'FUNC'
 
@@ -640,13 +640,14 @@ def p_ReturnStmt(p):
         if scopeST[0].table[currFunc]['rType'] == 'float' and p[2].type == 'int':
             var = new_tmp('float')
             p[0] += ['=inttofloat '+var+', '+p[2].place]
-            p[0] += ["retval "+var]
+            p[0] += ["putretval "+var+", "+str(scopeST[0].table[currFunc]['rOff'])]
         elif scopeST[0].table[currFunc]['rType'] == 'int' and p[2].type == 'bool':
-            p[0] += ["retval "+p[2].place]
+            p[0] += ["putretval "+p[2].place+", "+str(scopeST[0].table[currFunc]['rOff'])]
         elif scopeST[0].table[currFunc]['rType'] != p[2].type:
             raise Exception("Line "+str(p.lineno(1))+": "+"Type mismatch for return value.")
         else:
-            p[0] += ["retval "+p[2].place]
+            # width=typeWidth[]
+            p[0] += ["putretval "+p[2].place+", "+str(scopeST[0].table[currFunc]['rOff'])]
         p[0] += ["funcend"]
         p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
         p[0] += ["pop %ebp"]
@@ -1134,9 +1135,10 @@ def p_PrimaryExpr5(p):
         p[0] = expr()
         p[0].type = dic['rType']
         p[0].place = new_tmp(p[0].type)
-
         for i in xrange(len(p[2])):
             p[0].code+=p[2][i].code
+
+        p[0].code+=["sub $"+str(typeWidth[p[0].type])+", %esp"]
         p[0].code+=["push %eax", "push %ecx", "push %edx"]
         for exp in p[2][::-1]:
             if exp.type[:6]=="struct":
@@ -1161,9 +1163,11 @@ def p_PrimaryExpr5(p):
                 p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]
 
-        p[0].code+=["= "+p[0].place+", %eax"]
+        # if p[0].type[:6]=="struct" or p[0].type[:5]=="array":
+        #     p[0].place = "var\"ret\":"+str()+":"+str()
         p[0].code+=["add $"+str(dic['aMem'])+", %esp"]
         p[0].code+=["pop %edx", "pop %ecx", "pop %eax"]
+        p[0].code+=["getretval "+p[0].place]
     p.set_lineno(0, p.lineno(1))
 
 def p_Arguments(p):

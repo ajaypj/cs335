@@ -114,21 +114,30 @@ for line in ir:
 	if i[0] == "funcend":
 		code += ["sub ${}, %esp".format(temp_offset)]
 
-	if i[0] == "retval":
+	if i[0] == "getretval":
+		width = int(split_var(i[1])[1])
+		temp_var_name = split_var(i[1])[0]
+		temp_vars[temp_var_name] = {"ro":-1, "so":function_width+temp_offset+width, "width":width}
+		temp_offset += width
+
+	if i[0] == "putretval":
+		offset=int(i[2])
 		if get_type(i[1]) == "c":
-			code += ["mov {}, %eax".format(i[1])]
+			code += ["mov {}, {}(%ebp)".format(i[1],-offset)]
 		elif get_type(i[1]) == "r":
 			temp_var_name = split_var(i[1])[0]
-			code += ["mov %{}, %eax".format(temp_vars[temp_var_name]["ro"])]
+			code += ["mov %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"],-offset)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[1]) == "m":
-			offset = 0
 			if "var" in i[1]:
-				offset = int(split_var(i[1])[1])
+				offset2 = int(split_var(i[1])[1])
 			elif "tmp#" in i[1]:
 				temp_var_name = split_var(i[1])[0]
-				offset = temp_vars[temp_var_name]["so"]
-			code += ["mov {}(%ebp), %eax".format(-offset)]
+				offset2 = temp_vars[temp_var_name]["so"]
+			reg=get_reg("#",4)
+			code += ["mov {}(%ebp), %{}".format(-offset2,reg)]
+			code += ["mov %{}, {}(%ebp)".format(reg,-offset)]
+			remove_used_temp_var_in_reg("#")
 
 	elif i[0] in ["pop", "call", "mov", "add", "sub", "ret"]: # push and pop
 		code += [line[:-1]]
@@ -161,9 +170,15 @@ for line in ir:
 			code += ["mov %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"], -var_offset)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif (get_type(i[1]), get_type(i[2])) == ("m", "m"): #m=m
+			var_offset_from=0
+			if "var" in i[2]:
+				var_offset_from = int(split_var(i[2])[1])
+			elif "tmp#" in i[2]:
+				temp_var_name =	split_var(i[2])[0]
+				var_offset_from = temp_vars[temp_var_name]["so"]
+
 			var_width = int(split_var(i[2])[-1])
 			var_offset_to = int(split_var(i[1])[1])
-			var_offset_from = int(split_var(i[2])[1])
 			reg=get_reg("#", var_width)
 			code += ["mov {}(%ebp), %{}".format(-var_offset_from, reg)]
 			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset_to)]
@@ -290,4 +305,7 @@ for line in ir:
 	    code += [line[:-1]]
 
 for i in code:
-	print(i)
+	if ":" in i:
+		print(i)
+	else:
+		print("\t"+i)
