@@ -14,8 +14,12 @@ func main() {
 		var v int;
 		v = 0;
 		if v != 2 {
-			sum += add(sum, i);
+			sum = sum + i; // add(sum, i);
+		}
+		else {
+			sum = sum - i;
 		};
 	};
 	// fmt.Println(sum);
+	return;
 };

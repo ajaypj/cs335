@@ -21,7 +21,7 @@ currTypeDef = ''
 currFunc = ''
 currOffset = 0
 structOffset = 0
-typeWidth = {"int":4, "float":8, "bool":1, "rune":4, "string":8}
+typeWidth = {"int":4, "float":8, "bool":4, "rune":4, "string":8}
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -474,6 +474,8 @@ def p_VarSpec(p):
                     var = new_tmp('float')
                     p[0] += ['=inttofloat '+var+', '+p[e][i].place]
                     p[0] += ['= '+iden+', '+var]
+                elif p[2]['type'] == 'int' and p[e][i].type == 'bool':
+                    p[0] += ['= '+iden+', '+p[e][i].place]
                 elif p[2]['type'] != p[e][i].type:
                     raise Exception("Line "+str(p.lineno(3))+": "+"Type mismatch for variable "+iden+".")
                 else:
@@ -593,13 +595,10 @@ def p_IncDecStmt(p):
                             | Expression DEC '''
     # Check if expression is a variable or UnaryExpr
     p[0]=p[1].code
-    str=''
     if p[2]=='++':
-        str='+'
+        p[0] += ['inc ' + p[1].place]
     else:
-        str='-'
-    str+=p[1].place+', '+p[1].place+', 1'
-    p[0]+=[str]
+        p[0] += ['dec ' + p[1].place]
 
 def p_Assignment(p):
     ''' Assignment     		: UnaryExpr assign_op Expression '''
@@ -609,26 +608,28 @@ def p_Assignment(p):
         if p[1].type == 'float' and p[3].type == 'int':
             var = new_tmp('float')
             p[0] += ['=inttofloat '+var+', '+p[3].place]
-            p[0] += ['float'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+var]
+            p[0] += ['float'+p[2]+' '+p[1].place +', '+var]
         elif p[1].type != p[3].type:
             raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch for "+p[2]+".")
         elif p[1].type == 'int':
-            p[0] += ['int'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
+            p[0] += ['int'+p[2]+' '+p[1].place+', '+p[3].place]
         elif p[1].type == 'float':
-            p[0] += ['float'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
+            p[0] += ['float'+p[2]+' '+p[1].place+', '+p[3].place]
         elif p[1].type == 'string' and p[2][0] == '+':
-            p[0] += ['string'+p[2][0]+' '+p[1].place +', '+p[1].place +', '+p[3].place]
+            p[0] += ['string'+p[2]+' '+p[1].place+', '+p[3].place]
         else:
-            raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2][0]+" on given types.")
+            raise Exception("Line "+str(p.lineno(2))+": "+"Can't perform "+p[2]+" on given types.")
     else:
         if p[1].type == 'float' and p[3].type == 'int':
             var = new_tmp('float')
             p[0] += ['=inttofloat '+var+', '+p[3].place]
-            p[0] += ['= '+p[1].place +', '+var]
+            p[0] += ['= '+p[1].place+', '+var]
+        elif p[1].type == 'int' and p[3].type == 'bool':
+            p[0] += ['= '+p[1].place+', '+p[3].place]
         elif p[1].type != p[3].type:
             raise Exception("Line "+str(p.lineno(2))+": "+"Type mismatch for "+p[2]+".")
         else:
-            p[0] += ['= '+p[1].place +', '+p[3].place]
+            p[0] += ['= '+p[1].place+', '+p[3].place]
     # print p[0]
 
 def p_ReturnStmt(p):
@@ -640,6 +641,8 @@ def p_ReturnStmt(p):
             var = new_tmp('float')
             p[0] += ['=inttofloat '+var+', '+p[2].place]
             p[0] += ["retval "+var]
+        elif scopeST[0].table[currFunc]['rType'] == 'int' and p[2].type == 'bool':
+            p[0] += ["retval "+p[2].place]
         elif scopeST[0].table[currFunc]['rType'] != p[2].type:
             raise Exception("Line "+str(p.lineno(1))+": "+"Type mismatch for return value.")
         else:
@@ -725,6 +728,7 @@ def p_IfStmt1(p):
     p[0]+=["goto "+endLabel]
     p[0]+=[ifLabel+":"]
     p[0]+=p[4]
+    p[0]+=[endLabel+":"]
 
 def p_IfStmt2(p):
     ''' IfStmt         		: IF Expression StartScope Block EndScope ELSE IfStmt '''
@@ -736,6 +740,7 @@ def p_IfStmt2(p):
     p[0]+=["goto "+endLabel]
     p[0]+=[ifLabel+":"]
     p[0]+=p[4]
+    p[0]+=[endLabel+":"]
 
 def p_ForStmt(p):
     ''' ForStmt : FOR ForSig StartScope Block EndScope '''
@@ -744,7 +749,7 @@ def p_ForStmt(p):
     p[0]=p[2][0]
     p[0]+=[forLabel+":"]
     p[0]+=p[2][1].code
-    p[0]+=["gotoNeg "+p[2][1].place+", "+endLabel]
+    p[0]+=["gotoZeroNeg "+p[2][1].place+", "+endLabel]
     p[0]+=p[4]
     p[0]+=p[2][2]
     p[0]+=["goto "+forLabel]
@@ -806,12 +811,16 @@ def p_ExprSwitchStmt(p):
             if exp_var.type!=p[2].type:
                 Exception("Line "+p.lineno(1)+" : Cannot compare "+exp_var.value+" and switch expression." )
             if exp_var.value is not None:
-                p[0].append("Ifnotequalvalgoto "+p[2].place+", "+str(exp_var.value)+", "+clause[2])
+                tmp=new_tmp("int")
+                p[0].append("int== "+tmp+","+p[2].place+", "+str(exp_var.value))
+                p[0].append("gotoZeroNeg "+tmp+", "+clause[2])
             else:
-                p[0].append("Ifnotequalgoto "+exp_var.place+", "+p[2].place+", "+clause[2])
+                tmp=new_tmp("int")
+                p[0].append("int== "+tmp+","+p[2].place+", "+str(exp_var.value))
+                p[0].append("gotoZeroNeg "+exp_var.place+", "+p[2].place+", "+clause[2])
             p[0]+=stmt_code
             p[0].append("goto "+endLabel)
-            p[0].append(clause[2]+":")# Part ends here
+            p[0].append(clause[2]+":")
     if defaultLabel!='':
         p[0]+=defaultCode
     p[0].append(endLabel+":")
@@ -939,6 +948,8 @@ def p_Expression3(p):
             p[0].code.append('float'+p[2]+' '+p[0].place+', '+var+', '+p[3].place)
         elif p[1].type == 'int' and p[3].type == 'int':
             p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
+        elif p[1].type == 'bool' and p[3].type == 'bool':
+            p[0].code.append('bool'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'float' and p[3].type == 'float':
             p[0].code.append('float'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'string' and p[3].type == 'string':
