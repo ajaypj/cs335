@@ -556,6 +556,7 @@ def p_Statement(p):
                             | ForStmt
                             | SwitchStmt
                             | PrintStmt
+                            | MallocStmt
     '''
     # | FallthroughStmt
     # | GoStmt
@@ -572,9 +573,17 @@ def p_PrintStmt(p):
     '''PrintStmt            : PRINT LPAREN Expression RPAREN
     '''
     if p[3].type != 'int':
-        raise Exception("Line "+str(p.lineno(2))+": "+"Print only allows integer")
+        raise Exception("Line "+str(p.lineno(2))+": "+"Print only allows integer.")
     else:
         p[0] = ["print "+p[3].place]
+
+def p_MallocStmt(p):
+    '''MallocStmt           : MALLOC LPAREN Expression RPAREN
+    '''
+    if p[3].type != 'int':
+        raise Exception("Line "+str(p.lineno(2))+": "+"Malloc only allows integer.")
+    else:
+        p[0] = ["malloc "+p[3].place]
 
 def p_SimpleStmt(p):
     ''' SimpleStmt     		: ShortVarDecl

@@ -177,7 +177,6 @@ for line in ir:
 			elif "tmp#" in i[2]:
 				temp_var_name =	split_var(i[2])[0]
 				var_offset_from = temp_vars[temp_var_name]["so"]
-
 			var_width = int(split_var(i[2])[-1])
 			var_offset_to = int(split_var(i[1])[1])
 			reg=get_reg("#", var_width)
@@ -185,7 +184,7 @@ for line in ir:
 			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset_to)]
 			remove_used_temp_var_in_reg("#")
 
-	elif i[0] in ["int+", "int-", "int*", "int/", "int&", "int^", "int|", "bool&", "bool^", "bool|"]:
+	elif i[0] in ["int+", "int-", "int*", "int/", "int&", "int^", "int|"]:
 		op = op_dic[i[0][3:]]
 		width = split_var(i[1])[1]
 		left_temp_var_name = split_var(i[1])[0]
@@ -304,6 +303,7 @@ for line in ir:
 
 	elif i[0][:5]=="label":
 	    code += [line[:-1]]
+
 	elif i[0] == "print":# this assumes all other instructions are finished
 		code.append("push %ebp")
 		code.append("mov %esp, %ebp")
