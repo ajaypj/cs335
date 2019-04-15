@@ -62,7 +62,7 @@ currLabel="0"
 
 def new_tmp(type):
     global tmpNo
-    retVal='tmp'+str(tmpNo)+':'+str(typeWidth[type])
+    retVal='tmp#'+str(tmpNo)+':'+str(typeWidth[type])
     tmpNo+=1
     return retVal
 
@@ -201,8 +201,8 @@ def p_FunctionDecl(p):
     currFunc = ''
     code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
     code += ["push %ebp"]
-    code += ["mov %ebp, %esp"]
-    code += ["sub %esp, $"+str(scopeST[0].table[p[2]]['vMem'])]
+    code += ["mov %esp, %ebp"]
+    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
     code += ["push %ebx", "push %esi", "push %edi"]
     for stmt in code:
         irf.write(stmt+'\n')
@@ -645,12 +645,12 @@ def p_ReturnStmt(p):
         else:
             p[0] += ["retval "+p[2].place]
         p[0] += ["freetmp"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
         p[0] = ["freetmp"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %esp, %ebp"]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 
@@ -1151,7 +1151,7 @@ def p_PrimaryExpr5(p):
         p[0].code+=["call "+p[1].place]
 
         p[0].code+=["= "+p[0].place+", %eax"]
-        p[0].code+=["add %esp, $"+str(dic['aMem'])]
+        p[0].code+=["add $"+str(dic['aMem'])+", %esp"]
         p[0].code+=["pop %edx", "pop %ecx", "pop %eax"]
     p.set_lineno(0, p.lineno(1))
 

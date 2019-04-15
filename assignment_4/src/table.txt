@@ -1,5 +1,9 @@
+				2
 		1
-		x {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
+		n {'width': 4, 'offset': -8, 'type': 'int', 'cls': 'VAR'}
+		3
+		fac {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
 0
 fmt {'cls': 'PACKAGE'}
+factorial {'vMem': 0, 'args': ['int'], 'aMem': 4, 'cls': 'FUNC', 'rType': 'int'}
 main {'vMem': 4, 'args': [], 'aMem': 0, 'cls': 'FUNC', 'rType': 'void'}

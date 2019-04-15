@@ -72,7 +72,7 @@ def get_type(name):
 	global regs, unused_temp_vars, temp_vars, temp_offset, function_width, code
 	if "var" in name:
 		return "m"
-	elif "tmp" in name:
+	elif "tmp#" in name:
 		if temp_vars[name]["ro"]!=-1:
 			return "r"
 		else:
@@ -87,20 +87,20 @@ file=open("ir.txt")
 ir=list()
 line=file.readline()
 while line:
-	data=re.split(" |,|\n", line)
-	new_data=list()
-	for i in data:
-		if i:
-			new_data.append(i)
-	data=new_data
-	# print(data)
-	ir.append(data)
+	ir.append(line)
 	line=file.readline()
 file.close()
 # print(ir)
 
 ################################ Code generation ###############################
-for i in ir:
+op_dic = {'+':"add", '-':"sub", '*':"imul", '/':"idiv"}
+
+for line in ir:
+	data = re.split(" |,|\n", line)
+	i = list()
+	for w in data:
+		if w:
+			i.append(w)
 	# print(i)
 	# print(regs)
 	# print(temp_vars)
@@ -108,13 +108,14 @@ for i in ir:
 		function_width = int(i[1])
 		code += [i[2]]
 
-	elif i[0] in ["push", "pop", "call", "mov", "sub"]: # push and pop
-		temp_str=""
-		for word in i:
-			temp_str += word+' '
-		code += [temp_str]
+	if i[0] ==  "freetmp":
+		code += ["sub ${}, %esp".format(temp_offset)]
 
-	elif i[0]=="int+":
+	elif i[0] in ["push", "pop", "call", "mov", "add", "sub"]: # push and pop
+		code += [line[:-1]]
+
+	elif i[0][:3]=="int":
+		op = op_dic[i[0][3:]]
 		left_temp_var_name = split_var(i[1])[0]
 		width = split_var(i[1])[1]
 		# print(left_temp_var_name, width)
@@ -122,99 +123,114 @@ for i in ir:
 			const1 = i[2]
 			const2 = i[3]
 			new_reg=get_reg(left_temp_var_name, width)
-			code += ["mov %{}, {}".format(new_reg, const1)]
-			code += ["add %{}, {}".format(new_reg, const2)]
+			code += ["mov {}, %{}".format(const1, new_reg)]
+			code += ["{} {}, %{}".format(op, const2, new_reg)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","c"): #r+c
 			temp_var_name = split_var(i[2])[0]
 			const = i[3]
-			code += ["add %{}, {}".format(temp_vars[temp_var_name]["ro"], const)]
+			code += ["{} {}, %{}".format(op, const, temp_vars[temp_var_name]["ro"])]
 			transfer_reg_to_left(temp_var_name, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("c","r"): #c+r
 			temp_var_name = split_var(i[3])[0]
 			const = i[2]
-			code+= ["add %{}, {}".format(temp_vars[temp_var_name]["ro"], const)]
+			if op=='sub':
+				code += ["neg %{}".format(temp_vars[temp_var_name]["ro"])]
+				op = 'add'
+			code+= ["{} {}, %{}".format(op, const, temp_vars[temp_var_name]["ro"])]
 			transfer_reg_to_left(temp_var_name, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","c"): #m+c
-			if "tmp" in i[2]:
+			if "tmp#" in i[2]:
 				temp_var_name = split_var(i[2])[0]
 				const = i[3]
 				new_reg=get_reg(left_temp_var_name, width)
-				code += ["mov %{}, dword ptr [rbp - {}]".format(new_reg, temp_vars[temp_var_name]["so"])]
-				code += ["add %{}, {}".format(new_reg, const)]
+				code += ["mov -{}(%ebp), %{}".format(temp_vars[temp_var_name]["so"], new_reg)]
+				code += ["{} {}, %{}".format(op, const, new_reg)]
 				del temp_vars[temp_var_name]
 			elif "var" in i[2]:
 				var_offset = int(split_var(i[2])[1])
 				const = i[3]
 				new_reg=get_reg(left_temp_var_name, width)
-				code += ["mov %{}, dword ptr [rbp - {}]".format(new_reg, var_offset)]
-				code += ["add %{}, {}".format(new_reg, const)]
+				code += ["mov -{}(%ebp), %{}".format(var_offset, new_reg)]
+				code += ["{} {}, %{}".format(op, const, new_reg)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("c","m"): #c+m
-			if "tmp" in i[3]:
+			if "tmp#" in i[3]:
 				temp_var_name = split_var(i[3])[0]
 				const = i[2]
 				new_reg=get_reg(left_temp_var_name, width)
-				code += ["mov %{}, dword ptr [rbp - {}]".format(new_reg, temp_vars[temp_var_name]["so"])]
-				code += ["add %{}, {}".format(new_reg, const)]
+				code += ["mov -{}(%ebp), %{}".format(temp_vars[temp_var_name]["so"], new_reg)]
+				if op=='sub':
+					code += ["neg %{}".format(new_reg)]
+					op = 'add'
+				code += ["{} {}, %{}".format(op, const, new_reg)]
 				del temp_vars[temp_var_name]
 			elif "var" in i[3]:
 				var_offset = int(split_var(i[3])[1])
 				const = i[2]
 				new_reg=get_reg(left_temp_var_name, width)
-				code += ["mov %{}, dword ptr [rbp - {}]".format(new_reg, var_offset)]
-				code += ["add %{}, {}".format(new_reg, const)]
+				code += ["mov -{}(%ebp), %{}".format(var_offset, new_reg)]
+				if op=='sub':
+					code += ["neg %{}".format(new_reg)]
+					op = 'add'
+				code += ["{} {}, %{}".format(op, const, new_reg)]
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","r"): #r+r
-			if "tmp" in i[2] and "tmp" in i[3]:
+			if "tmp#" in i[2] and "tmp#" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
-				code += ["add %{}, %{}".format(temp_vars[temp_var_name1]["ro"], temp_vars[temp_var_name2]["ro"])]
+				code += ["{} %{}, %{}".format(op, temp_vars[temp_var_name2]["ro"], temp_vars[temp_var_name1]["ro"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
 				remove_used_temp_var_in_reg(temp_var_name2)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("r","m"): #r+m
-			if "tmp" in i[2] and "tmp" in i[3]:
+			if "tmp#" in i[2] and "tmp#" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
-				code += ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], temp_vars[temp_var_name2]["so"])]
+				code += ["{} -{}(%ebp), %{}".format(op, temp_vars[temp_var_name2]["so"], temp_vars[temp_var_name1]["ro"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
-			if "tmp" in i[2] and "var" in i[3]:
+			if "tmp#" in i[2] and "var" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				var_offset = int(split_var(i[3])[1])
-				code += ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], var_offset)]
+				code += ["{} -{}(%ebp), %{}".format(op, var_offset, temp_vars[temp_var_name1]["ro"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","r"): #m+r
-			if "tmp" in i[2] and "tmp" in i[3]:
+			if "tmp#" in i[2] and "tmp#" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
-				code += ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name2]["ro"], temp_vars[temp_var_name1]["so"])]
+				if op=='sub':
+					code += ["neg %{}".format(temp_vars[temp_var_name2]["ro"])]
+					op = 'add'
+				code += ["{} -{}(%ebp), %{}".format(op, temp_vars[temp_var_name1]["so"], temp_vars[temp_var_name2]["ro"])]
 				transfer_reg_to_left(temp_var_name2, left_temp_var_name, width)
 				del temp_vars[temp_var_name1]
-			elif "var" in i[2] and "tmp" in i[3]:
+			elif "var" in i[2] and "tmp#" in i[3]:
 				var_offset = int(split_var(i[2])[1])
 				temp_var_name1 = split_var(i[3])[0]
-				code += ["add %{}, dword ptr [rbp - {}]".format(temp_vars[temp_var_name1]["ro"], var_offset)]
+				if op=='sub':
+					code += ["neg %{}".format(temp_vars[temp_var_name1]["ro"])]
+					op = 'add'
+				code += ["{} -{}(%ebp), %{}".format(op, var_offset, temp_vars[temp_var_name1]["ro"])]
 				transfer_reg_to_left(temp_var_name1, left_temp_var_name, width)
 
 		elif (get_type(i[2]),get_type(i[3])) == ("m","m"): #m+m
 			loc1=""
 			loc2=""
 			new_reg=get_reg(left_temp_var_name, width)
-			if "tmp" in i[2] and "tmp" in i[3]:
+			if "tmp#" in i[2] and "tmp#" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				temp_var_name2 = split_var(i[3])[0]
 				loc1 = temp_vars[temp_var_name1]["so"]
 				loc2 = temp_vars[temp_var_name2]["so"]
-			elif "tmp" in i[2] and "var" in i[3]:
+			elif "tmp#" in i[2] and "var" in i[3]:
 				temp_var_name1 = split_var(i[2])[0]
 				var_offset = int(split_var(i[3])[2])
 				loc1 = temp_vars[temp_var_name1]["so"]
 				loc2 = var_offset
-			elif "var" in i[2] and "tmp" in i[3]:
+			elif "var" in i[2] and "tmp#" in i[3]:
 				var_offset = int(split_var(i[2])[2])
 				temp_var_name1 = str(split_var(i[3])[0]+split_var(i[3])[1])
 				loc1 = var_offset
@@ -224,8 +240,8 @@ for i in ir:
 				var_offset1 = int(split_var(i[3])[2])
 				loc1 = var_offset1
 				loc2 = var_offset2
-			code += ["mov %{}, dword ptr [rbp - {}]".format(new_reg, loc1)]
-			code += ["add %{}, dword ptr [rbp - {}]".format(new_reg, loc2)]
+			code += ["mov -{}(%ebp), %{}".format(loc1, new_reg)]
+			code += ["{} -{}(%ebp), %{}".format(op, loc2, new_reg)]
 
 for i in code:
 	print(i)
