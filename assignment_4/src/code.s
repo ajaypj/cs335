@@ -3,23 +3,6 @@
 	.text
 	.global main
 	.type main, @function
-add:
-	push %ebp
-	movl %esp, %ebp
-	sub $0, %esp
-	push %ebx
-	push %esi
-	push %edi
-	movl 8(%ebp), %eax
-	add 12(%ebp), %eax
-	movl %eax, 28(%ebp)
-	sub $0, %esp
-	pop %edi
-	pop %esi
-	pop %ebx
-	movl %ebp, %esp
-	pop %ebp
-	ret
 main:
 	push %ebp
 	movl %esp, %ebp
@@ -27,40 +10,42 @@ main:
 	push %ebx
 	push %esi
 	push %edi
-	movl $0, -4(%ebp)
-	movl $0, -8(%ebp)
-label0:
-	movl -8(%ebp), %eax
-	cmp $10, %eax
+	movl $2, -4(%ebp)
+	movl -4(%ebp), %eax
+	cmp $1, %eax
 	movl $0, %eax
-	setl %al
+	sete %al
+	cmp $0, %eax
+	jle label0
+	movl $10, -8(%ebp)
+	jmp label3
+label0:
+	movl -4(%ebp), %eax
+	cmp $2, %eax
+	movl $0, %eax
+	sete %al
 	cmp $0, %eax
 	jle label1
-	sub $4, %esp
-	push %eax
-	push %ecx
-	push %edx
-	push -8(%ebp)
-	push -4(%ebp)
-	call add
-	add $8, %esp
-	pop %edx
-	pop %ecx
-	pop %eax
-	add $4, %esp
-	movl -24(%ebp), %eax
-	movl %eax, -4(%ebp)
-	mov $1, %eax
-	add %eax, -8(%ebp)
-	jmp label0
+	movl $20, -8(%ebp)
+	jmp label3
 label1:
+	movl -4(%ebp), %eax
+	cmp $3, %eax
+	movl $0, %eax
+	sete %al
+	cmp $0, %eax
+	jle label2
+	movl $30, -8(%ebp)
+	jmp label3
+label2:
+label3:
 	push %eax
 	push %ebx
 	push %ecx
 	push %edx
 	push %esi
 	push %edi
-	movl -4(%ebp), %eax
+	movl -8(%ebp), %eax
 	push %ebp
 	mov %esp, %ebp
 	push %eax

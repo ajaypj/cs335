@@ -844,11 +844,11 @@ def p_ExprSwitchStmt(p):
                 Exception("Line "+p.lineno(1)+" : Cannot compare "+exp_var.value+" and switch expression." )
             if exp_var.value is not None:
                 tmp=new_tmp("int")
-                p[0].append("int== "+tmp+","+p[2].place+", "+str(exp_var.value))
+                p[0].append("int== "+tmp+", "+p[2].place+", $"+str(exp_var.value))
                 p[0].append("gotoZeroNeg "+tmp+", "+clause[2])
             else:
                 tmp=new_tmp("int")
-                p[0].append("int== "+tmp+","+p[2].place+", "+str(exp_var.value))
+                p[0].append("int== "+tmp+", "+p[2].place+", $"+str(exp_var.value))
                 p[0].append("gotoZeroNeg "+exp_var.place+", "+p[2].place+", "+clause[2])
             p[0]+=stmt_code
             p[0].append("goto "+endLabel)
@@ -1213,8 +1213,9 @@ def p_PrimaryExpr5(p):
                 elemType = exp.type[6:-1]
                 if elemType[:6]=="struct" or elemType[:5]=="array":
                     raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass arrays of basic types.")
-                for i in xrange(arrWidth/typeWidth[elemType]):
-                    p[0].code += ['push var\"'+name+'['+str(i)+']'+'\":'+str(offset-i*typeWidth[elemType])+':'+str(typeWidth[elemType])]
+                n = arrWidth/typeWidth[elemType]
+                for i in xrange(n):
+                    p[0].code += ['push var\"'+name+'['+str(n-1-i)+']'+'\":'+str(offset-(n-1-i)*typeWidth[elemType])+':'+str(typeWidth[elemType])]
             else:
                 p[0].code+=["push "+exp.place]
         p[0].code+=["call "+p[1].place]

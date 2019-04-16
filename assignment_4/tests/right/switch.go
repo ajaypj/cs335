@@ -8,20 +8,17 @@ import "time";
 
 func main() {
   // Here's a basic `switch`.
-  var i int;
-  i=2;
-  var a,b,c int;
-  a=10;
-  b=6;
-
+  var i,c int;
+  i = 2;
   switch (i) {
-  case 1:
-      c=a+b;
-  case 2:
-      c=a-b;
-  case 3:
-      c=a*b;
+    case 1:
+      c = 10;
+    case 2:
+      c = 20;
+    case 3:
+      c = 30;
   };
 
+  print(c);
   return;
 };

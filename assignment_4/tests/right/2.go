@@ -7,21 +7,23 @@ type S struct {
   z *S;
 };
 
-// func sum(s S, a [3]int) int {
-// 	return s.x + s.y;
-// };
+func sum(s S, a [3]int) int {
+	return s.x + s.y + a[2] + a[1];
+};
 
 func main() {
-  // var example S;
+  var example S;
   var S [3]int;
 
   i := 2;
-  S[i] = 0;
-  // j := S[2];
+  S[i] = 10;
+  S[1] = 10;
 
-  // example.x = 2;
-  // example.y = 1;
+  example.x = 5;
+  example.y = 5;
 
-  // S[0] = sum(example, S);
+  S[0] = sum(example, S);
+  res := S[0];
+  print(res);
   return;
 };

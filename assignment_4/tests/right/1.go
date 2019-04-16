@@ -10,7 +10,7 @@ func main() {
 	var sum int;
 	sum = 0;
 	var i int;
-	for i = 0; i < 10; i+=1 {
+	for i = 0; i < 10; i++ {
 		sum = add(sum, i);
 	};
 	print(sum);
