@@ -60,12 +60,17 @@ def remove_used_temp_var_in_reg(name):
 def remove_used_temp_var_in_mem(name):
 	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
 	# print("DELETING", name)
+	if temp_vars[name]["so"] == function_width+temp_offset:
+		code += ["add $4, %esp"]
+		temp_offset -= 4
 	del temp_vars[name]
 
 def get_type(name):
 	# print(name)
 	name=split_var(name)[0]
 	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
+	if "addrv" in name:
+		return "a"
 	if "var" in name:
 		return "m"
 	elif "tmp#" in name:
@@ -111,22 +116,22 @@ for line in ir:
 		temp_offset = 0
 		code += [i[2]]
 
-	if i[0] == "funcend":
+	elif i[0] == "funcend":
 		code += ["sub ${}, %esp".format(temp_offset)]
 
-	if i[0] == "getretval":
+	elif i[0] == "getretval":
 		width = int(split_var(i[1])[1])
 		temp_var_name = split_var(i[1])[0]
 		temp_vars[temp_var_name] = {"ro":-1, "so":function_width+temp_offset+width, "width":width}
 		temp_offset += width
 
-	if i[0] == "putretval":
+	elif i[0] == "putretval":
 		offset=int(i[2])
 		if get_type(i[1]) == "c":
-			code += ["mov {}, {}(%ebp)".format(i[1],-offset)]
+			code += ["movl {}, {}(%ebp)".format(i[1],-offset)]
 		elif get_type(i[1]) == "r":
 			temp_var_name = split_var(i[1])[0]
-			code += ["mov %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"],-offset)]
+			code += ["movl %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"],-offset)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[1]) == "m":
 			offset2=0
@@ -136,11 +141,11 @@ for line in ir:
 				temp_var_name = split_var(i[1])[0]
 				offset2 = temp_vars[temp_var_name]["so"]
 			reg=get_reg("#",4)
-			code += ["mov {}(%ebp), %{}".format(-offset2,reg)]
-			code += ["mov %{}, {}(%ebp)".format(reg,-offset)]
+			code += ["movl {}(%ebp), %{}".format(-offset2,reg)]
+			code += ["movl %{}, {}(%ebp)".format(reg,-offset)]
 			remove_used_temp_var_in_reg("#")
 
-	elif i[0] in ["pop", "call", "mov", "add", "sub", "ret"]: # push and pop
+	elif i[0] in ["pop", "call", "movl", "add", "sub", "ret"]: # push and pop
 		code += [line[:-1]]
 
 	elif i[0] == "push":
@@ -161,41 +166,79 @@ for line in ir:
 		elif get_type(i[1]) == -1:
 			code += ["push {}".format(i[1])]
 
-	elif i[0] == "loadoff":
-		width = int(split_var(i[1])[1])
-		temp_var_name = split_var(i[1])[0]
-		offset_var_name = split_var(i[2])[0]
+	elif i[0] == "offtoaddr":
+		offset_var_name = split_var(i[1])[0]
+		temp_var_name = split_var(i[2])[0]
+		width = int(split_var(i[2])[1])
 		new_reg = get_reg(temp_var_name, width)
-		code += ["mov %ebp, %{}".format(new_reg)]
+		code += ["movl %ebp, %{}".format(new_reg)]
 		code += ["sub %{}, %{}".format(temp_vars[offset_var_name]["ro"], new_reg)]
-		code += ["mov 0(%{}), %{}".format(new_reg, new_reg)]
 		remove_used_temp_var_in_reg(offset_var_name)
 
-	elif i[0] == "=":
-		if (get_type(i[1]), get_type(i[2])) == ("m", "c"): #m=c
-			var_offset = int(split_var(i[1])[1])
-			reg = get_reg("#", 4)
-			code += ["mov {}, %{}".format(i[2], reg)]
-			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset)]
-			remove_used_temp_var_in_reg("#")
-		elif (get_type(i[1]), get_type(i[2])) == ("m", "r"): #m=r
-			var_offset = int(split_var(i[1])[1])
+	elif i[0] == "addrtotmp":
+		if get_type(i[1]) == "r":
+			addr_var_name = split_var(i[1])[0]
 			temp_var_name = split_var(i[2])[0]
-			code += ["mov %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"], -var_offset)]
-			remove_used_temp_var_in_reg(temp_var_name)
-		elif (get_type(i[1]), get_type(i[2])) == ("m", "m"): #m=m
-			var_offset_from=0
+			width = int(split_var(i[2])[1])
+			new_reg = get_reg(temp_var_name, width)
+			code += ["movl 0(%{}), %{}".format(temp_vars[addr_var_name]["ro"], new_reg)]
+			remove_used_temp_var_in_reg(addr_var_name)
+		elif get_type(i[1]) == "m":
+			offset=0
 			if "var" in i[2]:
-				var_offset_from = int(split_var(i[2])[1])
+				offset = int(split_var(i[1])[1])
 			elif "tmp#" in i[2]:
-				temp_var_name =	split_var(i[2])[0]
-				var_offset_from = temp_vars[temp_var_name]["so"]
-			var_width = int(split_var(i[2])[-1])
-			var_offset_to = int(split_var(i[1])[1])
-			reg = get_reg("#", var_width)
-			code += ["mov {}(%ebp), %{}".format(-var_offset_from, reg)]
-			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset_to)]
-			remove_used_temp_var_in_reg("#")
+				offset = temp_vars[split_var(i[1])[0]]["so"]
+				remove_used_temp_var_in_mem(split_var(i[1])[0])
+			temp_var_name = split_var(i[2])[0]
+			width = int(split_var(i[2])[1])
+			new_reg = get_reg(temp_var_name, width)
+			code += ["movl {}(%ebp), %{}".format(-offset, new_reg)]
+			code += ["movl 0(%{}), %{}".format(new_reg, new_reg)]
+
+	elif i[0] == "=":
+		if get_type(i[1]) == "a":
+			addr_var_name = split_var(i[1])[1] #r
+			if get_type(i[2]) == "c": #m=c
+				code += ["movl {}, 0(%{})".format(i[2], temp_vars[addr_var_name]["ro"])]
+			elif get_type(i[2]) == "r": #m=r
+				temp_var_name = split_var(i[2])[0]
+				code += ["movl %{}, 0(%{})".format(temp_vars[temp_var_name]["ro"], temp_vars[addr_var_name]["ro"])]
+				remove_used_temp_var_in_reg(temp_var_name)
+			elif get_type(i[2]) == "m": #m=m
+				offset_from=0
+				if "var" in i[2]:
+					offset_from = int(split_var(i[2])[1])
+				elif "tmp#" in i[2]:
+					offset_from = temp_vars[split_var(i[2])[0]]["so"]
+					remove_used_temp_var_in_mem(split_var(i[2])[0])
+				width = int(split_var(i[1])[-1])
+				reg = get_reg("#", width)
+				code += ["movl {}(%ebp), %{}".format(-offset_from, reg)]
+				code += ["movl %{}, 0(%{})".format(reg, temp_vars[addr_var_name]["ro"])]
+				remove_used_temp_var_in_reg("#")
+			remove_used_temp_var_in_reg(addr_var_name)
+
+		elif get_type(i[1]) == "m":
+			offset_to = int(split_var(i[1])[1])
+			if get_type(i[2]) == "c": #m=c
+				code += ["movl {}, {}(%ebp)".format(i[2], -offset_to)]
+			elif get_type(i[2]) == "r": #m=r
+				temp_var_name = split_var(i[2])[0]
+				code += ["movl %{}, {}(%ebp)".format(temp_vars[temp_var_name]["ro"], -offset_to)]
+				remove_used_temp_var_in_reg(temp_var_name)
+			elif get_type(i[2]) == "m": #m=m
+				offset_from=0
+				if "var" in i[2]:
+					offset_from = int(split_var(i[2])[1])
+				elif "tmp#" in i[2]:
+					offset_from = temp_vars[split_var(i[2])[0]]["so"]
+					remove_used_temp_var_in_mem(split_var(i[2])[0])
+				width = int(split_var(i[1])[-1])
+				reg = get_reg("#", width)
+				code += ["movl {}(%ebp), %{}".format(-offset_from, reg)]
+				code += ["movl %{}, {}(%ebp)".format(reg, -offset_to)]
+				remove_used_temp_var_in_reg("#")
 
 	elif i[0] in ["int+", "int-", "int*", "int/", "int&", "int^", "int|"]:
 		op = op_dic[i[0][3:]]
@@ -205,19 +248,19 @@ for line in ir:
 
 		new_reg = get_reg(left_temp_var_name, width)
 		if get_type(i[2]) == "c":
-			code += ["mov {}, %{}".format(i[2], new_reg)]
+			code += ["movl {}, %{}".format(i[2], new_reg)]
 		elif get_type(i[2]) == "r":
 			temp_var_name = split_var(i[2])[0]
-			code += ["mov %{}, %{}".format(temp_vars[temp_var_name]["ro"], new_reg)]
+			code += ["movl %{}, %{}".format(temp_vars[temp_var_name]["ro"], new_reg)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[2]) == "m":
 			if "tmp#" in i[2]:
 				temp_var_name = split_var(i[2])[0]
-				code += ["mov {}(%ebp), %{}".format(-temp_vars[temp_var_name]["so"], new_reg)]
+				code += ["movl {}(%ebp), %{}".format(-temp_vars[temp_var_name]["so"], new_reg)]
 				remove_used_temp_var_in_mem(temp_var_name)
 			elif "var" in i[2]:
 				var_offset = int(split_var(i[2])[1])
-				code += ["mov {}(%ebp), %{}".format(-var_offset, new_reg)]
+				code += ["movl {}(%ebp), %{}".format(-var_offset, new_reg)]
 
 		if get_type(i[3]) == "c":
 			code += ["{} {}, %{}".format(op, i[3], new_reg)]
@@ -247,19 +290,19 @@ for line in ir:
 
 		new_reg = get_reg(left_temp_var_name, width)
 		if get_type(i[2]) == "c":
-			code += ["mov {}, %{}".format(i[2], new_reg)]
+			code += ["movl {}, %{}".format(i[2], new_reg)]
 		elif get_type(i[2]) == "r":
 			temp_var_name = split_var(i[2])[0]
-			code += ["mov %{}, %{}".format(temp_vars[temp_var_name]["ro"], new_reg)]
+			code += ["movl %{}, %{}".format(temp_vars[temp_var_name]["ro"], new_reg)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[2]) == "m":
 			if "tmp#" in i[2]:
 				temp_var_name = split_var(i[2])[0]
-				code += ["mov {}(%ebp), %{}".format(-temp_vars[temp_var_name]["so"], new_reg)]
+				code += ["movl {}(%ebp), %{}".format(-temp_vars[temp_var_name]["so"], new_reg)]
 				remove_used_temp_var_in_mem(temp_var_name)
 			elif "var" in i[2]:
 				var_offset = int(split_var(i[2])[1])
-				code += ["mov {}(%ebp), %{}".format(-var_offset, new_reg)]
+				code += ["movl {}(%ebp), %{}".format(-var_offset, new_reg)]
 
 		if get_type(i[3]) == "c":
 			code += ["cmp {}, %{}".format(i[3], new_reg)]
@@ -275,7 +318,8 @@ for line in ir:
 			elif "var" in i[3]:
 				var_offset = int(split_var(i[3])[1])
 				code += ["cmp {}(%ebp), %{}".format(-var_offset, new_reg)]
-		code += ["set{} %{}".format(op, new_reg)]
+		code += ["movl $0, %{}".format(new_reg)]
+		code += ["set{} %{}".format(op, new_reg[1]+'l')]
 
 	elif i[0] in ["gotoZeroNeg", "gotoPos"]:
 		jump_command=""
@@ -285,7 +329,7 @@ for line in ir:
 			jump_command="jg"
 		if get_type(i[1]) == "c":
 			reg = get_reg("#", 4)
-			code += ["mov {}, %{}".format(i[1], reg)]
+			code += ["movl {}, %{}".format(i[1], reg)]
 			code += ["cmp $0, %{}".format(reg)]
 			code += ["{} {}".format(jump_command, i[2])]
 			remove_used_temp_var_in_reg('#')
@@ -300,36 +344,123 @@ for line in ir:
 			if "tmp#" in i[1]:
 				temp_var_name = split_var(i[1])[0]
 				temp_offset = int(temp_vars[temp_var_name]["so"])
-				code += ["mov {}(%ebp), %{}".format(-temp_offset, reg)]
+				code += ["movl {}(%ebp), %{}".format(-temp_offset, reg)]
 				code += ["cmp $0, %{}".format(reg)]
 				code += ["{} {}".format(jump_command, i[2])]
 				remove_used_temp_var_in_mem(temp_var_name)
 			else:
 				var_offset = int(split_var(i[1])[2])
-				code += ["mov {}(%ebp), %{}".format(-var_offset, reg)]
+				code += ["movl {}(%ebp), %{}".format(-var_offset, reg)]
 				code += ["cmp $0, %{}".format(reg)]
 				code += ["{} {}".format(jump_command, i[2])]
 			remove_used_temp_var_in_reg('#')
 
 	elif i[0] == "goto":
-	    code += ["jump {}".format(i[1])]
+	    code += ["jmp {}".format(i[1])]
 
 	elif i[0][:5]=="label":
 	    code += [line[:-1]]
 
-	elif i[0] == "print":# this assumes all other instructions are finished
+	elif i[0] == "unary-":
+	    reg = get_reg("#", 4)
+	    if get_type(i[2]) == "c":
+	        code += ["mov {}, %{}".format(i[2], reg)]
+	        code += ["neg %{}".format(reg)]
+	    elif get_type(i[2]) == "r":
+	        temp_var_name=split_var(i[2])[0]
+	        reg_old = temp_vars[temp_var_name]["ro"]
+	        code += ["mov %{}, %{}".format(reg_old, reg)]
+	        code += ["neg %{}".format(reg)]
+	        remove_used_temp_var_in_reg(temp_var_name)
+	    elif get_type(i[2]) == "m":
+	        if "tmp#" in i[2]:
+	            temp_var_name = split_var(i[2])[0]
+	            temp_offset = int(temp_vars[temp_var_name]["so"])
+	            code += ["mov {}(%ebp), %{}".format(-temp_offset, reg)]
+	            code += ["neg %{}".format(reg)]
+	            remove_used_temp_var_in_mem(temp_var_name)
+	        else:
+	            var_offset = int(split_var(i[2])[1])
+	            code += ["mov {}(%ebp), %{}".format(-var_offset, reg)]
+	            code += ["neg %{}".format(reg)]
+	    if "tmp#" in i[1]:
+	        temp_var_name = split_var(i[1])[0]
+	        to_reg=get_reg(temp_var_name,4)
+	        code += ["mov %{}, %{}".format(reg,to_reg)]
+	    else:
+	        var_offset = int(split_var(i[1])[1])
+	        code += ["mov %{}, {}(%ebx)".format(reg,-var_offset)]
+	    remove_used_temp_var_in_reg('#')
+
+	elif i[0] in ["inc","dec"]:
+	    op="decl"
+	    if i[0] == "inc":
+	        op="incl"
+	    if get_type(i[1])=='m':
+	        if "tmp#" in i[1]:
+	            temp_var_name = split_var(i[1])[0]
+	            temp_offset = int(temp_vars[temp_var_name]["so"])
+	            code += ["{} {}(%ebp)".format(op,-temp_offset)]
+	        else:
+	            var_offset = int(split_var(i[1])[1])
+	            code += ["{} {}(%ebp)".format(op,-var_offset)]
+	    elif get_type(i[1])=='r':
+	        temp_var_name=split_var(i[1])[0]
+	        reg = temp_vars[temp_var_name]["ro"]
+	        code += ["{}, %{}".format(op,reg)]
+
+	elif i[0] in ["int+=","int-=","int*=","int/=","int"]:
+	    op=op_dic[i[0][3]]
+	    var_offset = split_var(i[1])[1]
+	    # print(left_temp_var_name, width)
+	    new_reg = get_reg("#", 4)
+	    if get_type(i[2]) == "c":
+	        code += ["mov {}, %{}".format(i[2], new_reg)]
+	    elif get_type(i[2]) == "r":
+	        temp_var_name = split_var(i[2])[0]
+	        code += ["mov %{}, %{}".format(temp_vars[temp_var_name]["ro"], new_reg)]
+	        remove_used_temp_var_in_reg(temp_var_name)
+	    elif get_type(i[2]) == "m":
+	        if "tmp#" in i[2]:
+	            temp_var_name = split_var(i[2])[0]
+	            code += ["mov {}(%ebp), %{}".format(-temp_vars[temp_var_name]["so"], new_reg)]
+	            remove_used_temp_var_in_mem(temp_var_name)
+	        elif "var" in i[2]:
+	            var_offset = int(split_var(i[2])[1])
+	            code += ["mov {}(%ebp), %{}".format(-var_offset, new_reg)]
+	    var_offset = int(split_var(i[1])[1])
+	    code += ["{} %{}, {}(%ebp)".format(op,new_reg, -var_offset)]
+	    remove_used_temp_var_in_reg("#")
+
+	elif i[0] == "print": # this assumes all other instructions are finished
+		var_offset = int(split_var(i[1])[1])
+		code.append("push %eax")
+		code.append("push %ebx")
+		code.append("push %ecx")
+		code.append("push %edx")
+		code.append("push %esi")
+		code.append("push %edi")
+		code.append("movl {}(%ebp), %eax".format(-var_offset))
 		code.append("push %ebp")
 		code.append("mov %esp, %ebp")
 		code.append("push %eax")
-		code.append("push $print_int")
+		code.append("push $fmt_int")
 		code.append("call printf")
 		code.append("add  $8, %esp")
 		code.append("mov %ebp, %esp")
 		code.append("pop %ebp")
+		code.append("pop %edi")
+		code.append("pop %esi")
+		code.append("pop %edx")
+		code.append("pop %ecx")
+		code.append("pop %ebx")
+		code.append("pop %eax")
 
 print(".data")
-print("print_int:")
-print("\t.string \"%d\"")
+print('\tfmt_int: .string \"%d\\n\"')
+print("\t.text")
+print("\t.global main")
+print("\t.type main, @function")
 for i in code:
 	if ":" in i:
 		print(i)

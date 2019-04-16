@@ -10,15 +10,8 @@ func main() {
 	var sum int;
 	sum = 0;
 	var i int;
-	for i = 0; i < 10; i++ {
-		var v int;
-		v = 0;
-		if v != 2 {
-			sum = sum + i; // add(sum, i);
-		}
-		else {
-			sum = sum - i;
-		};
+	for i = 0; i < 10; i+=1 {
+		sum = add(sum, i);
 	};
 	print(sum);
 	return;

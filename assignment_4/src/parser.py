@@ -18,10 +18,11 @@ scopeST = {}
 scopeST[0] = symbolTable()
 
 currTypeDef = ''
+declared = list()
 currFunc = ''
 currOffset = 0
 structOffset = 0
-typeWidth = {"int":4, "float":8, "bool":4, "rune":4, "string":8}
+typeWidth = {"void":0, "int":4, "float":8, "bool":4, "rune":4, "string":8}
 
 def checkID(identifier, typeOf):
     if typeOf == 'global':
@@ -183,7 +184,7 @@ def p_StartStructScope(p):
 
 def p_StartFuncScope(p):
     ''' StartFuncScope      : '''
-    if checkID(p[-1], 'curr'):
+    if p[-1] not in declared and checkID(p[-1], 'global'):
         raise Exception("Line "+str(p.lineno(-1))+": "+"Function "+p[-1]+" already exists.")
     else:
         pushScope(p[-1])
@@ -199,16 +200,21 @@ def p_FunctionDecl(p):
 							| FUNC ID StartFuncScope Signature Block EndScope '''
     global currFunc
     currFunc = ''
-    code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
-    code += ["push %ebp"]
-    code += ["mov %esp, %ebp"]
-    code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
-    code += ["push %ebx", "push %esi", "push %edi"]
-    for stmt in code:
-        irf.write(stmt+'\n')
-    if len(p)==7:
-        for stmt in p[5]:
+    if len(p)==6:
+        declared.append(p[2])
+    else:
+        if p[2] in declared:
+            del declared[p[2]]
+        code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
+        code += ["push %ebp"]
+        code += ["movl %esp, %ebp"]
+        code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
+        code += ["push %ebx", "push %esi", "push %edi"]
+        for stmt in code:
             irf.write(stmt+'\n')
+        if len(p)==7:
+            for stmt in p[5]:
+                irf.write(stmt+'\n')
 
 # def p_MethodDecl(p):
 #     ''' MethodDecl     		: FUNC Parameters ID Signature
@@ -674,12 +680,12 @@ def p_ReturnStmt(p):
             # width=typeWidth[]
             p[0] += ["putretval "+p[2].place+", "+str(scopeST[0].table[currFunc]['rOff'])]
         p[0] += ["funcend"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "movl %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
     else:
         p[0] = ["funcend"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "mov %ebp, %esp"]
+        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "movl %ebp, %esp"]
         p[0] += ["pop %ebp"]
         p[0] += ["ret"]
 
@@ -964,6 +970,7 @@ def p_Expression3(p):
         p[0].type = 'bool'
         p[0].place=new_tmp(p[0].type)
         p[0].code=p[1].code+p[3].code
+
         if p[1].type == 'float' and p[3].type == 'int':
             var = new_tmp('float')
             p[0].code.append('=inttofloat '+var+', '+p[3].place)
@@ -992,6 +999,7 @@ def p_Expression4(p):
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code
+
         if p[1].type == 'float' and p[3].type == 'int':
             p[0].type = 'float'
             p[0].place = new_tmp('float')
@@ -1025,9 +1033,20 @@ def p_Expression5(p):
 							| Expression5 mul_op UnaryExpr '''
     if len(p)==2:
         p[0]=p[1]
+        if "addrv:" in p[1].place:
+            var = new_tmp(p[1].type)
+            addr = p[1].place[6:]
+            p[0].code += ["addrtotmp "+addr+", "+var]
+            p[0].place = var
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code
+        if "addrv:" in p[3].place:
+            var = new_tmp(p[3].type)
+            addr = p[3].place[6:]
+            p[0].code += ["addrtotmp "+addr+", "+var]
+            p[3].place = var
+
         if p[1].type == 'float' and p[3].type == 'int':
             p[0].type = 'float'
             p[0].place = new_tmp('float')
@@ -1061,16 +1080,26 @@ def p_UnaryExpr(p):
         else:
             p[0] = p[1]
     else:
+        if p[1]=='+':
+            if p[2].type=='int' or p[2].type=='float':
+                p[0] = p[2]
+            else:
+                raise Exception("Line "+str(p.lineno(1))+": "+"Can't use "+p[1].place+" on this type.")
         p[0] = expr()
-        if p[1]=='*':
-            p[0].type = p[2].type[8:-1]
-        elif p[1]=='+' or p[1]=='-':
+        if p[1]=='-':
             if p[2].type=='int' or p[2].type=='float':
                 p[0].type = p[2].type
                 p[0].place = new_tmp(p[0].type)
-                p[0].code = p[2].code+['unary'+p[1]+' '+p[0].place+', '+p[2].place]
+                p[0].code = p[2].code+['unary- '+p[0].place+', '+p[2].place]
             else:
                 raise Exception("Line "+str(p.lineno(1))+": "+"Can't use "+p[1].place+" on this type.")
+        elif p[1]=='*':
+            p[0].type = p[2].type[8:-1]
+            p[0].place = "addrv:"+p[2].place
+        elif p[1]== '&':
+            p[0].type = "pointer("+p[2].type+")"
+            typeWidth.update({p[0].type : 4})
+            p[0].place = new_tmp(p[0].type)
         p.set_lineno(0, p.lineno(1))
 
 def p_PrimaryExpr(p):
@@ -1086,17 +1115,20 @@ def p_PrimaryExpr1(p):
     if p[1].type[:6]!="struct":
         Exception("Line "+str(p.lineno(1))+": "+p[1].place+" must be a struct.")
     else:
-        sc = int(p[1].type[7:])
-        name = p[1].place.split('\"')[1]
-        offset = int(p[1].place.split(':')[1])
-        if p[2] in (scopeST[sc].table).keys():
-            dic = scopeST[sc].table[p[2]]
-            p[0] = expr()
-            p[0].type = dic['type']
-            p[0].place = 'var\"'+name+'.'+p[2]+'\":'+str(offset-dic['fOffset'])+':'+str(dic['width'])
-            p[0].code = p[1].code
+        if "tmp#" in p[1].place:
+            sc = int(p[1].type[7:])
         else:
-            Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2]+".")
+            sc = int(p[1].type[7:])
+            name = p[1].place.split('\"')[1]
+            offset = int(p[1].place.split(':')[1])
+            if p[2] in (scopeST[sc].table).keys():
+                dic = scopeST[sc].table[p[2]]
+                p[0] = expr()
+                p[0].type = dic['type']
+                p[0].place = 'var\"'+name+'.'+p[2]+'\":'+str(offset-dic['fOffset'])+':'+str(dic['width'])
+                p[0].code = p[1].code
+            else:
+                Exception("Line "+str(p.lineno(1))+": "+p[1].place+" does not have any field named "+p[2]+".")
     p.set_lineno(0, p.lineno(1))
 
 def p_Selector(p):
@@ -1116,7 +1148,6 @@ def p_PrimaryExpr2(p):
         name = p[1].place.split('\"')[1]
         offset = int(p[1].place.split(':')[1])
         p[0].type=p[1].type[6:-1]
-        p[0].place=new_tmp(p[0].type)
         p[0].code=p[1].code
 
         var1=new_tmp('int') # Element offset
@@ -1124,7 +1155,8 @@ def p_PrimaryExpr2(p):
         addr=new_tmp('int') # Address of element
         p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
         p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
-        p[0].code+=["loadoff "+p[0].place+", "+var2]
+        p[0].code+=["offtoaddr "+var2+", "+addr]
+        p[0].place="addrv:"+addr
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):

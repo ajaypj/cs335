@@ -1,0 +1,52 @@
+funcstart 12 add:
+push %ebp
+movl %esp, %ebp
+sub $0, %esp
+push %ebx
+push %esi
+push %edi
+int+ tmp#0:4, var"a":-8:4, var"b":-12:4
+putretval tmp#0:4, -28
+funcend
+pop %edi
+pop %esi
+pop %ebx
+movl %ebp, %esp
+pop %ebp
+ret
+funcstart 20 main:
+push %ebp
+movl %esp, %ebp
+sub $8, %esp
+push %ebx
+push %esi
+push %edi
+= var"sum":4:4, $0
+= var"i":8:4, $0
+label0:
+int< tmp#1:4, var"i":8:4, $10
+gotoZeroNeg tmp#1:4, label1
+sub $4, %esp
+push %eax
+push %ecx
+push %edx
+push var"i":8:4
+push var"sum":4:4
+call add
+add $8, %esp
+pop %edx
+pop %ecx
+pop %eax
+getretval tmp#2:4
+= var"sum":4:4, tmp#2:4
+int+= var"i":8:4, $1
+goto label0
+label1:
+print var"sum":4:4
+funcend
+pop %edi
+pop %esi
+pop %ebx
+movl %ebp, %esp
+pop %ebp
+ret

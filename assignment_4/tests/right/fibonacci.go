@@ -12,5 +12,6 @@ func FibonacciRecursion(n int) int {
 func main() {
   var fib int;
   fib = FibonacciRecursion(10);
+  print(fib);
   return;
 };
