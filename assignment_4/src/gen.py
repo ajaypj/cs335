@@ -161,10 +161,23 @@ for line in ir:
 		elif get_type(i[1]) == -1:
 			code += ["push {}".format(i[1])]
 
+	elif i[0] == "loadoff":
+		width = int(split_var(i[1])[1])
+		temp_var_name = split_var(i[1])[0]
+		offset_var_name = split_var(i[2])[0]
+		new_reg = get_reg(temp_var_name, width)
+		code += ["mov %ebp, %{}".format(new_reg)]
+		code += ["sub %{}, %{}".format(temp_vars[offset_var_name]["ro"], new_reg)]
+		code += ["mov 0(%{}), %{}".format(new_reg, new_reg)]
+		remove_used_temp_var_in_reg(offset_var_name)
+
 	elif i[0] == "=":
 		if (get_type(i[1]), get_type(i[2])) == ("m", "c"): #m=c
 			var_offset = int(split_var(i[1])[1])
-			code += ["mov {}, {}(%ebp)".format(i[2], -var_offset)]
+			reg = get_reg("#", 4)
+			code += ["mov {}, %{}".format(i[2], reg)]
+			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset)]
+			remove_used_temp_var_in_reg("#")
 		elif (get_type(i[1]), get_type(i[2])) == ("m", "r"): #m=r
 			var_offset = int(split_var(i[1])[1])
 			temp_var_name = split_var(i[2])[0]
@@ -179,7 +192,7 @@ for line in ir:
 				var_offset_from = temp_vars[temp_var_name]["so"]
 			var_width = int(split_var(i[2])[-1])
 			var_offset_to = int(split_var(i[1])[1])
-			reg=get_reg("#", var_width)
+			reg = get_reg("#", var_width)
 			code += ["mov {}(%ebp), %{}".format(-var_offset_from, reg)]
 			code += ["mov %{}, {}(%ebp)".format(reg, -var_offset_to)]
 			remove_used_temp_var_in_reg("#")

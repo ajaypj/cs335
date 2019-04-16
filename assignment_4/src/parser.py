@@ -467,31 +467,36 @@ def p_VarSpec(p):
             scopeST[currScope].table[iden] = p[2].copy()
             scopeST[currScope].update(iden, 'cls', 'VAR')
 
+        var = ''
         if len(p) > 3:
             p[0] += p[e][i].code
             if len(p)==5 or len(p)==7:
                 if p[2]['type'] == 'float' and p[e][i].type == 'int':
                     var = new_tmp('float')
                     p[0] += ['=inttofloat '+var+', '+p[e][i].place]
-                    p[0] += ['= '+iden+', '+var]
                 elif p[2]['type'] == 'int' and p[e][i].type == 'bool':
-                    p[0] += ['= '+iden+', '+p[e][i].place]
+                    var = var
                 elif p[2]['type'] != p[e][i].type:
                     raise Exception("Line "+str(p.lineno(3))+": "+"Type mismatch for variable "+iden+".")
-                else:
-                    p[0] += ['= '+iden+', '+p[e][i].place]
             else:
                 scopeST[currScope].insert(iden)
                 scopeST[currScope].update(iden, 'cls', 'VAR')
                 scopeST[currScope].update(iden, 'type', p[e][i].type)
                 scopeST[currScope].update(iden, 'width', typeWidth[p[e][i].type])
-                p[0] += ['= '+iden+', '+p[e][i].place]
 
         w = scopeST[currScope].table[iden]['width']
         global currOffset
         scopeST[currScope].update(iden, 'offset', currOffset + w)
         currOffset += w
         scopeST[0].table[currFunc]['vMem'] += w
+
+        if len(p) > 3:
+            dic = scopeST[currScope].table[iden]
+            iden = "var\"" + iden + "\":" + str(dic['offset']) + ":" + str(dic['width'])
+            if var != '':
+                p[0] += ['= '+iden+', '+var]
+            else:
+                p[0] += ['= '+iden+', '+p[e][i].place]
 
 def p_IdentifierList(p):
     ''' IdentifierList 		: ID
@@ -522,6 +527,8 @@ def p_ShortVarDecl(p):
         currOffset += w
         scopeST[0].table[currFunc]['vMem'] += w
 
+        dic = scopeST[currScope].table[iden]
+        iden = "var\"" + iden + "\":" + str(dic['offset']) + ":" + str(dic['width'])
         p[0] += p[3][i].code + ['= '+iden+', '+p[3][i].place]
 
 ################################################################################
@@ -1117,8 +1124,7 @@ def p_PrimaryExpr2(p):
         addr=new_tmp('int') # Address of element
         p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
         p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
-        p[0].code+=["int- "+addr+", %ebp, "+var2]
-        p[0].code+=["load "+p[0].place+", "+addr]
+        p[0].code+=["loadoff "+p[0].place+", "+var2]
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):

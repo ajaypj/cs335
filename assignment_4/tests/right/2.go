@@ -15,7 +15,7 @@ func main() {
   var example S;
   var S [3]int;
 
-  example.x = -2;
+  example.x = 2;
   i := 2;
   S[i] = 0;
 

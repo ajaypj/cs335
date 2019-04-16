@@ -3,4 +3,6 @@ break/continue
 print statement
 
 S:
+mov 0(%eax), %eax
++=, unary
 heap/data
