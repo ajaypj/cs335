@@ -2,7 +2,7 @@
 To run the parser, do:
 
 	$cd src
-	$python parser.py --in=../tests/right/factorial.go --out=ir.txt > table.txt
+	$./run.sh factorial.go
 	$make clean
 
-The output symbol tables are written in "table.txt" and the 3-address code is written in "ir.txt".
+The output symbol tables are put in "table.txt", the IR code in "ir.txt", and the final code in "code.s".

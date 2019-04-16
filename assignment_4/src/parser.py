@@ -204,7 +204,7 @@ def p_FunctionDecl(p):
         declared.append(p[2])
     else:
         if p[2] in declared:
-            del declared[p[2]]
+            declared.remove(p[2])
         code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
         code += ["push %ebp"]
         code += ["movl %esp, %ebp"]
@@ -1096,10 +1096,12 @@ def p_UnaryExpr(p):
         elif p[1]=='*':
             p[0].type = p[2].type[8:-1]
             p[0].place = "addrv:"+p[2].place
-        elif p[1]== '&':
+            p[0].code = p[2].code
+        elif p[1]=='&':
             p[0].type = "pointer("+p[2].type+")"
             typeWidth.update({p[0].type : 4})
             p[0].place = new_tmp(p[0].type)
+            p[0].code = p[2].code+["lea "+p[2].place+", "+p[0].place]
         p.set_lineno(0, p.lineno(1))
 
 def p_PrimaryExpr(p):
@@ -1148,7 +1150,7 @@ def p_PrimaryExpr2(p):
         name = p[1].place.split('\"')[1]
         offset = int(p[1].place.split(':')[1])
         p[0].type=p[1].type[6:-1]
-        p[0].code=p[1].code
+        p[0].code=p[1].code+p[2].code
 
         var1=new_tmp('int') # Element offset
         var2=new_tmp('int') # Final offset

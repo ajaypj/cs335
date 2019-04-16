@@ -65,6 +65,11 @@ def remove_used_temp_var_in_mem(name):
 		temp_offset -= 4
 	del temp_vars[name]
 
+def remove_used_in_ret(name):
+	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
+	# print("DELETING", name)
+	del temp_vars[name]
+
 def get_type(name):
 	# print(name)
 	name=split_var(name)[0]
@@ -145,8 +150,17 @@ for line in ir:
 			code += ["movl %{}, {}(%ebp)".format(reg, -offset)]
 			remove_used_temp_var_in_reg("#")
 
+	elif i[0] == "lea":
+		offset = int(split_var(i[1])[1])
+		temp_var_name = split_var(i[2])[0]
+		width = int(split_var(i[2])[1])
+		new_reg = get_reg(temp_var_name, width)
+		code += ["lea {}(%ebp), %{}".format(-offset, new_reg)]
+
 	elif i[0] in ["pop", "call", "movl", "add", "sub", "ret"]: # push and pop
 		code += [line[:-1]]
+		if i[0]=="ret":
+			temp_offset = 0
 
 	elif i[0] == "push":
 		if get_type(i[1]) == "c":
@@ -162,6 +176,7 @@ for line in ir:
 			elif "tmp#" in i[1]:
 				temp_var_name = split_var(i[1])[0]
 				offset = temp_vars[temp_var_name]["so"]
+				remove_used_in_ret(temp_var_name)
 			code += ["push {}(%ebp)".format(-offset)]
 		elif get_type(i[1]) == -1:
 			code += ["push {}".format(i[1])]
@@ -185,9 +200,9 @@ for line in ir:
 			remove_used_temp_var_in_reg(addr_var_name)
 		elif get_type(i[1]) == "m":
 			offset=0
-			if "var" in i[2]:
+			if "var" in i[1]:
 				offset = int(split_var(i[1])[1])
-			elif "tmp#" in i[2]:
+			elif "tmp#" in i[1]:
 				offset = temp_vars[split_var(i[1])[0]]["so"]
 				remove_used_temp_var_in_mem(split_var(i[1])[0])
 			temp_var_name = split_var(i[2])[0]

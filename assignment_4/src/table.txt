@@ -1,7 +1,0 @@
-		1
-		i {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
-		c {'width': 4, 'offset': 8, 'type': 'int', 'cls': 'VAR'}
-0
-fmt {'cls': 'PACKAGE'}
-time {'cls': 'PACKAGE'}
-main {'aMem': 0, 'rOff': None, 'rType': 'void', 'args': [], 'vMem': 8, 'cls': 'FUNC'}
