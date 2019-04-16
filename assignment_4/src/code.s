@@ -1,5 +1,6 @@
 .data
 	fmt_int: .string "%d\n"
+	scan_int: .string "%d"
 	.text
 	.global main
 	.type main, @function
@@ -10,7 +11,27 @@ main:
 	push %ebx
 	push %esi
 	push %edi
-	movl $2, -4(%ebp)
+	push %eax
+	push %ebx
+	push %ecx
+	push %edx
+	push %esi
+	push %edi
+	lea -4(%ebp), %eax
+	push %ebp
+	mov %esp, %ebp
+	push %eax
+	push $scan_int
+	call scanf
+	add  $8, %esp
+	mov %ebp, %esp
+	pop %ebp
+	pop %edi
+	pop %esi
+	pop %edx
+	pop %ecx
+	pop %ebx
+	pop %eax
 	movl -4(%ebp), %eax
 	cmp $1, %eax
 	movl $0, %eax

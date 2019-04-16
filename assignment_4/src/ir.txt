@@ -5,7 +5,7 @@ sub $8, %esp
 push %ebx
 push %esi
 push %edi
-= var"i":4:4, $2
+scan var"i":4:4
 int== tmp#0:4, var"i":4:4, $1
 gotoZeroNeg tmp#0:4, label0
 = var"c":8:4, $10

@@ -35,7 +35,7 @@ reserved = {
     'return' : 'RETURN',
     'var' : 'VAR',
     'print' : 'PRINT',
-    'malloc' : 'MALLOC'
+    'scan' : 'SCAN'
 }
 
 operators = ['ADD','SUB','MUL','QUO','REM','AND','OR','COND','XOR','SHL','SHR','AND_NOT','ADD_ASSIGN','SUB_ASSIGN','MUL_ASSIGN','QUO_ASSIGN','REM_ASSIGN','AND_ASSIGN','OR_ASSIGN','XOR_ASSIGN','SHL_ASSIGN','SHR_ASSIGN','AND_NOT_ASSIGN','LAND','LOR','ARROW','INC','DEC','EQL','LSS','GTR','ASSIGN','NOT','NEQ','LEQ','GEQ','DEFINE','ELLIPSIS','LPAREN','LBRACK','LBRACE','COMMA','PERIOD','RPAREN','RBRACK','RBRACE','SEMICOLON','COLON']

@@ -102,9 +102,9 @@ Rule 80    Statement -> IfStmt
 Rule 81    Statement -> ForStmt
 Rule 82    Statement -> SwitchStmt
 Rule 83    Statement -> PrintStmt
-Rule 84    Statement -> MallocStmt
+Rule 84    Statement -> ScanStmt
 Rule 85    PrintStmt -> PRINT LPAREN Expression RPAREN
-Rule 86    MallocStmt -> MALLOC LPAREN Expression RPAREN
+Rule 86    ScanStmt -> SCAN LPAREN Expression RPAREN
 Rule 87    SimpleStmt -> ShortVarDecl
 Rule 88    SimpleStmt -> EmptyStmt
 Rule 89    SimpleStmt -> ExpressionStmt
@@ -256,7 +256,6 @@ LEQ                  : 168
 LOR                  : 123
 LPAREN               : 8 9 26 27 49 50 51 56 57 85 86 140 141 142 145
 LSS                  : 167
-MALLOC               : 86
 MAP                  : 
 MUL                  : 46 175 186
 MUL_ASSIGN           : 156
@@ -277,6 +276,7 @@ REM_ASSIGN           : 158
 RETURN               : 97 98
 RPAREN               : 8 9 26 27 49 50 51 56 57 85 86 140 141 142 145
 RUNE                 : 151
+SCAN                 : 86
 SELECT               : 
 SEMICOLON            : 5 6 7 11 12 13 14 28 29 42 43 58 59 70 71 111 111
 SHL                  : 178
@@ -337,7 +337,6 @@ Index                : 137
 LabeledStmt          : 77
 Literal              : 143
 LiteralType          : 34
-MallocStmt           : 84
 Operand              : 134
 PackageClause        : 1 2 3 4
 ParameterDecl        : 52 53
@@ -348,6 +347,7 @@ PrimaryExpr          : 132 135 137 139
 PrintStmt            : 83
 ReturnStmt           : 74
 SaveTypeName         : 30 31
+ScanStmt             : 84
 Selector             : 135
 ShortVarDecl         : 87
 Signature            : 21 22
@@ -1529,6 +1529,7 @@ state 73
     GEQ             reduce using rule 146 (Literal -> BasicLit .)
     LAND            reduce using rule 146 (Literal -> BasicLit .)
     LOR             reduce using rule 146 (Literal -> BasicLit .)
+    LBRACE          reduce using rule 146 (Literal -> BasicLit .)
     RBRACK          reduce using rule 146 (Literal -> BasicLit .)
     COMMA           reduce using rule 146 (Literal -> BasicLit .)
     SEMICOLON       reduce using rule 146 (Literal -> BasicLit .)
@@ -1536,7 +1537,6 @@ state 73
     RBRACE          reduce using rule 146 (Literal -> BasicLit .)
     INC             reduce using rule 146 (Literal -> BasicLit .)
     DEC             reduce using rule 146 (Literal -> BasicLit .)
-    LBRACE          reduce using rule 146 (Literal -> BasicLit .)
     COLON           reduce using rule 146 (Literal -> BasicLit .)
     ASSIGN          reduce using rule 146 (Literal -> BasicLit .)
     ADD_ASSIGN      reduce using rule 146 (Literal -> BasicLit .)
@@ -1606,10 +1606,10 @@ state 75
     (121) Expression -> Expression1 .
     (123) Expression1 -> Expression1 . LOR Expression2
 
+    LBRACE          reduce using rule 121 (Expression -> Expression1 .)
     COMMA           reduce using rule 121 (Expression -> Expression1 .)
     SEMICOLON       reduce using rule 121 (Expression -> Expression1 .)
     RBRACE          reduce using rule 121 (Expression -> Expression1 .)
-    LBRACE          reduce using rule 121 (Expression -> Expression1 .)
     RPAREN          reduce using rule 121 (Expression -> Expression1 .)
     INC             reduce using rule 121 (Expression -> Expression1 .)
     DEC             reduce using rule 121 (Expression -> Expression1 .)
@@ -1659,9 +1659,9 @@ state 77
     LBRACE          reduce using rule 122 (Expression1 -> Expression2 .)
     RBRACE          reduce using rule 122 (Expression1 -> Expression2 .)
     COMMA           reduce using rule 122 (Expression1 -> Expression2 .)
-    RPAREN          reduce using rule 122 (Expression1 -> Expression2 .)
     INC             reduce using rule 122 (Expression1 -> Expression2 .)
     DEC             reduce using rule 122 (Expression1 -> Expression2 .)
+    RPAREN          reduce using rule 122 (Expression1 -> Expression2 .)
     COLON           reduce using rule 122 (Expression1 -> Expression2 .)
     RBRACK          reduce using rule 122 (Expression1 -> Expression2 .)
     LAND            shift and go to state 124
@@ -1691,13 +1691,13 @@ state 78
     GEQ             reduce using rule 128 (Expression4 -> Expression5 .)
     LAND            reduce using rule 128 (Expression4 -> Expression5 .)
     LOR             reduce using rule 128 (Expression4 -> Expression5 .)
+    RPAREN          reduce using rule 128 (Expression4 -> Expression5 .)
+    SEMICOLON       reduce using rule 128 (Expression4 -> Expression5 .)
     INC             reduce using rule 128 (Expression4 -> Expression5 .)
     DEC             reduce using rule 128 (Expression4 -> Expression5 .)
-    SEMICOLON       reduce using rule 128 (Expression4 -> Expression5 .)
-    RPAREN          reduce using rule 128 (Expression4 -> Expression5 .)
-    LBRACE          reduce using rule 128 (Expression4 -> Expression5 .)
     COMMA           reduce using rule 128 (Expression4 -> Expression5 .)
     COLON           reduce using rule 128 (Expression4 -> Expression5 .)
+    LBRACE          reduce using rule 128 (Expression4 -> Expression5 .)
     RBRACE          reduce using rule 128 (Expression4 -> Expression5 .)
     RBRACK          reduce using rule 128 (Expression4 -> Expression5 .)
     MUL             shift and go to state 131
@@ -1727,13 +1727,13 @@ state 79
     GEQ             reduce using rule 126 (Expression3 -> Expression4 .)
     LAND            reduce using rule 126 (Expression3 -> Expression4 .)
     LOR             reduce using rule 126 (Expression3 -> Expression4 .)
+    SEMICOLON       reduce using rule 126 (Expression3 -> Expression4 .)
     INC             reduce using rule 126 (Expression3 -> Expression4 .)
     DEC             reduce using rule 126 (Expression3 -> Expression4 .)
-    SEMICOLON       reduce using rule 126 (Expression3 -> Expression4 .)
     RBRACE          reduce using rule 126 (Expression3 -> Expression4 .)
     COMMA           reduce using rule 126 (Expression3 -> Expression4 .)
-    RPAREN          reduce using rule 126 (Expression3 -> Expression4 .)
     LBRACE          reduce using rule 126 (Expression3 -> Expression4 .)
+    RPAREN          reduce using rule 126 (Expression3 -> Expression4 .)
     COLON           reduce using rule 126 (Expression3 -> Expression4 .)
     RBRACK          reduce using rule 126 (Expression3 -> Expression4 .)
     ADD             shift and go to state 135
@@ -2647,7 +2647,7 @@ state 112
     (81) Statement -> . ForStmt
     (82) Statement -> . SwitchStmt
     (83) Statement -> . PrintStmt
-    (84) Statement -> . MallocStmt
+    (84) Statement -> . ScanStmt
     (23) Declaration -> . TypeDecl
     (24) Declaration -> . VarDecl
     (87) SimpleStmt -> . ShortVarDecl
@@ -2670,7 +2670,7 @@ state 112
     (108) ForStmt -> . FOR ForSig StartScope Block EndScope
     (112) SwitchStmt -> . ExprSwitchStmt
     (85) PrintStmt -> . PRINT LPAREN Expression RPAREN
-    (86) MallocStmt -> . MALLOC LPAREN Expression RPAREN
+    (86) ScanStmt -> . SCAN LPAREN Expression RPAREN
     (25) TypeDecl -> . TYPE TypeSpec
     (26) TypeDecl -> . TYPE LPAREN TypeSpecList RPAREN
     (27) TypeDecl -> . TYPE LPAREN RPAREN
@@ -2721,20 +2721,20 @@ state 112
     (131) Expression5 -> . Expression5 mul_op UnaryExpr
 
     RBRACE          shift and go to state 186
-    RETURN          shift and go to state 165
-    BREAK           shift and go to state 182
+    RETURN          shift and go to state 166
+    BREAK           shift and go to state 180
     CONTINUE        shift and go to state 175
     ID              shift and go to state 188
-    GOTO            shift and go to state 161
+    GOTO            shift and go to state 162
     LBRACE          reduce using rule 17 (StartScope -> .)
     IF              shift and go to state 189
     FOR             shift and go to state 173
     PRINT           shift and go to state 168
-    MALLOC          shift and go to state 180
+    SCAN            shift and go to state 183
     TYPE            shift and go to state 15
     VAR             shift and go to state 13
     SEMICOLON       reduce using rule 92 (EmptyStmt -> .)
-    SWITCH          shift and go to state 178
+    SWITCH          shift and go to state 177
     ADD             shift and go to state 85
     SUB             shift and go to state 68
     NOT             shift and go to state 72
@@ -2753,15 +2753,14 @@ state 112
     SimpleStmt                     shift and go to state 184
     ExpressionStmt                 shift and go to state 157
     ForStmt                        shift and go to state 185
-    ExprSwitchStmt                 shift and go to state 166
-    Statement                      shift and go to state 158
+    ScanStmt                       shift and go to state 158
+    Statement                      shift and go to state 159
     IdentifierList                 shift and go to state 167
-    MallocStmt                     shift and go to state 176
-    IfStmt                         shift and go to state 159
-    Assignment                     shift and go to state 160
+    IfStmt                         shift and go to state 160
+    Assignment                     shift and go to state 161
     StartScope                     shift and go to state 170
     IncDecStmt                     shift and go to state 171
-    Declaration                    shift and go to state 179
+    Declaration                    shift and go to state 178
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
@@ -2769,13 +2768,14 @@ state 112
     Expression4                    shift and go to state 79
     GotoStmt                       shift and go to state 172
     TypeDecl                       shift and go to state 10
-    LabeledStmt                    shift and go to state 162
-    EmptyStmt                      shift and go to state 163
+    LabeledStmt                    shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
-    StatementList                  shift and go to state 164
+    StatementList                  shift and go to state 165
+    unary_op                       shift and go to state 70
     Operand                        shift and go to state 84
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     BreakStmt                      shift and go to state 190
     SwitchStmt                     shift and go to state 174
     Literal                        shift and go to state 69
@@ -2783,8 +2783,8 @@ state 112
     PrintStmt                      shift and go to state 169
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
-    ReturnStmt                     shift and go to state 183
-    unary_op                       shift and go to state 70
+    ReturnStmt                     shift and go to state 181
+    ExprSwitchStmt                 shift and go to state 182
 
 state 113
 
@@ -4018,19 +4018,26 @@ state 157
 
 state 158
 
+    (84) Statement -> ScanStmt .
+
+    SEMICOLON       reduce using rule 84 (Statement -> ScanStmt .)
+
+
+state 159
+
     (71) StatementList -> Statement . SEMICOLON
 
     SEMICOLON       shift and go to state 212
 
 
-state 159
+state 160
 
     (80) Statement -> IfStmt .
 
     SEMICOLON       reduce using rule 80 (Statement -> IfStmt .)
 
 
-state 160
+state 161
 
     (91) SimpleStmt -> Assignment .
 
@@ -4038,21 +4045,21 @@ state 160
     LBRACE          reduce using rule 91 (SimpleStmt -> Assignment .)
 
 
-state 161
+state 162
 
     (104) GotoStmt -> GOTO . ID
 
     ID              shift and go to state 213
 
 
-state 162
+state 163
 
     (77) Statement -> LabeledStmt .
 
     SEMICOLON       reduce using rule 77 (Statement -> LabeledStmt .)
 
 
-state 163
+state 164
 
     (88) SimpleStmt -> EmptyStmt .
 
@@ -4060,7 +4067,7 @@ state 163
     LBRACE          reduce using rule 88 (SimpleStmt -> EmptyStmt .)
 
 
-state 164
+state 165
 
     (68) Block -> LBRACE StatementList . RBRACE
     (70) StatementList -> StatementList . Statement SEMICOLON
@@ -4076,7 +4083,7 @@ state 164
     (81) Statement -> . ForStmt
     (82) Statement -> . SwitchStmt
     (83) Statement -> . PrintStmt
-    (84) Statement -> . MallocStmt
+    (84) Statement -> . ScanStmt
     (23) Declaration -> . TypeDecl
     (24) Declaration -> . VarDecl
     (87) SimpleStmt -> . ShortVarDecl
@@ -4099,7 +4106,7 @@ state 164
     (108) ForStmt -> . FOR ForSig StartScope Block EndScope
     (112) SwitchStmt -> . ExprSwitchStmt
     (85) PrintStmt -> . PRINT LPAREN Expression RPAREN
-    (86) MallocStmt -> . MALLOC LPAREN Expression RPAREN
+    (86) ScanStmt -> . SCAN LPAREN Expression RPAREN
     (25) TypeDecl -> . TYPE TypeSpec
     (26) TypeDecl -> . TYPE LPAREN TypeSpecList RPAREN
     (27) TypeDecl -> . TYPE LPAREN RPAREN
@@ -4150,20 +4157,20 @@ state 164
     (131) Expression5 -> . Expression5 mul_op UnaryExpr
 
     RBRACE          shift and go to state 215
-    RETURN          shift and go to state 165
-    BREAK           shift and go to state 182
+    RETURN          shift and go to state 166
+    BREAK           shift and go to state 180
     CONTINUE        shift and go to state 175
     ID              shift and go to state 188
-    GOTO            shift and go to state 161
+    GOTO            shift and go to state 162
     LBRACE          reduce using rule 17 (StartScope -> .)
     IF              shift and go to state 189
     FOR             shift and go to state 173
     PRINT           shift and go to state 168
-    MALLOC          shift and go to state 180
+    SCAN            shift and go to state 183
     TYPE            shift and go to state 15
     VAR             shift and go to state 13
     SEMICOLON       reduce using rule 92 (EmptyStmt -> .)
-    SWITCH          shift and go to state 178
+    SWITCH          shift and go to state 177
     ADD             shift and go to state 85
     SUB             shift and go to state 68
     NOT             shift and go to state 72
@@ -4182,15 +4189,14 @@ state 164
     SimpleStmt                     shift and go to state 184
     ExpressionStmt                 shift and go to state 157
     ForStmt                        shift and go to state 185
-    ExprSwitchStmt                 shift and go to state 166
+    ScanStmt                       shift and go to state 158
     Statement                      shift and go to state 214
     IdentifierList                 shift and go to state 167
-    MallocStmt                     shift and go to state 176
-    IfStmt                         shift and go to state 159
-    Assignment                     shift and go to state 160
+    IfStmt                         shift and go to state 160
+    Assignment                     shift and go to state 161
     StartScope                     shift and go to state 170
     IncDecStmt                     shift and go to state 171
-    Declaration                    shift and go to state 179
+    Declaration                    shift and go to state 178
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
@@ -4198,12 +4204,13 @@ state 164
     Expression4                    shift and go to state 79
     GotoStmt                       shift and go to state 172
     TypeDecl                       shift and go to state 10
-    LabeledStmt                    shift and go to state 162
-    EmptyStmt                      shift and go to state 163
+    LabeledStmt                    shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
+    unary_op                       shift and go to state 70
     Operand                        shift and go to state 84
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     BreakStmt                      shift and go to state 190
     SwitchStmt                     shift and go to state 174
     Literal                        shift and go to state 69
@@ -4211,10 +4218,10 @@ state 164
     PrintStmt                      shift and go to state 169
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
-    ReturnStmt                     shift and go to state 183
-    unary_op                       shift and go to state 70
+    ReturnStmt                     shift and go to state 181
+    ExprSwitchStmt                 shift and go to state 182
 
-state 165
+state 166
 
     (97) ReturnStmt -> RETURN .
     (98) ReturnStmt -> RETURN . Expression
@@ -4280,13 +4287,6 @@ state 165
     Expression2                    shift and go to state 77
     Expression                     shift and go to state 216
     Expression4                    shift and go to state 79
-
-state 166
-
-    (112) SwitchStmt -> ExprSwitchStmt .
-
-    SEMICOLON       reduce using rule 112 (SwitchStmt -> ExprSwitchStmt .)
-
 
 state 167
 
@@ -4409,19 +4409,19 @@ state 173
     unary_op                       shift and go to state 70
     ForSig                         shift and go to state 221
     IdentifierList                 shift and go to state 167
-    Assignment                     shift and go to state 160
+    Assignment                     shift and go to state 161
     IncDecStmt                     shift and go to state 171
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
     Expression5                    shift and go to state 78
     Expression4                    shift and go to state 79
-    EmptyStmt                      shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
     Operand                        shift and go to state 84
     ForClause                      shift and go to state 223
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     Literal                        shift and go to state 69
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
@@ -4444,20 +4444,13 @@ state 175
 
 state 176
 
-    (84) Statement -> MallocStmt .
-
-    SEMICOLON       reduce using rule 84 (Statement -> MallocStmt .)
-
-
-state 177
-
     (87) SimpleStmt -> ShortVarDecl .
 
     SEMICOLON       reduce using rule 87 (SimpleStmt -> ShortVarDecl .)
     LBRACE          reduce using rule 87 (SimpleStmt -> ShortVarDecl .)
 
 
-state 178
+state 177
 
     (113) ExprSwitchStmt -> SWITCH . Expression LBRACE ExprCaseClauseList RBRACE
     (121) Expression -> . Expression1
@@ -4522,21 +4515,14 @@ state 178
     Expression2                    shift and go to state 77
     Expression4                    shift and go to state 79
 
-state 179
+state 178
 
     (72) Statement -> Declaration .
 
     SEMICOLON       reduce using rule 72 (Statement -> Declaration .)
 
 
-state 180
-
-    (86) MallocStmt -> MALLOC . LPAREN Expression RPAREN
-
-    LPAREN          shift and go to state 226
-
-
-state 181
+state 179
 
     (93) ExpressionStmt -> Expression .
     (94) IncDecStmt -> Expression . INC
@@ -4544,24 +4530,38 @@ state 181
 
     LBRACE          reduce using rule 93 (ExpressionStmt -> Expression .)
     SEMICOLON       reduce using rule 93 (ExpressionStmt -> Expression .)
-    INC             shift and go to state 228
-    DEC             shift and go to state 227
+    INC             shift and go to state 227
+    DEC             shift and go to state 226
 
 
-state 182
+state 180
 
     (99) BreakStmt -> BREAK .
     (100) BreakStmt -> BREAK . ID
 
     SEMICOLON       reduce using rule 99 (BreakStmt -> BREAK .)
-    ID              shift and go to state 229
+    ID              shift and go to state 228
 
 
-state 183
+state 181
 
     (74) Statement -> ReturnStmt .
 
     SEMICOLON       reduce using rule 74 (Statement -> ReturnStmt .)
+
+
+state 182
+
+    (112) SwitchStmt -> ExprSwitchStmt .
+
+    SEMICOLON       reduce using rule 112 (SwitchStmt -> ExprSwitchStmt .)
+
+
+state 183
+
+    (86) ScanStmt -> SCAN . LPAREN Expression RPAREN
+
+    LPAREN          shift and go to state 229
 
 
 state 184
@@ -4780,9 +4780,9 @@ state 192
     LBRACE          reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     RBRACE          reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     COMMA           reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
-    RPAREN          reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     INC             reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     DEC             reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
+    RPAREN          reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     COLON           reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     RBRACK          reduce using rule 123 (Expression1 -> Expression1 LOR Expression2 .)
     LAND            shift and go to state 124
@@ -4805,13 +4805,13 @@ state 193
     GEQ             reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     LAND            reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     LOR             reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
+    SEMICOLON       reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     INC             reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     DEC             reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
-    SEMICOLON       reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     RBRACE          reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     COMMA           reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
-    RPAREN          reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     LBRACE          reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
+    RPAREN          reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     COLON           reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     RBRACK          reduce using rule 127 (Expression3 -> Expression3 rel_op Expression4 .)
     ADD             shift and go to state 135
@@ -4910,13 +4910,13 @@ state 196
     GEQ             reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     LAND            reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     LOR             reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
+    RPAREN          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
+    SEMICOLON       reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     INC             reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     DEC             reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
-    SEMICOLON       reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
-    RPAREN          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
-    LBRACE          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     COMMA           reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     COLON           reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
+    LBRACE          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     RBRACE          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     RBRACK          reduce using rule 129 (Expression4 -> Expression4 add_op Expression5 .)
     MUL             shift and go to state 131
@@ -5231,7 +5231,7 @@ state 212
     IF              reduce using rule 71 (StatementList -> Statement SEMICOLON .)
     FOR             reduce using rule 71 (StatementList -> Statement SEMICOLON .)
     PRINT           reduce using rule 71 (StatementList -> Statement SEMICOLON .)
-    MALLOC          reduce using rule 71 (StatementList -> Statement SEMICOLON .)
+    SCAN            reduce using rule 71 (StatementList -> Statement SEMICOLON .)
     TYPE            reduce using rule 71 (StatementList -> Statement SEMICOLON .)
     VAR             reduce using rule 71 (StatementList -> Statement SEMICOLON .)
     SWITCH          reduce using rule 71 (StatementList -> Statement SEMICOLON .)
@@ -5511,7 +5511,30 @@ state 225
 
 state 226
 
-    (86) MallocStmt -> MALLOC LPAREN . Expression RPAREN
+    (95) IncDecStmt -> Expression DEC .
+
+    SEMICOLON       reduce using rule 95 (IncDecStmt -> Expression DEC .)
+    LBRACE          reduce using rule 95 (IncDecStmt -> Expression DEC .)
+
+
+state 227
+
+    (94) IncDecStmt -> Expression INC .
+
+    SEMICOLON       reduce using rule 94 (IncDecStmt -> Expression INC .)
+    LBRACE          reduce using rule 94 (IncDecStmt -> Expression INC .)
+
+
+state 228
+
+    (100) BreakStmt -> BREAK ID .
+
+    SEMICOLON       reduce using rule 100 (BreakStmt -> BREAK ID .)
+
+
+state 229
+
+    (86) ScanStmt -> SCAN LPAREN . Expression RPAREN
     (121) Expression -> . Expression1
     (122) Expression1 -> . Expression2
     (123) Expression1 -> . Expression1 LOR Expression2
@@ -5573,29 +5596,6 @@ state 226
     Expression2                    shift and go to state 77
     Expression                     shift and go to state 261
     Expression4                    shift and go to state 79
-
-state 227
-
-    (95) IncDecStmt -> Expression DEC .
-
-    SEMICOLON       reduce using rule 95 (IncDecStmt -> Expression DEC .)
-    LBRACE          reduce using rule 95 (IncDecStmt -> Expression DEC .)
-
-
-state 228
-
-    (94) IncDecStmt -> Expression INC .
-
-    SEMICOLON       reduce using rule 94 (IncDecStmt -> Expression INC .)
-    LBRACE          reduce using rule 94 (IncDecStmt -> Expression INC .)
-
-
-state 229
-
-    (100) BreakStmt -> BREAK ID .
-
-    SEMICOLON       reduce using rule 100 (BreakStmt -> BREAK ID .)
-
 
 state 230
 
@@ -5917,7 +5917,7 @@ state 243
     (81) Statement -> . ForStmt
     (82) Statement -> . SwitchStmt
     (83) Statement -> . PrintStmt
-    (84) Statement -> . MallocStmt
+    (84) Statement -> . ScanStmt
     (23) Declaration -> . TypeDecl
     (24) Declaration -> . VarDecl
     (87) SimpleStmt -> . ShortVarDecl
@@ -5940,7 +5940,7 @@ state 243
     (108) ForStmt -> . FOR ForSig StartScope Block EndScope
     (112) SwitchStmt -> . ExprSwitchStmt
     (85) PrintStmt -> . PRINT LPAREN Expression RPAREN
-    (86) MallocStmt -> . MALLOC LPAREN Expression RPAREN
+    (86) ScanStmt -> . SCAN LPAREN Expression RPAREN
     (25) TypeDecl -> . TYPE TypeSpec
     (26) TypeDecl -> . TYPE LPAREN TypeSpecList RPAREN
     (27) TypeDecl -> . TYPE LPAREN RPAREN
@@ -5990,20 +5990,20 @@ state 243
     (130) Expression5 -> . UnaryExpr
     (131) Expression5 -> . Expression5 mul_op UnaryExpr
 
-    RETURN          shift and go to state 165
-    BREAK           shift and go to state 182
+    RETURN          shift and go to state 166
+    BREAK           shift and go to state 180
     CONTINUE        shift and go to state 175
     ID              shift and go to state 188
-    GOTO            shift and go to state 161
+    GOTO            shift and go to state 162
     LBRACE          reduce using rule 17 (StartScope -> .)
     IF              shift and go to state 189
     FOR             shift and go to state 173
     PRINT           shift and go to state 168
-    MALLOC          shift and go to state 180
+    SCAN            shift and go to state 183
     TYPE            shift and go to state 15
     VAR             shift and go to state 13
     SEMICOLON       reduce using rule 92 (EmptyStmt -> .)
-    SWITCH          shift and go to state 178
+    SWITCH          shift and go to state 177
     ADD             shift and go to state 85
     SUB             shift and go to state 68
     NOT             shift and go to state 72
@@ -6022,15 +6022,14 @@ state 243
     SimpleStmt                     shift and go to state 184
     ExpressionStmt                 shift and go to state 157
     ForStmt                        shift and go to state 185
-    ExprSwitchStmt                 shift and go to state 166
+    ScanStmt                       shift and go to state 158
     Statement                      shift and go to state 263
     IdentifierList                 shift and go to state 167
-    MallocStmt                     shift and go to state 176
-    IfStmt                         shift and go to state 159
-    Assignment                     shift and go to state 160
+    IfStmt                         shift and go to state 160
+    Assignment                     shift and go to state 161
     StartScope                     shift and go to state 170
     IncDecStmt                     shift and go to state 171
-    Declaration                    shift and go to state 179
+    Declaration                    shift and go to state 178
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
@@ -6038,12 +6037,13 @@ state 243
     Expression4                    shift and go to state 79
     GotoStmt                       shift and go to state 172
     TypeDecl                       shift and go to state 10
-    LabeledStmt                    shift and go to state 162
-    EmptyStmt                      shift and go to state 163
+    LabeledStmt                    shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
+    unary_op                       shift and go to state 70
     Operand                        shift and go to state 84
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     BreakStmt                      shift and go to state 190
     SwitchStmt                     shift and go to state 174
     Literal                        shift and go to state 69
@@ -6051,8 +6051,8 @@ state 243
     PrintStmt                      shift and go to state 169
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
-    ReturnStmt                     shift and go to state 183
-    unary_op                       shift and go to state 70
+    ReturnStmt                     shift and go to state 181
+    ExprSwitchStmt                 shift and go to state 182
 
 state 244
 
@@ -6300,7 +6300,7 @@ state 254
     IF              reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
     FOR             reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
     PRINT           reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
-    MALLOC          reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
+    SCAN            reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
     TYPE            reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
     VAR             reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
     SWITCH          reduce using rule 70 (StatementList -> StatementList Statement SEMICOLON .)
@@ -6442,7 +6442,7 @@ state 260
 
 state 261
 
-    (86) MallocStmt -> MALLOC LPAREN Expression . RPAREN
+    (86) ScanStmt -> SCAN LPAREN Expression . RPAREN
 
     RPAREN          shift and go to state 278
 
@@ -6685,9 +6685,9 @@ state 277
 
 state 278
 
-    (86) MallocStmt -> MALLOC LPAREN Expression RPAREN .
+    (86) ScanStmt -> SCAN LPAREN Expression RPAREN .
 
-    SEMICOLON       reduce using rule 86 (MallocStmt -> MALLOC LPAREN Expression RPAREN .)
+    SEMICOLON       reduce using rule 86 (ScanStmt -> SCAN LPAREN Expression RPAREN .)
 
 
 state 279
@@ -6772,18 +6772,18 @@ state 280
     Literal                        shift and go to state 69
     unary_op                       shift and go to state 70
     IdentifierList                 shift and go to state 167
-    Assignment                     shift and go to state 160
+    Assignment                     shift and go to state 161
     IncDecStmt                     shift and go to state 171
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
     Expression5                    shift and go to state 78
     Expression4                    shift and go to state 79
-    EmptyStmt                      shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
     PrimaryExpr                    shift and go to state 93
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     ExpressionStmt                 shift and go to state 157
     BasicLit                       shift and go to state 73
     Operand                        shift and go to state 84
@@ -6819,7 +6819,7 @@ state 283
     (81) Statement -> . ForStmt
     (82) Statement -> . SwitchStmt
     (83) Statement -> . PrintStmt
-    (84) Statement -> . MallocStmt
+    (84) Statement -> . ScanStmt
     (23) Declaration -> . TypeDecl
     (24) Declaration -> . VarDecl
     (87) SimpleStmt -> . ShortVarDecl
@@ -6842,7 +6842,7 @@ state 283
     (108) ForStmt -> . FOR ForSig StartScope Block EndScope
     (112) SwitchStmt -> . ExprSwitchStmt
     (85) PrintStmt -> . PRINT LPAREN Expression RPAREN
-    (86) MallocStmt -> . MALLOC LPAREN Expression RPAREN
+    (86) ScanStmt -> . SCAN LPAREN Expression RPAREN
     (25) TypeDecl -> . TYPE TypeSpec
     (26) TypeDecl -> . TYPE LPAREN TypeSpecList RPAREN
     (27) TypeDecl -> . TYPE LPAREN RPAREN
@@ -6892,20 +6892,20 @@ state 283
     (130) Expression5 -> . UnaryExpr
     (131) Expression5 -> . Expression5 mul_op UnaryExpr
 
-    RETURN          shift and go to state 165
-    BREAK           shift and go to state 182
+    RETURN          shift and go to state 166
+    BREAK           shift and go to state 180
     CONTINUE        shift and go to state 175
     ID              shift and go to state 188
-    GOTO            shift and go to state 161
+    GOTO            shift and go to state 162
     LBRACE          reduce using rule 17 (StartScope -> .)
     IF              shift and go to state 189
     FOR             shift and go to state 173
     PRINT           shift and go to state 168
-    MALLOC          shift and go to state 180
+    SCAN            shift and go to state 183
     TYPE            shift and go to state 15
     VAR             shift and go to state 13
     SEMICOLON       reduce using rule 92 (EmptyStmt -> .)
-    SWITCH          shift and go to state 178
+    SWITCH          shift and go to state 177
     ADD             shift and go to state 85
     SUB             shift and go to state 68
     NOT             shift and go to state 72
@@ -6924,15 +6924,14 @@ state 283
     SimpleStmt                     shift and go to state 184
     ExpressionStmt                 shift and go to state 157
     ForStmt                        shift and go to state 185
-    ExprSwitchStmt                 shift and go to state 166
-    Statement                      shift and go to state 158
+    ScanStmt                       shift and go to state 158
+    Statement                      shift and go to state 159
     IdentifierList                 shift and go to state 167
-    MallocStmt                     shift and go to state 176
-    IfStmt                         shift and go to state 159
-    Assignment                     shift and go to state 160
+    IfStmt                         shift and go to state 160
+    Assignment                     shift and go to state 161
     StartScope                     shift and go to state 170
     IncDecStmt                     shift and go to state 171
-    Declaration                    shift and go to state 179
+    Declaration                    shift and go to state 178
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
@@ -6940,13 +6939,14 @@ state 283
     Expression4                    shift and go to state 79
     GotoStmt                       shift and go to state 172
     TypeDecl                       shift and go to state 10
-    LabeledStmt                    shift and go to state 162
-    EmptyStmt                      shift and go to state 163
+    LabeledStmt                    shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
     StatementList                  shift and go to state 288
+    unary_op                       shift and go to state 70
     Operand                        shift and go to state 84
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     BreakStmt                      shift and go to state 190
     SwitchStmt                     shift and go to state 174
     Literal                        shift and go to state 69
@@ -6954,8 +6954,8 @@ state 283
     PrintStmt                      shift and go to state 169
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
-    ReturnStmt                     shift and go to state 183
-    unary_op                       shift and go to state 70
+    ReturnStmt                     shift and go to state 181
+    ExprSwitchStmt                 shift and go to state 182
 
 state 284
 
@@ -7006,7 +7006,7 @@ state 288
     (81) Statement -> . ForStmt
     (82) Statement -> . SwitchStmt
     (83) Statement -> . PrintStmt
-    (84) Statement -> . MallocStmt
+    (84) Statement -> . ScanStmt
     (23) Declaration -> . TypeDecl
     (24) Declaration -> . VarDecl
     (87) SimpleStmt -> . ShortVarDecl
@@ -7029,7 +7029,7 @@ state 288
     (108) ForStmt -> . FOR ForSig StartScope Block EndScope
     (112) SwitchStmt -> . ExprSwitchStmt
     (85) PrintStmt -> . PRINT LPAREN Expression RPAREN
-    (86) MallocStmt -> . MALLOC LPAREN Expression RPAREN
+    (86) ScanStmt -> . SCAN LPAREN Expression RPAREN
     (25) TypeDecl -> . TYPE TypeSpec
     (26) TypeDecl -> . TYPE LPAREN TypeSpecList RPAREN
     (27) TypeDecl -> . TYPE LPAREN RPAREN
@@ -7082,20 +7082,20 @@ state 288
     RBRACE          reduce using rule 116 (ExprCaseClause -> ExprSwitchCase COLON StatementList .)
     DEFAULT         reduce using rule 116 (ExprCaseClause -> ExprSwitchCase COLON StatementList .)
     CASE            reduce using rule 116 (ExprCaseClause -> ExprSwitchCase COLON StatementList .)
-    RETURN          shift and go to state 165
-    BREAK           shift and go to state 182
+    RETURN          shift and go to state 166
+    BREAK           shift and go to state 180
     CONTINUE        shift and go to state 175
     ID              shift and go to state 188
-    GOTO            shift and go to state 161
+    GOTO            shift and go to state 162
     LBRACE          reduce using rule 17 (StartScope -> .)
     IF              shift and go to state 189
     FOR             shift and go to state 173
     PRINT           shift and go to state 168
-    MALLOC          shift and go to state 180
+    SCAN            shift and go to state 183
     TYPE            shift and go to state 15
     VAR             shift and go to state 13
     SEMICOLON       reduce using rule 92 (EmptyStmt -> .)
-    SWITCH          shift and go to state 178
+    SWITCH          shift and go to state 177
     ADD             shift and go to state 85
     SUB             shift and go to state 68
     NOT             shift and go to state 72
@@ -7114,15 +7114,14 @@ state 288
     SimpleStmt                     shift and go to state 184
     ExpressionStmt                 shift and go to state 157
     ForStmt                        shift and go to state 185
-    ExprSwitchStmt                 shift and go to state 166
+    ScanStmt                       shift and go to state 158
     Statement                      shift and go to state 214
     IdentifierList                 shift and go to state 167
-    MallocStmt                     shift and go to state 176
-    IfStmt                         shift and go to state 159
-    Assignment                     shift and go to state 160
+    IfStmt                         shift and go to state 160
+    Assignment                     shift and go to state 161
     StartScope                     shift and go to state 170
     IncDecStmt                     shift and go to state 171
-    Declaration                    shift and go to state 179
+    Declaration                    shift and go to state 178
     Expression1                    shift and go to state 75
     Expression3                    shift and go to state 76
     Expression2                    shift and go to state 77
@@ -7130,12 +7129,13 @@ state 288
     Expression4                    shift and go to state 79
     GotoStmt                       shift and go to state 172
     TypeDecl                       shift and go to state 10
-    LabeledStmt                    shift and go to state 162
-    EmptyStmt                      shift and go to state 163
+    LabeledStmt                    shift and go to state 163
+    EmptyStmt                      shift and go to state 164
     UnaryExpr                      shift and go to state 187
+    unary_op                       shift and go to state 70
     Operand                        shift and go to state 84
-    Expression                     shift and go to state 181
-    ShortVarDecl                   shift and go to state 177
+    Expression                     shift and go to state 179
+    ShortVarDecl                   shift and go to state 176
     BreakStmt                      shift and go to state 190
     SwitchStmt                     shift and go to state 174
     Literal                        shift and go to state 69
@@ -7143,8 +7143,8 @@ state 288
     PrintStmt                      shift and go to state 169
     BasicLit                       shift and go to state 73
     PrimaryExpr                    shift and go to state 93
-    ReturnStmt                     shift and go to state 183
-    unary_op                       shift and go to state 70
+    ReturnStmt                     shift and go to state 181
+    ExprSwitchStmt                 shift and go to state 182
 
 state 289
 

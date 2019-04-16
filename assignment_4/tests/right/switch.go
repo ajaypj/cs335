@@ -9,7 +9,8 @@ import "time";
 func main() {
   // Here's a basic `switch`.
   var i,c int;
-  i = 2;
+
+  scan(i);
   switch (i) {
     case 1:
       c = 10;
