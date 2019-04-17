@@ -205,13 +205,8 @@ def p_FunctionDecl(p):
     else:
         if p[2] in declared:
             declared.remove(p[2])
-        code = ["funcstart "+str(12 + scopeST[0].table[p[2]]['vMem'])+" "+p[2]+":"]
-        code += ["push %ebp"]
-        code += ["movl %esp, %ebp"]
-        code += ["sub $"+str(scopeST[0].table[p[2]]['vMem'])+", %esp"]
-        code += ["push %ebx", "push %esi", "push %edi"]
-        for stmt in code:
-            irf.write(stmt+'\n')
+        stmt = "func "+p[2]+":"+str(scopeST[0].table[p[2]]['aMem'])+":"+str(scopeST[0].table[p[2]]['vMem'])
+        irf.write(stmt+'\n')
         if len(p)==7:
             for stmt in p[5]:
                 irf.write(stmt+'\n')
@@ -679,15 +674,9 @@ def p_ReturnStmt(p):
         else:
             # width=typeWidth[]
             p[0] += ["putretval "+p[2].place+", "+str(scopeST[0].table[currFunc]['rOff'])]
-        p[0] += ["funcend"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "movl %ebp, %esp"]
-        p[0] += ["pop %ebp"]
-        p[0] += ["ret"]
+        p[0] += ["return"]
     else:
-        p[0] = ["funcend"]
-        p[0] += ["pop %edi", "pop %esi", "pop %ebx", "movl %ebp, %esp"]
-        p[0] += ["pop %ebp"]
-        p[0] += ["ret"]
+        p[0] = ["return"]
 
 ### Not Done
 def p_BreakStmt(p):
@@ -1033,18 +1022,18 @@ def p_Expression5(p):
 							| Expression5 mul_op UnaryExpr '''
     if len(p)==2:
         p[0]=p[1]
-        if "addrv:" in p[1].place:
+        if "*" in p[1].place:
             var = new_tmp(p[1].type)
-            addr = p[1].place[6:]
-            p[0].code += ["addrtotmp "+addr+", "+var]
+            addr = p[1].place[1:]
+            p[0].code += ["unary* "+var+", "+addr]
             p[0].place = var
     else:
         p[0]=expr()
         p[0].code=p[1].code+p[3].code
-        if "addrv:" in p[3].place:
+        if "*" in p[3].place:
             var = new_tmp(p[3].type)
-            addr = p[3].place[6:]
-            p[0].code += ["addrtotmp "+addr+", "+var]
+            addr = p[3].place[1:]
+            p[0].code += ["unary* "+var+", "+addr]
             p[3].place = var
 
         if p[1].type == 'float' and p[3].type == 'int':
@@ -1095,13 +1084,13 @@ def p_UnaryExpr(p):
                 raise Exception("Line "+str(p.lineno(1))+": "+"Can't use "+p[1].place+" on this type.")
         elif p[1]=='*':
             p[0].type = p[2].type[8:-1]
-            p[0].place = "addrv:"+p[2].place
+            p[0].place = "*"+p[2].place
             p[0].code = p[2].code
         elif p[1]=='&':
             p[0].type = "pointer("+p[2].type+")"
             typeWidth.update({p[0].type : 4})
             p[0].place = new_tmp(p[0].type)
-            p[0].code = p[2].code+["lea "+p[2].place+", "+p[0].place]
+            p[0].code = p[2].code+["unary& "+p[0].place+", "+p[2].place]
         p.set_lineno(0, p.lineno(1))
 
 def p_PrimaryExpr(p):
@@ -1157,8 +1146,8 @@ def p_PrimaryExpr2(p):
         addr=new_tmp('int') # Address of element
         p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
         p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
-        p[0].code+=["offtoaddr "+var2+", "+addr]
-        p[0].place="addrv:"+addr
+        p[0].code+=["int- "+addr+", %ebp, "+var2]
+        p[0].place="*"+addr
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):
@@ -1192,12 +1181,13 @@ def p_PrimaryExpr5(p):
         # Function call
         p[0] = expr()
         p[0].type = dic['rType']
+        # if p[0].type[:6]=="struct" or p[0].type[:5]=="array":
+        #     p[0].place = "var\"ret\":"+str()+":"+str()
         p[0].place = new_tmp(p[0].type)
         for i in xrange(len(p[2])):
             p[0].code+=p[2][i].code
 
-        p[0].code+=["sub $"+str(typeWidth[p[0].type])+", %esp"]
-        p[0].code+=["push %eax", "push %ecx", "push %edx"]
+        p[0].code+=["returnsize "+str(typeWidth[p[0].type])]
         for exp in p[2][::-1]:
             if exp.type[:6]=="struct":
                 sc = int(exp.type[7:])
@@ -1207,7 +1197,7 @@ def p_PrimaryExpr5(p):
                     dic2 = scopeST[sc].table[field]
                     if dic2["type"][:6]=="struct" or dic2["type"][:5]=="array":
                         raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass structs of basic types.")
-                    p[0].code += ['push var\"'+name+'.'+field+'\":'+str(offset-dic2['fOffset'])+':'+str(dic2['width'])]
+                    p[0].code += ['pass var\"'+name+'.'+field+'\":'+str(offset-dic2['fOffset'])+':'+str(dic2['width'])]
             elif exp.type[:5]=="array":
                 name = exp.place.split('\"')[1]
                 offset = int(exp.place.split(':')[1])
@@ -1217,15 +1207,10 @@ def p_PrimaryExpr5(p):
                     raise Exception("Line "+str(p.lineno(2))+": "+"Sorry, you can only pass arrays of basic types.")
                 n = arrWidth/typeWidth[elemType]
                 for i in xrange(n):
-                    p[0].code += ['push var\"'+name+'['+str(n-1-i)+']'+'\":'+str(offset-(n-1-i)*typeWidth[elemType])+':'+str(typeWidth[elemType])]
+                    p[0].code += ['pass var\"'+name+'['+str(n-1-i)+']'+'\":'+str(offset-(n-1-i)*typeWidth[elemType])+':'+str(typeWidth[elemType])]
             else:
-                p[0].code+=["push "+exp.place]
-        p[0].code+=["call "+p[1].place]
-
-        # if p[0].type[:6]=="struct" or p[0].type[:5]=="array":
-        #     p[0].place = "var\"ret\":"+str()+":"+str()
-        p[0].code+=["add $"+str(dic['aMem'])+", %esp"]
-        p[0].code+=["pop %edx", "pop %ecx", "pop %eax"]
+                p[0].code += ["pass "+exp.place]
+        p[0].code+=["call "+p[1].place+":"+str(dic['aMem'])+":"+str(dic['vMem'])]
         p[0].code+=["getretval "+p[0].place]
     p.set_lineno(0, p.lineno(1))
 
@@ -1478,6 +1463,6 @@ data = f.read()
 f.close()
 
 irf = open(args["out"], "w")
-result = parser.parse(data, debug=1)
+result = parser.parse(data, debug=0)
 irf.close()
 # print (result)

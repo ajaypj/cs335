@@ -3,9 +3,9 @@ package main;
 import "fmt";
 
 func ackermann(m, n int) int {
-	if m == 0 {
-		return n + 1;
-	}	else if m > 0 {
+	if m==0 {
+		return n+1;
+	}	else if m>0 {
 		if n==0 {
 			return ackermann(m-1, 1);
 		};
@@ -14,7 +14,7 @@ func ackermann(m, n int) int {
 };
 
 func main() {
-	a:= ackermann(1, 2);
+	a := ackermann(3, 3);
 	print(a);
 	return;
 };

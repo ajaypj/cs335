@@ -6,22 +6,22 @@ import "fmt";
 
 func main() {
   var input [5]int;
-  input[0]=5;
-  input[1]=4;
-  input[2]=3;
-  input[3]=2;
-  input[4]=1;
+  input[0] = 5;
+  input[1] = 4;
+  input[2] = 3;
+  input[3] = 2;
+  input[4] = 1;
   n := 5;
-  for i:=0;i<n;i++{
-    for j:=0;j<n-1;j++{
-      if input[j]>input[j+1]{
-        temp:=input[j];
-        input[j]=input[j+1];
-        input[j+1]=temp;
+  for i:=0; i<n; i++ {
+    for j:=0; j < n-1; j++ {
+      if input[j] > input[j+1] {
+        temp := input[j];
+        input[j] = input[j+1];
+        input[j+1] = temp;
       };
     };
   };
-  for k:=0;k<n;k++{
+  for k:=0; k<n; k++ {
     res := input[k];
     print(res);
   };
