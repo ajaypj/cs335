@@ -731,7 +731,6 @@ def p_IfStmt(p):
                             # | IF SimpleStmt SEMICOLON Expression Block ELSE Block
                             # | IF SimpleStmt SEMICOLON Expression Block
     endLabel=createLabel()
-
     p[0]=p[2].code
     # Consider gotoPos goes to Label if positive, similarly gotoZeroNeg
     p[0]+=["gotoZeroNeg "+p[2].place+", "+endLabel]
@@ -1005,6 +1004,10 @@ def p_Expression4(p):
             p[0].type = 'int'
             p[0].place = new_tmp('int')
             p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
+        elif p[1].type[:7] == 'pointer' and p[3].type == 'int':
+            p[0].type = p[1].type
+            p[0].place = new_tmp(p[0].type)
+            p[0].code.append('int'+p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place)
         elif p[1].type == 'float' and p[3].type == 'float':
             p[0].type = 'float'
             p[0].place = new_tmp('float')
@@ -1087,7 +1090,10 @@ def p_UnaryExpr(p):
             p[0].place = "*"+p[2].place
             p[0].code = p[2].code
         elif p[1]=='&':
-            p[0].type = "pointer("+p[2].type+")"
+            if p[2].type[:5]=='array':
+                p[0].type = "pointer"+p[2].type[5:]
+            else:
+                p[0].type = "pointer("+p[2].type+")"
             typeWidth.update({p[0].type : 4})
             p[0].place = new_tmp(p[0].type)
             p[0].code = p[2].code+["unary& "+p[0].place+", "+p[2].place]

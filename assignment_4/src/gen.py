@@ -2,9 +2,9 @@ import re
 from collections import OrderedDict
 
 init_regs = OrderedDict()
-init_regs["eax"] = 0
+# init_regs["eax"] = 0
 init_regs["ecx"] = 0
-init_regs["edx"] = 0
+# init_regs["edx"] = 0
 init_regs["ebx"] = 0
 init_regs["esi"] = 0
 init_regs["edi"] = 0
@@ -94,7 +94,7 @@ file.close()
 # print(ir)
 
 ################################ Code generation ###############################
-op_dic = {'+':"add", '-':"sub", '*':"imul", '/':"idiv", '&':"and", '^':"xor", '|':"or", '<':"l", '<=':"le", '>':"g", '>=':"ge", '==':"e", '!=':"ne"}
+op_dic = {'+':"add", '-':"sub", '*':"imul", '/':"idivl", '&':"and", '^':"xor", '|':"or", '<':"l", '<=':"le", '>':"g", '>=':"ge", '==':"e", '!=':"ne"}
 
 for line in ir:
 	data = re.split(" |, |\n", line)
@@ -302,7 +302,11 @@ for line in ir:
 		width = int(split_var(i[1])[1])
 		left_temp_var_name = split_var(i[1])[0]
 		# print(left_temp_var_name, width)
-		new_reg = get_reg(left_temp_var_name, width)
+		new_reg = ''
+		if op == 'idivl':
+			new_reg = 'eax'
+		else:
+			new_reg = get_reg(left_temp_var_name, width)
 
 		if get_type(i[2]) == "c" or get_type(i[2]) == -1:
 			code += ["movl {}, %{}".format(i[2], new_reg)]
@@ -318,21 +322,41 @@ for line in ir:
 			elif "var" in i[2]:
 				var_offset = int(split_var(i[2])[1])
 				code += ["movl {}(%ebp), %{}".format(-var_offset, new_reg)]
+		if op == 'idivl':
+			code += ["cdq"]
 
 		if get_type(i[3]) == "c" or get_type(i[3]) == -1:
-			code += ["{} {}, %{}".format(op, i[3], new_reg)]
+			if op == 'idivl':
+				reg = get_reg("#", 4)
+				code += ["movl {}, %{}".format(i[3], reg)]
+				code += ["{} %{}".format(op, reg)]
+				remove_used_temp_var_in_reg("#")
+			else:
+				code += ["{} {}, %{}".format(op, i[3], new_reg)]
 		elif get_type(i[3]) == "r":
 			temp_var_name = split_var(i[3])[0]
-			code += ["{} %{}, %{}".format(op, temp_vars[temp_var_name]["ro"], new_reg)]
+			if op == 'idivl':
+				code += ["{} %{}".format(op, temp_vars[temp_var_name]["ro"])]
+			else:
+				code += ["{} %{}, %{}".format(op, temp_vars[temp_var_name]["ro"], new_reg)]
 			remove_used_temp_var_in_reg(temp_var_name)
 		elif get_type(i[3]) == "m":
 			if "tmp#" in i[3]:
 				temp_var_name = split_var(i[3])[0]
-				code += ["{} {}(%ebp), %{}".format(op, -temp_vars[temp_var_name]["so"], new_reg)]
+				if op == 'idivl':
+					code += ["{} {}(%ebp)".format(op, -temp_vars[temp_var_name]["so"])]
+				else:
+					code += ["{} {}(%ebp), %{}".format(op, -temp_vars[temp_var_name]["so"], new_reg)]
 				remove_used_temp_var_in_mem(temp_var_name)
 			elif "var" in i[3]:
 				var_offset = int(split_var(i[3])[1])
-				code += ["{} {}(%ebp), %{}".format(op, -var_offset, new_reg)]
+				if op == 'idivl':
+					code += ["{} {}(%ebp)".format(op, -var_offset)]
+				else:
+					code += ["{} {}(%ebp), %{}".format(op, -var_offset, new_reg)]
+		if op == 'idivl':
+			new_reg = get_reg(left_temp_var_name, width)
+			code += ["movl %eax, %{}".format(new_reg)]
 
 	elif i[0] in ["int<=", "int>=", "int==", "int!=", "int>", "int<", "bool<=", "bool>=", "bool>", "bool<", "bool==", "bool!="]:
 		# print i[0][3:]
@@ -375,8 +399,9 @@ for line in ir:
 			elif "var" in i[3]:
 				var_offset = int(split_var(i[3])[1])
 				code += ["cmp {}(%ebp), %{}".format(-var_offset, new_reg)]
-		code += ["movl $0, %{}".format(new_reg)]
-		code += ["set{} %{}".format(op, new_reg[1]+'l')]
+		code += ["movl $0, %eax"]
+		code += ["set{} %al".format(op)]
+		code += ["movl %eax, %{}".format(new_reg)]
 
 	elif i[0] in ["gotoZeroNeg", "gotoPos"]:
 		jump_command=""
