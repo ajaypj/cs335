@@ -243,7 +243,7 @@ for line in ir:
 	    elif get_type(i[1])=='r':
 	        temp_var_name=split_var(i[1])[0]
 	        reg = temp_vars[temp_var_name]["ro"]
-	        code += ["{}, %{}".format(op, reg)]
+	        code += ["{} %{}".format(op, reg)]
 
 	elif i[0] in ["int+=", "int-=", "int*=", "int/=", "int"]:
 	    op=op_dic[i[0][3]]

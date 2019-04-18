@@ -1,27 +1,29 @@
 						3
-						temp {'width': 4, 'offset': 12, 'type': 'int', 'cls': 'VAR'}
+						input {'width': 4, 'offset': 60, 'type': 'int', 'cls': 'VAR'}
 				2
+				k {'width': 4, 'offset': 56, 'type': 'int', 'cls': 'VAR'}
+						5
+						input {'width': 4, 'offset': 72, 'type': 'int', 'cls': 'VAR'}
+				4
+				k {'width': 4, 'offset': 68, 'type': 'int', 'cls': 'VAR'}
+								8
+						7
+						k {'width': 4, 'offset': 88, 'type': 'int', 'cls': 'VAR'}
+				6
+				d {'width': 4, 'offset': 84, 'type': 'int', 'cls': 'VAR'}
+						10
+						res {'width': 4, 'offset': 100, 'type': 'int', 'cls': 'VAR'}
+				9
+				j {'width': 4, 'offset': 96, 'type': 'int', 'cls': 'VAR'}
 		1
-		a {'width': 4, 'offset': -8, 'type': 'pointer(int)', 'cls': 'VAR'}
-		l {'width': 4, 'offset': -12, 'type': 'int', 'cls': 'VAR'}
-		h {'width': 4, 'offset': -16, 'type': 'int', 'cls': 'VAR'}
-		p {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
-		j {'width': 4, 'offset': 8, 'type': 'int', 'cls': 'VAR'}
-		temp {'width': 4, 'offset': 16, 'type': 'int', 'cls': 'VAR'}
-				5
-		4
-		a {'width': 4, 'offset': -8, 'type': 'pointer(int)', 'cls': 'VAR'}
-		l {'width': 4, 'offset': -12, 'type': 'int', 'cls': 'VAR'}
-		h {'width': 4, 'offset': -16, 'type': 'int', 'cls': 'VAR'}
-		p {'width': 4, 'offset': 4, 'type': 'int', 'cls': 'VAR'}
-				7
-				res {'width': 4, 'offset': 28, 'type': 'int', 'cls': 'VAR'}
-		6
-		list {'width': 16, 'offset': 16, 'type': 'array(int)', 'cls': 'VAR'}
-		a {'width': 4, 'offset': 20, 'type': 'pointer(int)', 'cls': 'VAR'}
-		k {'width': 4, 'offset': 24, 'type': 'int', 'cls': 'VAR'}
+		mat {'width': 16, 'offset': 16, 'type': 'array(array(int))', 'cls': 'VAR'}
+		A {'width': 16, 'offset': 32, 'type': 'array(array(int))', 'cls': 'VAR'}
+		B {'width': 16, 'offset': 48, 'type': 'array(array(int))', 'cls': 'VAR'}
+		a {'width': 4, 'offset': 52, 'type': 'int', 'cls': 'VAR'}
+		b {'width': 4, 'offset': 64, 'type': 'int', 'cls': 'VAR'}
+		sum {'width': 4, 'offset': 76, 'type': 'int', 'cls': 'VAR'}
+		c {'width': 4, 'offset': 80, 'type': 'int', 'cls': 'VAR'}
+		i {'width': 4, 'offset': 92, 'type': 'int', 'cls': 'VAR'}
 0
 fmt {'cls': 'PACKAGE'}
-partition {'aMem': 12, 'rOff': -32, 'rType': 'int', 'args': ['pointer(int)', 'int', 'int'], 'vMem': 16, 'cls': 'FUNC'}
-quickSort {'aMem': 12, 'rOff': None, 'rType': 'void', 'args': ['pointer(int)', 'int', 'int'], 'vMem': 4, 'cls': 'FUNC'}
-main {'aMem': 0, 'rOff': None, 'rType': 'void', 'args': [], 'vMem': 28, 'cls': 'FUNC'}
+main {'aMem': 0, 'rOff': None, 'rType': 'void', 'args': [], 'vMem': 100, 'cls': 'FUNC'}

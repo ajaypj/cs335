@@ -933,7 +933,16 @@ def p_Expression1(p):
         p[0]=expr()
         p[0].type='bool'
         p[0].place=new_tmp(p[0].type)
-        p[0].code=p[1].code+p[3].code+[p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place]
+        p[0].code=p[1].code+p[3].code
+        trueLabel=createLabel()
+        endLabel=createLabel()
+        p[0].code+=["int^ "+p[0].place+", %eax, %eax"]
+        p[0].code+=["gotoPos "+p[1].place+", "+trueLabel]
+        p[0].code+=["gotoPos "+p[3].place+", "+trueLabel]
+        p[0].code+=["goto "+endLabel]
+        p[0].code+=[trueLabel+":"]
+        p[0].code+=["inc "+p[0].place]
+        p[0].code+=[endLabel+":"]
         p.set_lineno(0, p.lineno(2))
 
 def p_Expression2(p):
@@ -945,7 +954,13 @@ def p_Expression2(p):
         p[0]=expr()
         p[0].type='bool'
         p[0].place=new_tmp(p[0].type)
-        p[0].code=p[1].code+p[3].code+[p[2]+' '+p[0].place+', '+p[1].place+', '+p[3].place]
+        p[0].code=p[1].code+p[3].code
+        falseLabel=createLabel()
+        p[0].code+=["int^ "+p[0].place+", %eax, %eax"]
+        p[0].code+=["gotoZeroNeg "+p[1].place+", "+falseLabel]
+        p[0].code+=["gotoZeroNeg "+p[3].place+", "+falseLabel]
+        p[0].code+=["inc "+p[0].place]
+        p[0].code+=[falseLabel+":"]
         p.set_lineno(0, p.lineno(2))
 
 def p_Expression3(p):
@@ -1345,8 +1360,8 @@ def p_BasicLit4(p):
     ''' BasicLit       		: RUNE '''
     p[0]=expr()
     p[0].type='int'
-    p[0].value=ord(p[1])
-    p[0].place=str(ord(p[1]))
+    p[0].value=ord(p[1][1:-1])
+    p[0].place=str(p[0].value)
     p.set_lineno(0, p.lineno(1))
 
 def p_BasicLit5(p):
