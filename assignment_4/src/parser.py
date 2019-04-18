@@ -1028,6 +1028,10 @@ def p_Expression5(p):
         if "*" in p[1].place:
             var = new_tmp(p[1].type)
             addr = p[1].place[1:]
+            if "*" in addr:
+                addr2 = addr[1:]
+                addr = new_tmp("pointer("+p[1].type+")")
+                p[0].code += ["unary* "+addr+", "+addr2]
             p[0].code += ["unary* "+var+", "+addr]
             p[0].place = var
     else:
@@ -1142,18 +1146,25 @@ def p_PrimaryExpr2(p):
         raise Exception("Line "+str(p.lineno(1))+": Array index must be an integer.")
     else:
         p[0]=expr()
-        name = p[1].place.split('\"')[1]
-        offset = int(p[1].place.split(':')[1])
         p[0].type=p[1].type[6:-1]
         p[0].code=p[1].code+p[2].code
 
-        var1=new_tmp('int') # Element offset
-        var2=new_tmp('int') # Final offset
-        addr=new_tmp('int') # Address of element
-        p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
-        p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
-        p[0].code+=["int- "+addr+", %ebp, "+var2]
-        p[0].place="*"+addr
+        if "*" in p[1].place:
+            var=new_tmp('int') # Element offset
+            addr=new_tmp('int') # Address
+            p[0].code+=["int* "+var+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
+            p[0].code+=["int+ "+addr+", "+p[1].place[1:]+", "+var]
+            p[0].place="*"+addr
+        else:
+            name = p[1].place.split('\"')[1]
+            offset = int(p[1].place.split(':')[1])
+            var1=new_tmp('int') # Element offset
+            var2=new_tmp('int') # Final offset
+            addr=new_tmp('int') # Address of element
+            p[0].code+=["int* "+var1+", "+p[2].place+", $"+str(typeWidth[p[0].type])]
+            p[0].code+=["int- "+var2+", $"+str(offset)+", "+var1]
+            p[0].code+=["int- "+addr+", %ebp, "+var2]
+            p[0].place="*"+addr
     p.set_lineno(0, p.lineno(1))
 
 def p_Index(p):

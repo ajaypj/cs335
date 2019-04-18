@@ -53,9 +53,10 @@ def write_list(file, a_list):
 def remove_used_temp_var_in_reg(name):
 	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
 	# print("DELETING", name)
-	unused_temp_vars_in_reg.remove(name)
-	regs[temp_vars[name]["ro"]]=0
-	del temp_vars[name]
+	if name in temp_vars:
+		unused_temp_vars_in_reg.remove(name)
+		regs[temp_vars[name]["ro"]]=0
+		del temp_vars[name]
 
 def remove_used_temp_var_in_mem(name):
 	global regs, unused_temp_vars_in_reg, temp_vars, temp_offset, function_width, code
@@ -269,9 +270,22 @@ for line in ir:
 
 	elif i[0] == "=":
 		dest = ''
+		addr_var_name = ''
 		if get_type(i[1]) == "*":
-			addr_var_name = split_var(i[1][1:])[0] #r
-			dest = "0(%{})".format(temp_vars[addr_var_name]["ro"])
+			if get_type(i[1][1:]) == "*": # Handling only **var = _
+				offset = int(split_var(i[1][2:])[1])
+				reg = get_reg("##", 4)
+				code += ["movl {}(%ebp), %{}".format(-offset, reg)]
+				code += ["movl 0(%{}), %{}".format(reg, reg)]
+				dest = "0(%{})".format(reg)
+			elif get_type(i[1][1:]) == "r":
+				addr_var_name = split_var(i[1][1:])[0]
+				dest = "0(%{})".format(temp_vars[addr_var_name]["ro"])
+			elif get_type(i[1][1:]) == "m":
+				offset = int(split_var(i[1][1:])[1])
+				reg = get_reg("##", width)
+				code += ["movl {}(%ebp), %{}".format(-offset, reg)]
+				dest = "0(%{})".format(reg)
 		elif get_type(i[1]) == "m":
 			offset_to = int(split_var(i[1])[1])
 			dest = "{}(%ebp)".format(-offset_to)
@@ -289,13 +303,12 @@ for line in ir:
 			elif "tmp#" in i[2]:
 				offset_from = temp_vars[split_var(i[2])[0]]["so"]
 				remove_used_temp_var_in_mem(split_var(i[2])[0])
-			width = int(split_var(i[1])[-1])
-			reg = get_reg("#", width)
+			reg = get_reg("#", 4)
 			code += ["movl {}(%ebp), %{}".format(-offset_from, reg)]
 			code += ["movl %{}, {}".format(reg, dest)]
 			remove_used_temp_var_in_reg("#")
-		if get_type(i[1]) == "*":
-			remove_used_temp_var_in_reg(addr_var_name)
+		remove_used_temp_var_in_reg("##")
+		remove_used_temp_var_in_reg(addr_var_name)
 
 	elif i[0] in ["int+", "int-", "int*", "int/", "int&", "int^", "int|"]:
 		op = op_dic[i[0][3:]]
