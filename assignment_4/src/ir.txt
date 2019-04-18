@@ -1,0 +1,113 @@
+func partition:12:16
+int* tmp#0:4, $4, var"h":-16:4
+int+ tmp#1:4, var"a":-8:4, tmp#0:4
+unary* tmp#2:4, tmp#1:4
+= var"p":4:4, tmp#2:4
+= var"j":8:4, var"l":-12:4
+label1:
+int< tmp#3:4, var"j":8:4, var"h":-16:4
+gotoZeroNeg tmp#3:4, label2
+int* tmp#4:4, $4, var"j":8:4
+int+ tmp#5:4, var"a":-8:4, tmp#4:4
+unary* tmp#6:4, tmp#5:4
+int<= tmp#7:4, tmp#6:4, var"p":4:4
+gotoZeroNeg tmp#7:4, label0
+int* tmp#8:4, $4, var"j":8:4
+int+ tmp#9:4, var"a":-8:4, tmp#8:4
+unary* tmp#10:4, tmp#9:4
+= var"temp":12:4, tmp#10:4
+int* tmp#11:4, $4, var"j":8:4
+int+ tmp#12:4, var"a":-8:4, tmp#11:4
+int* tmp#13:4, $4, var"l":-12:4
+int+ tmp#14:4, var"a":-8:4, tmp#13:4
+unary* tmp#15:4, tmp#14:4
+= *tmp#12:4, tmp#15:4
+int* tmp#16:4, $4, var"l":-12:4
+int+ tmp#17:4, var"a":-8:4, tmp#16:4
+= *tmp#17:4, var"temp":12:4
+inc var"l":-12:4
+label0:
+inc var"j":8:4
+goto label1
+label2:
+int* tmp#18:4, $4, var"l":-12:4
+int+ tmp#19:4, var"a":-8:4, tmp#18:4
+unary* tmp#20:4, tmp#19:4
+= var"temp":16:4, tmp#20:4
+int* tmp#21:4, $4, var"l":-12:4
+int+ tmp#22:4, var"a":-8:4, tmp#21:4
+int* tmp#23:4, $4, var"h":-16:4
+int+ tmp#24:4, var"a":-8:4, tmp#23:4
+unary* tmp#25:4, tmp#24:4
+= *tmp#22:4, tmp#25:4
+int* tmp#26:4, $4, var"h":-16:4
+int+ tmp#27:4, var"a":-8:4, tmp#26:4
+= *tmp#27:4, var"temp":16:4
+putretval var"l":-12:4, -32
+return
+func quickSort:12:4
+int> tmp#28:4, var"l":-12:4, var"h":-16:4
+gotoZeroNeg tmp#28:4, label3
+return
+label3:
+returnsize 4
+pass var"h":-16:4
+pass var"l":-12:4
+pass var"a":-8:4
+call partition:12:16
+getretval tmp#29:4
+= var"p":4:4, tmp#29:4
+int- tmp#30:4, var"p":4:4, $1
+returnsize 0
+pass tmp#30:4
+pass var"l":-12:4
+pass var"a":-8:4
+call quickSort:12:4
+getretval tmp#31:0
+int+ tmp#32:4, var"p":4:4, $1
+returnsize 0
+pass var"h":-16:4
+pass tmp#32:4
+pass var"a":-8:4
+call quickSort:12:4
+getretval tmp#33:0
+return
+func main:0:28
+int* tmp#34:4, $0, $4
+int- tmp#35:4, $16, tmp#34:4
+int- tmp#36:4, %ebp, tmp#35:4
+= *tmp#36:4, $10
+int* tmp#37:4, $1, $4
+int- tmp#38:4, $16, tmp#37:4
+int- tmp#39:4, %ebp, tmp#38:4
+= *tmp#39:4, $90
+int* tmp#40:4, $2, $4
+int- tmp#41:4, $16, tmp#40:4
+int- tmp#42:4, %ebp, tmp#41:4
+= *tmp#42:4, $8
+int* tmp#43:4, $3, $4
+int- tmp#44:4, $16, tmp#43:4
+int- tmp#45:4, %ebp, tmp#44:4
+= *tmp#45:4, $7
+unary& tmp#46:4, var"list":16:16
+= var"a":20:4, tmp#46:4
+returnsize 0
+pass $3
+pass $0
+pass var"a":20:4
+call quickSort:12:4
+getretval tmp#47:0
+= var"k":24:4, $0
+label4:
+int< tmp#48:4, var"k":24:4, $4
+gotoZeroNeg tmp#48:4, label5
+int* tmp#49:4, var"k":24:4, $4
+int- tmp#50:4, $16, tmp#49:4
+int- tmp#51:4, %ebp, tmp#50:4
+unary* tmp#52:4, tmp#51:4
+= var"res":28:4, tmp#52:4
+print var"res":28:4
+inc var"k":24:4
+goto label4
+label5:
+return

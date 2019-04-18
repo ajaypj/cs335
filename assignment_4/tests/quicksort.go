@@ -31,7 +31,7 @@ func quickSort(a *int, l, h int) {
 func main() {
 	var list [4]int;
 	list[0] = 10;
-	list[1] = 9;
+	list[1] = 90;
 	list[2] = 8;
 	list[3] = 7;
 	var a *int;

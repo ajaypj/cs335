@@ -1040,6 +1040,10 @@ def p_Expression5(p):
         if "*" in p[3].place:
             var = new_tmp(p[3].type)
             addr = p[3].place[1:]
+            if "*" in addr:
+                addr2 = addr[1:]
+                addr = new_tmp("pointer("+p[1].type+")")
+                p[0].code += ["unary* "+addr+", "+addr2]
             p[0].code += ["unary* "+var+", "+addr]
             p[3].place = var
 
