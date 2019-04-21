@@ -272,13 +272,7 @@ for line in ir:
 		dest = ''
 		addr_var_name = ''
 		if get_type(i[1]) == "*":
-			if get_type(i[1][1:]) == "*": # Handling only **var = _
-				offset = int(split_var(i[1][2:])[1])
-				reg = get_reg("##", 4)
-				code += ["movl {}(%ebp), %{}".format(-offset, reg)]
-				code += ["movl 0(%{}), %{}".format(reg, reg)]
-				dest = "0(%{})".format(reg)
-			elif get_type(i[1][1:]) == "r":
+			if get_type(i[1][1:]) == "r":
 				addr_var_name = split_var(i[1][1:])[0]
 				dest = "0(%{})".format(temp_vars[addr_var_name]["ro"])
 			elif get_type(i[1][1:]) == "m":

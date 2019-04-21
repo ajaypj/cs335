@@ -1043,10 +1043,6 @@ def p_Expression5(p):
         if "*" in p[1].place:
             var = new_tmp(p[1].type)
             addr = p[1].place[1:]
-            if "*" in addr:
-                addr2 = addr[1:]
-                addr = new_tmp("pointer("+p[1].type+")")
-                p[0].code += ["unary* "+addr+", "+addr2]
             p[0].code += ["unary* "+var+", "+addr]
             p[0].place = var
     else:
@@ -1055,10 +1051,6 @@ def p_Expression5(p):
         if "*" in p[3].place:
             var = new_tmp(p[3].type)
             addr = p[3].place[1:]
-            if "*" in addr:
-                addr2 = addr[1:]
-                addr = new_tmp("pointer("+p[1].type+")")
-                p[0].code += ["unary* "+addr+", "+addr2]
             p[0].code += ["unary* "+var+", "+addr]
             p[3].place = var
 
@@ -1110,11 +1102,18 @@ def p_UnaryExpr(p):
                 raise Exception("Line "+str(p.lineno(1))+": "+"Can't use "+p[1].place+" on this type.")
         elif p[1]=='*':
             p[0].type = p[2].type[8:-1]
-            p[0].place = "*"+p[2].place
             p[0].code = p[2].code
+            var = p[2].place
+            if "*" in p[2].place:
+                var = new_tmp(p[2].type)
+                addr = p[2].place[1:]
+                p[0].code += ["unary* "+var+", "+addr]
+            p[0].place = "*"+var
         elif p[1]=='&':
-            if p[2].type[:5]=='array':
-                p[0].type = "pointer"+p[2].type[5:]
+            if p[2].type[:5]=='array': # Ptr to smallest element's type
+                while p[2].type[:6]=='array(':
+                    p[2].type = p[2].type[6:-1]
+                p[0].type = "pointer("+p[2].type+")"
             else:
                 p[0].type = "pointer("+p[2].type+")"
             typeWidth.update({p[0].type : 4})
