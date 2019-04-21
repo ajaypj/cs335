@@ -13,6 +13,5 @@ func main() {
 	a7 := 70;
 	a8 := 80;
 	a9 := 90;
-	print(a3);
 	return;
 };
